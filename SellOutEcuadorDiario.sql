@@ -1,0 +1,24 @@
+USE [CmiSellOutEcuador];
+CREATE TABLE NOTAS_CREDITO(
+	Regional VARCHAR(10),
+	Agencia VARCHAR(10),
+	Ciudad VARCHAR(10),
+	IdVendedor VARCHAR(10),
+	NVendedor VARCHAR(10),
+	IdSupervisor VARCHAR(10),
+	NSupervisor VARCHAR(10),
+	TVendedor VARCHAR(10),
+	RCliente VARCHAR(10),
+	IdTarifa VARCHAR(10),
+	Tcanal VARCHAR(10),
+	Cliente VARCHAR(10));
+
+IF OBJECT_ID(N'tempdb..#Prueba1') IS NOT NULL DROP TABLE #Prueba1;
+
+SELECT Regional
+INTO #Prueba1
+FROM NOTAS_CREDITO;
+
+
+	--COMENZAMOS CON DROP
+	LUEGO EN LA TABLA TEMPORRAL ALTERAMOS
