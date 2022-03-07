@@ -1,5 +1,119 @@
 USE CmiSellOutEcuador;
 
+
+DECLARE @dia DATE;
+DECLARE @d1 AS VARCHAR(20);
+
+SELECT @dia= DATEADD(DAY,-2,SYSDATETIME());
+SELECT @d1= TRY_CONVERT(VARCHAR(20), TRY_CONVERT(DATE, @dia,103),103);
+-- cambiar el nuemro de acuerdo a la fecha
+PRINT @dia;
+PRINT 'd1 '+ @d1;
+
+DECLARE @f AS DATE;
+DECLARE @d2 AS VARCHAR(20);
+DECLARE @d3 AS VARCHAR(20);
+
+SELECT @f= CASE WHEN TRY_CONVERT(VARCHAR(20), TRY_CONVERT(DATE, @dia,103),103)= TRY_CONVERT(VARCHAR(10),TRY_CONVERT(DATE,EOMONTH(@dia),103),103)
+THEN TRY_CONVERT(DATE,EOMONTH(DATEADD(MONTH,-1,(@dia))),103) ELSE TRY_CONVERT(DATE, DATEADD(MONTH,-1,TRY_CONVERT(DATE, @d1, 103)),103) END;
+SELECT @d2 = TRY_CONVERT(VARCHAR(10), @f, 103);
+SELECT @d3 = TRY_CONVERT(VARCHAR(10), TRY_CONVERT(DATE,DATEADD(YEAR,-1,@dia),103),103);
+
+PRINT 'd3  '+@d3;
+PRINT 'd2  '+ @d2;
+
+DECLARE @M1 AS VARCHAR(20); 
+DECLARE @M2 AS VARCHAR(20);
+DECLARE @M3 AS VARCHAR(20);
+
+ SELECT @M1= PER FROM BD_FECHAS WHERE TRY_CONVERT(VARCHAR(10),TRY_CONVERT(DATE,DIA,103),103) = @d1;
+ SELECT @M2= PER FROM BD_FECHAS WHERE TRY_CONVERT(VARCHAR(10),TRY_CONVERT(DATE,DIA,103),103)  = @d2;
+ SELECT @M3= PER FROM BD_FECHAS WHERE TRY_CONVERT(VARCHAR(10),TRY_CONVERT(DATE,DIA,103),103)  = @d3;
+
+ PRINT @M1
+ PRINT @M2
+ PRINT @M3
+
+DECLARE @dm1 AS INTEGER; 
+DECLARE @dm2 AS INTEGER;
+DECLARE @dm3 AS INTEGER;
+
+SELECT @dm1 = MAX(DIA_UTIL)   FROM BD_FECHAS
+WHERE TRY_CONVERT(DATETIME, DIA,103) <= TRY_CONVERT(DATETIME,@d1,103) AND PER= @M1;
+SELECT @dm2 = MAX(DIA_UTIL)   FROM BD_FECHAS
+WHERE TRY_CONVERT(DATETIME, dia,103) <= TRY_CONVERT(DATETIME,@d2,103) AND PER= @M2;
+SELECT @dm3 = MAX(DIA_UTIL)   FROM BD_FECHAS
+WHERE TRY_CONVERT(DATETIME, dia,103) <= TRY_CONVERT(DATETIME,@d3,103) AND PER= @M3;
+PRINT 'dm1 ' + TRY_CONVERT(VARCHAR(10),@dm1)
+PRINT 'dm2 ' +  TRY_CONVERT(VARCHAR(10),@dm2)
+PRINT 'dm3 ' +  TRY_CONVERT(VARCHAR(10),@dm3)
+
+DECLARE @DMAX AS INTEGER;
+DECLARE @DMAX2 AS INTEGER;
+DECLARE @DMAX3 AS INTEGER;
+
+SELECT @DMAX= MAX(DIA_UTIL) FROM BD_FECHAS 
+where PER IN  (SELECT PER FROM BD_FECHAS WHERE try_convert(varchar(10),try_convert(date,DIA,103),103)=@d1);
+SELECT @DMAX2= MAX(DIA_UTIL) FROM BD_FECHAS 
+where PER IN  (SELECT PER FROM BD_FECHAS WHERE try_convert(varchar(10),try_convert(date,DIA,103),103)=@d2);
+SELECT @DMAX3= MAX(DIA_UTIL) FROM BD_FECHAS 
+where PER IN  (SELECT PER FROM BD_FECHAS WHERE try_convert(varchar(10),try_convert(date,DIA,103),103)=@d3);
+
+PRINT @DMAX;
+PRINT @DMAX2;
+PRINT @DMAX3;
+
+declare @ds1 as integer; 
+declare @ds2 as integer;
+declare @ds3 as integer;
+DECLARE @DS4 AS INTEGER;
+DECLARE @DS5 AS INTEGER;
+DECLARE @DS6 AS INTEGER;
+DECLARE @DS7 AS INTEGER;
+DECLARE @DS8 AS INTEGER;
+DECLARE @DS9 AS INTEGER;
+DECLARE @DS10 AS INTEGER;
+DECLARE @DS11 AS INTEGER;
+DECLARE @DS12 AS INTEGER;
+
+select @ds1 = max(dia_SEM_util)   from BD_FECHAS
+where TRY_CONVERT(datetime, dia,103) <= try_convert(datetime,@D1,103) AND PER= @M1 AND SEM LIKE '%1 AL 7%';
+select @ds2 = max(dia_SEM_util)   from BD_FECHAS
+where TRY_CONVERT(datetime, dia,103) <= try_convert(datetime,@D1,103) AND PER= @M1 AND SEM LIKE '%8 AL 14%';
+select @ds3 = max(dia_SEM_util)   from BD_FECHAS
+where TRY_CONVERT(datetime, dia,103) <= try_convert(datetime,@D1,103) AND PER= @M1 AND SEM LIKE '%15 AL 21%';
+select @DS4 = max(dia_SEM_util)   from BD_FECHAS
+where TRY_CONVERT(datetime, dia,103) <= try_convert(datetime,@D1,103) AND PER= @M1 AND SEM LIKE '%22 AL 31%';
+select @ds5	 = max(dia_SEM_util)   from BD_FECHAS
+where TRY_CONVERT(datetime, dia,103) <= try_convert(datetime,@d2,103) AND PER= @M2 AND SEM LIKE '%1 AL 7%';
+select @DS6 = max(dia_SEM_util)   from BD_FECHAS
+where TRY_CONVERT(datetime, dia,103) <= try_convert(datetime,@d2,103) AND PER= @M2 AND SEM LIKE '%8 AL 14%';
+select @DS7 = max(dia_SEM_util)   from BD_FECHAS
+where TRY_CONVERT(datetime, dia,103) <= try_convert(datetime,@d2,103) AND PER= @M2 AND SEM LIKE '%15 AL 21%';
+select @DS8 = max(dia_SEM_util)   from BD_FECHAS
+where TRY_CONVERT(datetime, dia,103) <= try_convert(datetime,@d2,103) AND PER= @M2 AND SEM LIKE '%22 AL 31%';
+select @DS9 = max(dia_SEM_util)   from BD_FECHAS
+where TRY_CONVERT(datetime, dia,103) <= try_convert(datetime,@d3,103) AND PER= @M3 AND SEM LIKE '%1 AL 7%';
+select @DS10 = max(dia_SEM_util)   from BD_FECHAS
+where TRY_CONVERT(datetime, dia,103) <= try_convert(datetime,@d3,103) AND PER= @M3 AND SEM LIKE '%8 AL 14%';
+select @DS11 = max(dia_SEM_util)   from BD_FECHAS
+where TRY_CONVERT(datetime, dia,103) <= try_convert(datetime,@d3,103) AND PER= @M3 AND SEM LIKE '%15 AL 21%';
+select @DS12 = max(dia_SEM_util)   from BD_FECHAS
+where TRY_CONVERT(datetime, dia,103) <= try_convert(datetime,@d3,103) AND PER= @M3 AND SEM LIKE '%22 AL 31%';
+
+print @ds1
+print @ds2
+print @ds3
+print @ds4
+print @ds5
+print @ds6
+PRINT @ds7
+PRINT @ds8
+PRINT @ds9
+PRINT @ds10
+print @ds11
+print @ds12
+
 TRUNCATE TABLE BASE_INICIAL_VENTAS;
 
 BULK INSERT BASE_INICIAL_VENTAS
@@ -58,9 +172,16 @@ FROM NOTAS_CREDITO A
 LEFT JOIN TABLA_MATERIALES B ON A.CodArticulo = B.CodFabril AND A.DesArticulo = B.MaterialLaFabril;  
 
 
+
 --UPDATE A
 -- SET A.Clase_id = B.Clase_id
 -- FROM TRASLADO A 
 --	INNER JOIN Negocio$ B ON A.Negocio_id = B.Negocio_id 
 -- CUANDO HACES UPDATE Y NO PONES WHERE O ALGUNA CONDICION FINAL, LE HACE EL UPDATE A TODO, Y DONDE NO ENCUENTRA LO PONE NULL
 --EN MI CASO SE SUPONE QUE EL MAESTRO TIENE TODOS LOS CODIGOS, SI HAY LLAVES REPETIDAS AGARRA LA PRIMERA
+
+BULK INSERT MAESTRO_AGENCIAS
+FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\MAESTRO_AGENCIAS.csv'
+WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
+
+
