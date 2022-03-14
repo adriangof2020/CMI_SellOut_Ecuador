@@ -132,6 +132,7 @@ SET OficinaVentas = CASE OficinaVentas
 	ELSE OficinaVentas END;
 
 
+
 TRUNCATE TABLE BASE_INICIAL_VENTAS;
 
 BULK INSERT BASE_INICIAL_VENTAS
@@ -213,17 +214,30 @@ WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
 UPDATE MAESTRO_AGENCIAS SET Agencia = TRIM(Agencia);
 UPDATE MAESTRO_AGENCIAS SET NomOficina = TRIM(NomOficina);
 
+IF OBJECT_ID(N'tempdb..#PLAN') IS NOT NULL DROP TABLE #PLAN;
+
+SELECT LEFT(OficinaVentas,3) CodOficina, RIGHT(OficinaVentas, LEN(OficinaVentas)-4) NomOficina , CodAlicorp, Kilos, Importe
+INTO #PLAN
+FROM PLAN_LA_FABRIL
+
+
+--SELECT * FROM #PLAN  A LEFT JOIN [dbo].[TABLA_MATERIALES] B ON A.CodAlicorp = B.CodAlicorp ORDER BY B.CodFabril
+--SE SUPONE QUE NO DEBEN HABER CODIGOS ALICORP EN EL PLAN QUE NO ESTEN EN LA TABLA MATERIALES
+
 IF OBJECT_ID(N'tempdb..#VENTAS_Y_NOTAS_CREDITO') IS NOT NULL DROP TABLE #VENTAS_Y_NOTAS_CREDITO;
 
 --SELECT * FROM #VENTAS_Y_NOTAS_CREDITO
 
-SELECT A.FFactura Fecha, A.Agencia Agencia, A.CodArticulo CodLaFabril, A.CodAlicorp CodAlicorp, A.Kilos VentaTon, A.Importe VentaDolares, A.GrupoProducto TipoProducto
+SELECT A.FFactura Fecha, A.Agencia Agencia, A.CodArticulo CodLaFabril, A.CodAlicorp CodAlicorp, 0 Plan_Ton, A.Kilos VentaKil, 0 Plan_Dol, A.Importe VentaDolares, A.GrupoProducto TipoProducto
 INTO #VENTAS_Y_NOTAS_CREDITO 
 FROM BASE_INICIAL_VENTAS A;
 
 INSERT INTO #VENTAS_Y_NOTAS_CREDITO 
-SELECT A.FNC Fecha, A.Agencia Agencia, A.CodArticulo CodLaFabril, A.CodAlicorp CodAlicorp, 0 VentaTon, A.Importe VentaDolares, 'MARCAS TERCEROS' TipoProducto
+SELECT A.FNC Fecha, A.Agencia Agencia, A.CodArticulo CodLaFabril, A.CodAlicorp CodAlicorp, 0 Plan_Ton, 0 VentaKil, 0 Plan_Dol,  A.Importe VentaDolares, 'MARCAS TERCEROS' TipoProducto
 FROM NOTAS_CREDITO  A;
+
+ALTER TABLE #VENTAS_Y_NOTAS_CREDITO ALTER COLUMN Plan_Ton FLOAT
+ALTER TABLE #VENTAS_Y_NOTAS_CREDITO ALTER COLUMN Plan_Dol FLOAT
 
 /*SELECT *
 FROM #VENTAS_Y_NOTAS_CREDITO
@@ -255,13 +269,23 @@ WHERE Agencia = 'AGI'
 UPDATE #VENTAS_Y_NOTAS_CREDITO 
 SET Agencia = 'AGG'
 WHERE Agencia = 'AGMCH'
+--SELECT * FROM #VENTAS_Y_NOTAS_CREDITO
+--SELECT * FROM #PLAN 
+ INSERT INTO #VENTAS_Y_NOTAS_CREDITO
+ SELECT @dia Fecha, AG.Agencia Agencia,'NC' CodLaFabril, P.CodAlicorp CodAlicorp, P.Kilos Plan_Ton, 0 VentaKil, P.Importe Plan_Dol , 0 VentaDolares, 'MARCAS TERCEROS' TipoProducto
+ FROM #PLAN P
+	LEFT JOIN MAESTRO_AGENCIAS AG ON P.CodOficina = AG.CodOficina
+	
+
 
 IF OBJECT_ID(N'tempdb..#VENTAS_Y_NOTAS') IS NOT NULL DROP TABLE #VENTAS_Y_NOTAS;
 
-SELECT CONVERT(VARCHAR(20), V.Fecha,103) Fecha, V.Agencia, V.CodLaFabril, V.CodAlicorp, V.VentaTon, V.VentaDolares, V.TipoProducto
+SELECT CONVERT(VARCHAR(20), V.Fecha,103) Fecha, V.Agencia, V.CodLaFabril, V.CodAlicorp, V.Plan_Ton, V.Ventakil, V.Plan_Dol, V.VentaDolares, V.TipoProducto
 INTO #VENTAS_Y_NOTAS
 FROM #VENTAS_Y_NOTAS_CREDITO V
---SELECT * FROM #VENTAS_Y_NOTAS
+----SELECT * FROM #VENTAS_Y_NOTAS
+
+
 
 UPDATE #VENTAS_Y_NOTAS 
 SET Fecha = RIGHT(Fecha,9)
@@ -273,8 +297,8 @@ IF OBJECT_ID('VENTAS_CONSOLIDADO') IS NOT NULL DROP TABLE VENTAS_CONSOLIDADO;
 SELECT F.DES_MES MES, A.Fecha DIA,
 	   M.CodCategoria CodCategoria, M.Categoria Categoria, M.CodFamilia CodFamilia, M.Familia Familia, M.CodMarca CodMarca, M.Marca Marca,
 	   AG.ZonaV2 Grupo_Condiciones, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
-	  'La Fabril S.A.' DEX, IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto) Negocio,
-	  ISNULL(A.VentaTon,0)/1000 real_ton, ISNULL(A.VentaDolares,0)/1000 real_Dolares,
+	  'La Fabril S.A.' DEX, IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto) Negocio, ISNULL(A.Plan_Ton,0)/1000 Plan_Ton,
+	  ISNULL(A.VentaKil,0)/1000 real_ton, ISNULL(A.Plan_Dol,0)/1000 Plan_Dol, ISNULL(A.VentaDolares,0)/1000 real_Dolares,
 	  M.Plataforma Plataforma
 INTO VENTAS_CONSOLIDADO
 FROM #VENTAS_Y_NOTAS A
@@ -284,8 +308,7 @@ FROM #VENTAS_Y_NOTAS A
 -- Cuando quiero unir cada row con todos los row de otra tabla puedo usar esto LEFT JOIN MAESTRO_AGENCIAS AG ON AG.Agencia IS NOT NULL
 --o ese tambien LEFT JOIN MAESTRO_AGENCIAS AG ON A.Agencia=A.Agencia donde A es la tabla izquierda
 	
-
-SELECT * FROM VENTAS_CONSOLIDADO;
+---SELECT * FROM VENTAS_CONSOLIDADO;
 	   
 -- CONVERT O TRY_CPONVERT DESPUES DE REALIZAR LA CONVERSION NO MW
 --MANTIENE EL TIPO DE DATO AL QUE LO CONVERTI SI ES EN LA MISMA TABLA
