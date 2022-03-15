@@ -297,14 +297,19 @@ IF OBJECT_ID('VENTAS_CONSOLIDADO') IS NOT NULL DROP TABLE VENTAS_CONSOLIDADO;
 SELECT F.DES_MES MES, A.Fecha DIA,
 	   M.CodCategoria CodCategoria, M.Categoria Categoria, M.CodFamilia CodFamilia, M.Familia Familia, M.CodMarca CodMarca, M.Marca Marca,
 	   AG.ZonaV2 Grupo_Condiciones, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
-	  'La Fabril S.A.' DEX, IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto) Negocio, ISNULL(A.Plan_Ton,0)/1000 Plan_Ton,
-	  ISNULL(A.VentaKil,0)/1000 real_ton, ISNULL(A.Plan_Dol,0)/1000 Plan_Dol, ISNULL(A.VentaDolares,0)/1000 real_Dolares,
+	  'La Fabril S.A.' DEX, IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto) Negocio, SUM(ISNULL(A.Plan_Ton,0)/1000) Plan_Ton,
+	  SUM(ISNULL(A.VentaKil,0)/1000) real_ton, SUM(ISNULL(A.Plan_Dol,0)/1000) Plan_Dol, SUM(ISNULL(A.VentaDolares,0)/1000) real_Dolares,
 	  M.Plataforma Plataforma
 INTO VENTAS_CONSOLIDADO
 FROM #VENTAS_Y_NOTAS A
 	LEFT JOIN BD_FECHAS F ON  A.Fecha= F.DIA
 	LEFT JOIN TABLA_MATERIALES M ON A.CodAlicorp = M.CodAlicorp
 	LEFT JOIN MAESTRO_AGENCIAS AG ON A.Agencia = AG.Agencia
+GROUP BY F.DES_MES, A.Fecha,
+	   M.CodCategoria, M.Categoria, M.CodFamilia, M.Familia, M.CodMarca, M.Marca,
+	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
+	   IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto),
+	  M.Plataforma
 -- Cuando quiero unir cada row con todos los row de otra tabla puedo usar esto LEFT JOIN MAESTRO_AGENCIAS AG ON AG.Agencia IS NOT NULL
 --o ese tambien LEFT JOIN MAESTRO_AGENCIAS AG ON A.Agencia=A.Agencia donde A es la tabla izquierda
 	
