@@ -4,23 +4,29 @@ USE CmiSellOutEcuador;
 DECLARE @dia DATE;
 DECLARE @d1 AS VARCHAR(20);
 
-SELECT @dia= DATEADD(DAY,-1,SYSDATETIME());
+SELECT @dia= DATEADD(DAY,-2,SYSDATETIME());
 SELECT @d1= TRY_CONVERT(VARCHAR(20), TRY_CONVERT(DATE, @dia,103),103);
 -- cambiar el nuemro de acuerdo a la fecha
 PRINT @dia;
 PRINT 'd1 '+ @d1;
 
+
 DECLARE @f AS DATE;
 DECLARE @d2 AS VARCHAR(20);
-DECLARE @d3 AS VARCHAR(20);
+DECLARE @d3 AS VARCHAR(20); 
 
 SELECT @f= CASE WHEN TRY_CONVERT(VARCHAR(20), TRY_CONVERT(DATE, @dia,103),103)= TRY_CONVERT(VARCHAR(10),TRY_CONVERT(DATE,EOMONTH(@dia),103),103)
+--CUANDO EL ULTIMO DIA DE VENTAS SEA IGUAL AL ULTIMO DIA DEL MES(SI EL ULTIMO DIA DEL MES ES MAYOR QUE EL ULTIMO DIA DEL MES ANTERIOR
+--SEGUIRA MANDANDO AL ULTIMO DIA DEL MES ANTERIOR, SI EL ULTIMO DIA DEL MES ES MENOR AL ULTIMO DIA DEL MES ANTERIOR , ENTONCES ME MANDARA DIRECTAMENTE
+--AL ULTIMO DIA DEL MES ANTERIOR, SI CAE 28FEB, YA NO PASARA AL 28ENE SINO DIRECTAMENTE AL 31ENE
 THEN TRY_CONVERT(DATE,EOMONTH(DATEADD(MONTH,-1,(@dia))),103) ELSE TRY_CONVERT(DATE, DATEADD(MONTH,-1,TRY_CONVERT(DATE, @d1, 103)),103) END;
 SELECT @d2 = TRY_CONVERT(VARCHAR(10), @f, 103);
-SELECT @d3 = TRY_CONVERT(VARCHAR(10), TRY_CONVERT(DATE,DATEADD(YEAR,-1,@dia),103),103);
-
-PRINT 'd3  '+@d3;
+SELECT @d3 = TRY_CONVERT(VARCHAR(10), TRY_CONVERT(DATE,DATEADD(YEAR,-1,@dia),103),103); 
+--SELECT DATEADD(MONTH,-1,GETDATE()-16) si GETDATE =28FEB ME MANDARA AL 28ENE  POR ESO EOMONTH EN LA FORMULA, SI QUIERES RETOCEDER DE UN MES 
+--MAYOR TE MANDARA AL ULTIMO DIA DEL MES MENOR, SI QUIERES RETROCEDER DE UN MES MENOR TE MANDARA AL MISMO DIA EN EL MES ANTERIOR Y NO AL ULTIMO
+--DIA DEL MES PARA ESO DEBES PONER EOMONTH
 PRINT 'd2  '+ @d2;
+PRINT 'd3  '+@d3;
 
 DECLARE @M1 AS VARCHAR(20); 
 DECLARE @M2 AS VARCHAR(20);
@@ -38,12 +44,12 @@ DECLARE @dm1 AS INTEGER;
 DECLARE @dm2 AS INTEGER;
 DECLARE @dm3 AS INTEGER;
 
-SELECT @dm1 = MAX(DIA_UTIL)   FROM BD_FECHAS
-WHERE TRY_CONVERT(DATETIME, DIA,103) <= TRY_CONVERT(DATETIME,@d1,103) AND PER= @M1;
-SELECT @dm2 = MAX(DIA_UTIL)   FROM BD_FECHAS
-WHERE TRY_CONVERT(DATETIME, dia,103) <= TRY_CONVERT(DATETIME,@d2,103) AND PER= @M2;
-SELECT @dm3 = MAX(DIA_UTIL)   FROM BD_FECHAS
-WHERE TRY_CONVERT(DATETIME, dia,103) <= TRY_CONVERT(DATETIME,@d3,103) AND PER= @M3;
+SELECT @dm1 = DIA_UTIL FROM BD_FECHAS
+WHERE TRY_CONVERT(DATETIME, DIA,103) = TRY_CONVERT(DATETIME,@d1,103);
+SELECT @dm2 = DIA_UTIL  FROM BD_FECHAS
+WHERE TRY_CONVERT(DATETIME, dia,103) = TRY_CONVERT(DATETIME,@d2,103);
+SELECT @dm3 = DIA_UTIL  FROM BD_FECHAS
+WHERE TRY_CONVERT(DATETIME, dia,103) = TRY_CONVERT(DATETIME,@d3,103);
 PRINT 'dm1 ' + TRY_CONVERT(VARCHAR(10),@dm1)
 PRINT 'dm2 ' +  TRY_CONVERT(VARCHAR(10),@dm2)
 PRINT 'dm3 ' +  TRY_CONVERT(VARCHAR(10),@dm3)
@@ -53,53 +59,53 @@ DECLARE @DMAX2 AS INTEGER;
 DECLARE @DMAX3 AS INTEGER;
 
 SELECT @DMAX= MAX(DIA_UTIL) FROM BD_FECHAS 
-where PER IN  (SELECT PER FROM BD_FECHAS WHERE try_convert(varchar(10),try_convert(date,DIA,103),103)=@d1);
+WHERE PER IN  (SELECT PER FROM BD_FECHAS WHERE TRY_CONVERT(VARCHAR(10),TRY_CONVERT(DATE,DIA,103),103)=@d1);
 SELECT @DMAX2= MAX(DIA_UTIL) FROM BD_FECHAS 
-where PER IN  (SELECT PER FROM BD_FECHAS WHERE try_convert(varchar(10),try_convert(date,DIA,103),103)=@d2);
+WHERE PER IN  (SELECT PER FROM BD_FECHAS WHERE TRY_CONVERT(VARCHAR(10),TRY_CONVERT(DATE,DIA,103),103)=@d2);
 SELECT @DMAX3= MAX(DIA_UTIL) FROM BD_FECHAS 
-where PER IN  (SELECT PER FROM BD_FECHAS WHERE try_convert(varchar(10),try_convert(date,DIA,103),103)=@d3);
+WHERE PER IN  (SELECT PER FROM BD_FECHAS WHERE TRY_CONVERT(VARCHAR(10),TRY_CONVERT(DATE,DIA,103),103)=@d3);
 
 PRINT @DMAX;
 PRINT @DMAX2;
 PRINT @DMAX3;
 
-declare @ds1 as integer; 
-declare @ds2 as integer;
-declare @ds3 as integer;
-DECLARE @DS4 AS INTEGER;
-DECLARE @DS5 AS INTEGER;
-DECLARE @DS6 AS INTEGER;
-DECLARE @DS7 AS INTEGER;
-DECLARE @DS8 AS INTEGER;
-DECLARE @DS9 AS INTEGER;
-DECLARE @DS10 AS INTEGER;
-DECLARE @DS11 AS INTEGER;
-DECLARE @DS12 AS INTEGER;
+DECLARE @ds1 AS INTEGER; 
+DECLARE @ds2 AS INTEGER;
+DECLARE @ds3 AS INTEGER;
+DECLARE @ds4 AS INTEGER;
+DECLARE @ds5 AS INTEGER;
+DECLARE @ds6 AS INTEGER;
+DECLARE @ds7 AS INTEGER;
+DECLARE @ds8 AS INTEGER;
+DECLARE @ds9 AS INTEGER;
+DECLARE @ds10 AS INTEGER;
+DECLARE @ds11 AS INTEGER;
+DECLARE @ds12 AS INTEGER;
 
-select @ds1 = max(dia_SEM_util)   from BD_FECHAS
-where TRY_CONVERT(datetime, dia,103) <= try_convert(datetime,@D1,103) AND PER= @M1 AND SEM LIKE '%1 AL 7%';
-select @ds2 = max(dia_SEM_util)   from BD_FECHAS
-where TRY_CONVERT(datetime, dia,103) <= try_convert(datetime,@D1,103) AND PER= @M1 AND SEM LIKE '%8 AL 14%';
-select @ds3 = max(dia_SEM_util)   from BD_FECHAS
-where TRY_CONVERT(datetime, dia,103) <= try_convert(datetime,@D1,103) AND PER= @M1 AND SEM LIKE '%15 AL 21%';
-select @DS4 = max(dia_SEM_util)   from BD_FECHAS
-where TRY_CONVERT(datetime, dia,103) <= try_convert(datetime,@D1,103) AND PER= @M1 AND SEM LIKE '%22 AL 31%';
-select @ds5	 = max(dia_SEM_util)   from BD_FECHAS
-where TRY_CONVERT(datetime, dia,103) <= try_convert(datetime,@d2,103) AND PER= @M2 AND SEM LIKE '%1 AL 7%';
-select @DS6 = max(dia_SEM_util)   from BD_FECHAS
-where TRY_CONVERT(datetime, dia,103) <= try_convert(datetime,@d2,103) AND PER= @M2 AND SEM LIKE '%8 AL 14%';
-select @DS7 = max(dia_SEM_util)   from BD_FECHAS
-where TRY_CONVERT(datetime, dia,103) <= try_convert(datetime,@d2,103) AND PER= @M2 AND SEM LIKE '%15 AL 21%';
-select @DS8 = max(dia_SEM_util)   from BD_FECHAS
-where TRY_CONVERT(datetime, dia,103) <= try_convert(datetime,@d2,103) AND PER= @M2 AND SEM LIKE '%22 AL 31%';
-select @DS9 = max(dia_SEM_util)   from BD_FECHAS
-where TRY_CONVERT(datetime, dia,103) <= try_convert(datetime,@d3,103) AND PER= @M3 AND SEM LIKE '%1 AL 7%';
-select @DS10 = max(dia_SEM_util)   from BD_FECHAS
-where TRY_CONVERT(datetime, dia,103) <= try_convert(datetime,@d3,103) AND PER= @M3 AND SEM LIKE '%8 AL 14%';
-select @DS11 = max(dia_SEM_util)   from BD_FECHAS
-where TRY_CONVERT(datetime, dia,103) <= try_convert(datetime,@d3,103) AND PER= @M3 AND SEM LIKE '%15 AL 21%';
-select @DS12 = max(dia_SEM_util)   from BD_FECHAS
-where TRY_CONVERT(datetime, dia,103) <= try_convert(datetime,@d3,103) AND PER= @M3 AND SEM LIKE '%22 AL 31%';
+SELECT @ds1 = MAX(dia_SEM_util)   FROM BD_FECHAS
+WHERE TRY_CONVERT(DATETIME, dia,103) <= TRY_CONVERT(DATETIME,@d1,103) AND PER= @M1 AND SEM LIKE '%1 AL 7%';
+SELECT @ds2 = MAX(dia_SEM_util)   FROM BD_FECHAS
+WHERE TRY_CONVERT(DATETIME, dia,103) <= TRY_CONVERT(DATETIME,@d1,103) AND PER= @M1 AND SEM LIKE '%8 AL 14%';
+SELECT @ds3 = MAX(dia_SEM_util)   FROM BD_FECHAS
+WHERE TRY_CONVERT(DATETIME, dia,103) <= TRY_CONVERT(DATETIME,@d1,103) AND PER= @M1 AND SEM LIKE '%15 AL 21%';
+SELECT @ds4 = MAX(dia_SEM_util)   FROM BD_FECHAS
+WHERE TRY_CONVERT(DATETIME, dia,103) <= TRY_CONVERT(DATETIME,@d1,103) AND PER= @M1 AND SEM LIKE '%22 AL 31%';
+SELECT @ds5	 = MAX(dia_SEM_util)   FROM BD_FECHAS
+WHERE TRY_CONVERT(DATETIME, dia,103) <= TRY_CONVERT(DATETIME,@d2,103) AND PER= @M2 AND SEM LIKE '%1 AL 7%';
+SELECT @ds6 = MAX(dia_SEM_util)   FROM BD_FECHAS
+WHERE TRY_CONVERT(DATETIME, dia,103) <= TRY_CONVERT(DATETIME,@d2,103) AND PER= @M2 AND SEM LIKE '%8 AL 14%';
+SELECT @ds7 = MAX(dia_SEM_util)   FROM BD_FECHAS
+WHERE TRY_CONVERT(DATETIME, dia,103) <= TRY_CONVERT(DATETIME,@d2,103) AND PER= @M2 AND SEM LIKE '%15 AL 21%';
+SELECT @ds8 = MAX(dia_SEM_util)   FROM BD_FECHAS
+WHERE TRY_CONVERT(DATETIME, dia,103) <= TRY_CONVERT(DATETIME,@d2,103) AND PER= @M2 AND SEM LIKE '%22 AL 31%';
+SELECT @ds9 = MAX(dia_SEM_util)   FROM BD_FECHAS
+WHERE TRY_CONVERT(DATETIME, dia,103) <= TRY_CONVERT(DATETIME,@d3,103) AND PER= @M3 AND SEM LIKE '%1 AL 7%';
+SELECT @ds10 = MAX(dia_SEM_util)   FROM BD_FECHAS
+WHERE TRY_CONVERT(DATETIME, dia,103) <= TRY_CONVERT(DATETIME,@d3,103) AND PER= @M3 AND SEM LIKE '%8 AL 14%';
+SELECT @ds11 = MAX(dia_SEM_util)   FROM BD_FECHAS
+WHERE TRY_CONVERT(DATETIME, dia,103) <= TRY_CONVERT(DATETIME,@d3,103) AND PER= @M3 AND SEM LIKE '%15 AL 21%';
+SELECT @ds12 = MAX(dia_SEM_util)   FROM BD_FECHAS
+WHERE TRY_CONVERT(DATETIME, dia,103) <= TRY_CONVERT(DATETIME,@d3,103) AND PER= @M3 AND SEM LIKE '%22 AL 31%';
 
 print @ds1
 print @ds2
@@ -113,6 +119,7 @@ PRINT @ds9
 PRINT @ds10
 print @ds11
 print @ds12
+
 
 TRUNCATE TABLE MAESTRO_ALICORP
 
@@ -325,7 +332,7 @@ WHERE Agencia = 'PTA'
 UPDATE #VENTAS_Y_NOTAS_CREDITO 
 SET Agencia = 'AGT'
 WHERE Agencia = 'AGI' 
-
+-- AGT ES TUCAN PORQUE ACASO NO ERA QUITO?
 
 UPDATE #VENTAS_Y_NOTAS_CREDITO 
 SET Agencia = 'AGG'
@@ -350,7 +357,7 @@ WHERE Agencia = ''
 	 
 IF OBJECT_ID('VENTAS_CONSOLIDADO') IS NOT NULL DROP TABLE VENTAS_CONSOLIDADO;
 
-SELECT F.DES_MES MES, A.Fecha DIA,
+SELECT F.DES_MES Mes, A.Fecha Dia,
 	   M.CodCategoria CodCategoria, M.Categoria Categoria, M.CodFamilia CodFamilia, M.Familia Familia, M.CodMarca CodMarca, M.Marca Marca,
 	   AG.ZonaV2 Grupo_Condiciones, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
 	  'La Fabril S.A.' DEX, IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto) Negocio, SUM(ISNULL(A.Plan_Ton,0)/1000) Plan_Ton,
@@ -365,14 +372,15 @@ GROUP BY F.DES_MES, A.Fecha,
 	   M.CodCategoria, M.Categoria, M.CodFamilia, M.Familia, M.CodMarca, M.Marca,
 	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
 	   IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto),
-	  M.Plataforma
-
+	   M.Plataforma
+--SELECT   sum(real_ton) SUMA FROM VENTAS_CONSOLIDADO WHERE FAMILIA = 'Don Vittorio Clasico'
+--SELECT SUM(VentaKil) FROM #VENTAS_Y_NOTAS A INNER JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp WHERE M.FAMILIA = 'Don Vittorio Clasico'
 
 -- Cuando quiero unir cada row con todos los row de otra tabla puedo usar esto LEFT JOIN MAESTRO_AGENCIAS AG ON AG.Agencia IS NOT NULL
 --o ese tambien LEFT JOIN MAESTRO_AGENCIAS AG ON A.Agencia=A.Agencia donde A es la tabla izquierda
 	
----SELECT DISTINCT CodAlicorp FROM VENTAS_CONSOLIDADO where CodCategoria IS NULL;
---SELECT  * FROM VENTAS_CONSOLIDADO where CodCategoria IS NULL AND Real_ton = 0;
+---SELECT DISTINCT CodAlicorp FROM VENTAS_CONSOLIDADO where CodCategoria IS NULL; le agregas ese campo antes
+--SELECT  * FROM VENTAS_CONSOLIDADO where  Plan_ton is null;
 --SELECT  * FROM VENTAS_CONSOLIDADO where CodOficina IS NULL 
 --SELECT  * FROM VENTAS_CONSOLIDADO where CodAlicorp IS NULL le agregas ese campo antes
 --SELECT  * FROM VENTAS_CONSOLIDADO where real_ton IS NULL
@@ -383,3 +391,89 @@ GROUP BY F.DES_MES, A.Fecha,
 -- PERO SI  ES EN OTRA TABLA NUEVA COMO ES EN ESTE CASO SI LO HACE
 
 --VER SI ES NECESARIO APLICAR EL UPDATE A LA FECHA POR LO DEL WHERE 0_/%
+
+IF OBJECT_ID('DBO.TMP_SELL_OUT_21') IS NOT NULL DROP TABLE DBO.TMP_SELL_OUT_21;
+
+select *
+INTO TMP_SELL_OUT_21 FROM 
+(SELECT 
+A.Mes "MES",
+'Sem' "Semana",
+A.DIA DIA,
+B.DIA_2 dia_2,
+/**a.COD_CATEGORIA+' '+**/CONCAT(A.CodCategoria,' ', A.Categoria) "Categoria",
+A.Negocio Negocio,
+/**COD_FAMILIA+' '+**/CONCAT(A.CodFamilia,' ',A.Familia) Familia,
+CONCAT(A.CodMarca,' ',A.Marca) Marca,
+/**COD_REGION_GEO+' '+**/A.Grupo_Condiciones "Grupo_Condiciones",
+/**COD_REGION + ' '+**/CONCAT(A.CodOficina,' ',A.NomOficina) "Oficina_Ventas",
+/**COD_ZONA+ ' '+**/CONCAT(A.CodTerritorio,' ',A.NomTerritorio) "Grupo_Vendedores",
+/**COD_OFICINA+ ' '+**/CONCAT(A.CodZona,' ',A.NomZona) "Zona_Clientes",
+---restructurado ¨??
+A.DEX "DEX",
+A.Plan_Ton plan_ton,
+A.real_ton real_ton,
+A.Plan_Dol plan_soles,
+A.real_Dolares real_soles,
+A.real_ton/@dm1 * @DMAX	 PROY_LIN_TON,
+A.real_Dolares/@dm1 * @DMAX	PROY_LIN_SOLES,
+--case when @DMAX>=@dm1 then isnull(real_ton,0)/@dm1 * @DMAX	end PROY_LIN_TON,
+--case when @DMAX>=@dm1 then isnull(REAL_SOLES,0)/@dm1 * @DMAX	end	PROY_LIN_SOLES,
+B.ANIO ANIO,
+B.SEM SEM,
+B.MES MES2,
+CASE WHEN B.PER=@M1 AND try_convert(DATE, A.Dia, 103) <=try_convert(date,@d1,103) THEN  A.real_ton/@dm1 
+WHEN B.PER=@M2  and try_convert(date, a.Dia,103) <=try_convert(date,@d2,103) THEN  A.real_ton/@dm2 
+WHEN B.PER=@M3  and try_convert(date, a.Dia,103) <=try_convert(date,@d3,103) THEN  A.real_ton/@dm3 END  PROM_AV,  --- PROMEDIO AL AVANCE TONELADAS
+CASE WHEN B.PER=@M1 AND B.SEM LIKE '%1 AL 7%' and try_convert(date, a.dia,103) <=try_convert(date,@d1,103) THEN  iif(@ds1=0,null,A.real_ton/@DS1 )
+	WHEN B.PER=@M1 AND B.SEM LIKE '%8 AL 14%' and try_convert(date, a.dia,103) <=try_convert(date,@d1,103) THEN  iif(@ds2=0,null,A.real_ton/@DS2 )
+	WHEN B.PER=@M1 AND B.SEM LIKE '%15 AL 21%' and try_convert(date, a.dia,103) <=try_convert(date,@d1,103) THEN  iif(@ds3=0,null,A.real_ton/@DS3 )
+	WHEN B.PER=@M1 AND B.SEM LIKE '%22 AL 31%' and try_convert(date, a.dia,103) <=try_convert(date,@d1,103) THEN  iif(@ds4=0,null,A.real_ton/@DS4 )
+	 WHEN B.PER=@M2 AND B.SEM LIKE '%1 AL 7%' and try_convert(date, a.dia,103) <=try_convert(date,@d2,103) THEN iif(@ds5=0,null,A.real_ton/@DS5 )
+	WHEN B.PER=@M2 AND B.SEM LIKE '%8 AL 14%' and try_convert(date, a.dia,103) <=try_convert(date,@d2,103) THEN  iif(@ds6=0,null,A.real_ton/@DS6 )
+	WHEN B.PER=@M2 AND B.SEM LIKE '%15 AL 21%' and try_convert(date, a.dia,103) <=try_convert(date,@d2,103) THEN iif(@ds7=0,null,A.real_ton/@DS7 )
+	WHEN B.PER=@M2 AND B.SEM LIKE '%22 AL 31%' and try_convert(date, a.dia,103) <=try_convert(date,@d2,103) THEN  iif(@ds8=0,null,A.real_ton/@DS8 )
+	 WHEN B.PER=@M3 AND B.SEM LIKE '%1 AL 7%' and try_convert(date, a.dia,103) <=try_convert(date,@d3,103) THEN  iif(@ds9=0,null,A.real_ton/@DS9 )
+	WHEN B.PER=@M3 AND B.SEM LIKE '%8 AL 14%' and try_convert(date, a.dia,103) <=try_convert(date,@d3,103) THEN  iif(@ds10=0,null,A.real_ton/@DS10 )
+	WHEN B.PER=@M3 AND B.SEM LIKE '%15 AL 21%' and try_convert(date, a.dia,103) <=try_convert(date,@d3,103) THEN  iif(@ds11=0,null,A.real_ton/@DS11 )
+	WHEN B.PER=@M3 AND B.SEM LIKE '%22 AL 31%' and try_convert(date, a.dia,103) <=try_convert(date,@d3,103) THEN  iif(@ds12=0,null,A.real_ton/@DS12 ) END  PROM_SEM,-- PROMEDIO SEMANAL TONELADAS
+
+CASE WHEN  @DMAX=@DM1 THEN A.Plan_Ton - A.real_ton ELSE (A.Plan_Ton - A.real_ton)/(@DMAX-@dm1) END OBJ_DIA, --- OBJETIVO DIARIO TONELADAS
+CASE WHEN  @DMAX=@DM1 THEN (A.Plan_Ton - A.real_ton) - A.real_ton/@DM1 ELSE (A.Plan_Ton - A.real_ton)/(@DMAX-@dm1) - A.real_ton/@DM1 END INCREMENTO_TON,
+
+CASE WHEN B.PER=@M1  and try_convert(date, a.dia,103) <=try_convert(date,@d1,103)  THEN  A.real_Dolares/@dm1 
+WHEN B.PER=@M2  and try_convert(date, a.dia,103) <=try_convert(date,@d2,103)  THEN  A.real_Dolares/@dm2 
+WHEN B.PER=@M3  and try_convert(date, a.dia,103) <=try_convert(date,@d3,103)  THEN  A.real_Dolares/@dm3 END  PROM_AV_SOLES,  --- PROMEDIO AL AVANCE TONELADAS
+CASE WHEN B.PER=@M1 AND B.SEM LIKE '%1 AL 7%' and try_convert(date, a.dia,103) <=try_convert(date,@d1,103) THEN iif(@ds1=0,null,A.real_Dolares/@DS1)
+	 WHEN B.PER=@M1 AND B.SEM LIKE '%8 AL 14%' and try_convert(date, a.dia,103) <=try_convert(date,@d1,103)THEN  iif(@ds2=0,null,A.real_Dolares/@DS2)
+	 WHEN B.PER=@M1 AND B.SEM LIKE '%15 AL 21%' and try_convert(date, a.dia,103) <=try_convert(date,@d1,103) THEN  iif(@ds3=0,null,A.real_Dolares/@DS3)
+	 WHEN B.PER=@M1 AND B.SEM LIKE '%22 AL 31%' and try_convert(date, a.dia,103) <=try_convert(date,@d1,103) THEN  iif(@ds4=0,null,A.real_Dolares/@DS4)
+	 WHEN B.PER=@M2 AND B.SEM LIKE '%1 AL 7%' and try_convert(date, a.dia,103) <=try_convert(date,@d2,103) THEN  iif(@ds5=0,null,A.real_Dolares/@DS5)
+	 WHEN B.PER=@M2 AND B.SEM LIKE '%8 AL 14%' and try_convert(date, a.dia,103) <=try_convert(date,@d2,103) THEN  iif(@ds6=0,null,A.real_Dolares/@DS6)
+	 WHEN B.PER=@M2 AND B.SEM LIKE '%15 AL 21%' and try_convert(date, a.dia,103) <=try_convert(date,@d2,103) THEN  iif(@ds7=0,null,A.real_Dolares/@DS7)
+	 WHEN B.PER=@M2 AND B.SEM LIKE '%22 AL 31%' and try_convert(date, a.dia,103) <=try_convert(date,@d2,103) THEN  iif(@ds8=0,null,A.real_Dolares/@DS8)
+	 WHEN B.PER=@M3 AND B.SEM LIKE '%1 AL 7%' and try_convert(date, a.dia,103) <=try_convert(date,@d3,103) THEN  iif(@ds9=0,null,A.real_Dolares/@DS9)
+	 WHEN B.PER=@M3 AND B.SEM LIKE '%8 AL 14%' and try_convert(date, a.dia,103) <=try_convert(date,@d3,103) THEN  iif(@ds10=0,null,A.real_Dolares/@DS10)
+	 WHEN B.PER=@M3 AND B.SEM LIKE '%15 AL 21%' and try_convert(date, a.dia,103) <=try_convert(date,@d3,103) THEN  iif(@ds11=0,null,A.real_Dolares/@DS11)
+	 WHEN B.PER=@M3 AND B.SEM LIKE '%22 AL 31%' and try_convert(date, a.dia,103) <=try_convert(date,@d3,103) THEN  iif(@ds12=0,null,A.real_Dolares/@DS12) END  PROM_SEM_SOLES,-- PROMEDIO SEMANAL TONELADAS
+
+CASE WHEN  @DMAX=@DM1 THEN A.Plan_Dol - A.real_Dolares ELSE (A.Plan_Dol - A.real_Dolares)/(@DMAX-@dm1) END OBJ_DIA_SOLES, --- OBJETIVO DIARIO SOLES
+CASE WHEN  @DMAX=@DM1 THEN (A.Plan_Dol - A.real_Dolares) - A.real_Dolares/@DM1 ELSE (A.Plan_Dol- A.real_Dolares)/(@DMAX-@dm1) - A.real_Dolares/@DM1 END INCREMENTO_SOLES,
+case when B.PER = @m1 then A.real_ton/@dm1 
+when B.PER = @m2 then A.real_ton/@dmax2 
+when B.PER = @m3 then A.real_ton/@dmax3
+end prom_mes,
+case when B.PER = @m1 then A.real_Dolares/@dm1 
+when B.PER = @m2 then A.real_Dolares/@dmax2 
+when B.PER = @m3 then A.real_Dolares/@dmax3
+end prom_mes_soles,
+A.Plataforma as Plataforma,
+--CASE WHEN A.CLIENTE_ACTUAL IN 
+--('D L F MEDINA RIVERA SA', 'DISTRIBUIDORA CUNZA S.A.', 'DISTRIBUIDORA NUGENT SA', 'COBERDEX SOCIEDAD ANONIMA CERRADA', 
+--'ATIPANA DEX S.A.C.', 'FUERZADEX S.A.C.', 'DISTRIBUCIONES EXCLUSIVAS DEL SUR', 'DISTRIBUCIONES EXCLUSIVAS DEL SUR S') THEN 'SÍ' ELSE 'NO' END NITRO,
+0 PONDERADA_TON,0 PONDERADA_SOLES
+FROM VENTAS_CONSOLIDADO  A 
+left JOIN BD_FECHAS  B ON A.DIA = B.DIA) A WHERE A.ANIO IS NOT NULL ;
+
+--select *
+--FROM TMP_SELL_OUT_21
