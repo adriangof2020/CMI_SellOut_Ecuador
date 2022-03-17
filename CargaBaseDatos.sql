@@ -4,7 +4,7 @@ USE CmiSellOutEcuador;
 DECLARE @dia DATE;
 DECLARE @d1 AS VARCHAR(20);
 
-SELECT @dia= DATEADD(DAY,-2,SYSDATETIME());
+SELECT @dia= DATEADD(DAY,-3,SYSDATETIME());
 SELECT @d1= TRY_CONVERT(VARCHAR(20), TRY_CONVERT(DATE, @dia,103),103);
 -- cambiar el nuemro de acuerdo a la fecha
 PRINT @dia;
@@ -360,7 +360,7 @@ IF OBJECT_ID('VENTAS_CONSOLIDADO') IS NOT NULL DROP TABLE VENTAS_CONSOLIDADO;
 SELECT F.DES_MES Mes, A.Fecha Dia,
 	   M.CodCategoria CodCategoria, M.Categoria Categoria, M.CodFamilia CodFamilia, M.Familia Familia, M.CodMarca CodMarca, M.Marca Marca,
 	   AG.ZonaV2 Grupo_Condiciones, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
-	  'La Fabril S.A.' DEX, IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto) Negocio, SUM(ISNULL(A.Plan_Ton,0)/1000) Plan_Ton,
+	  'La Fabril S.A.' DEX, IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto) Negocio, SUM(ISNULL(A.Plan_Ton,0)) Plan_Ton,
 	  SUM(ISNULL(A.VentaKil,0)/1000) real_ton, SUM(ISNULL(A.Plan_Dol,0)/1000) Plan_Dol, SUM(ISNULL(A.VentaDolares,0)/1000) real_Dolares,
 	  M.Plataforma Plataforma
 INTO VENTAS_CONSOLIDADO
@@ -419,6 +419,8 @@ A.real_ton/@dm1 * @DMAX	 PROY_LIN_TON,
 A.real_Dolares/@dm1 * @DMAX	PROY_LIN_SOLES,
 --case when @DMAX>=@dm1 then isnull(real_ton,0)/@dm1 * @DMAX	end PROY_LIN_TON,
 --case when @DMAX>=@dm1 then isnull(REAL_SOLES,0)/@dm1 * @DMAX	end	PROY_LIN_SOLES,
+0 PROY_TON,
+0 PROY_SOLES,
 B.ANIO ANIO,
 B.SEM SEM,
 B.MES MES2,
@@ -467,13 +469,12 @@ case when B.PER = @m1 then A.real_Dolares/@dm1
 when B.PER = @m2 then A.real_Dolares/@dmax2 
 when B.PER = @m3 then A.real_Dolares/@dmax3
 end prom_mes_soles,
-A.Plataforma as Plataforma,
+A.Plataforma as Plataforma
 --CASE WHEN A.CLIENTE_ACTUAL IN 
 --('D L F MEDINA RIVERA SA', 'DISTRIBUIDORA CUNZA S.A.', 'DISTRIBUIDORA NUGENT SA', 'COBERDEX SOCIEDAD ANONIMA CERRADA', 
 --'ATIPANA DEX S.A.C.', 'FUERZADEX S.A.C.', 'DISTRIBUCIONES EXCLUSIVAS DEL SUR', 'DISTRIBUCIONES EXCLUSIVAS DEL SUR S') THEN 'SÍ' ELSE 'NO' END NITRO,
-0 PONDERADA_TON,0 PONDERADA_SOLES
+
 FROM VENTAS_CONSOLIDADO  A 
 left JOIN BD_FECHAS  B ON A.DIA = B.DIA) A WHERE A.ANIO IS NOT NULL ;
 
---select *
---FROM TMP_SELL_OUT_21
+--select *FROM TMP_SELL_OUT_21
