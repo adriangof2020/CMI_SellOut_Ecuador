@@ -1,30 +1,24 @@
 USE CmiSellOutEcuador;
 
-
 DECLARE @dia DATE;
 DECLARE @d1 AS VARCHAR(20);
 
-SELECT @dia= DATEADD(DAY,-3,SYSDATETIME());
+SELECT @dia= DATEADD(DAY,-4,SYSDATETIME());
+-- poner el último día de ventas
 SELECT @d1= TRY_CONVERT(VARCHAR(20), TRY_CONVERT(DATE, @dia,103),103);
--- cambiar el nuemro de acuerdo a la fecha
+
 PRINT @dia;
 PRINT 'd1 '+ @d1;
-
 
 DECLARE @f AS DATE;
 DECLARE @d2 AS VARCHAR(20);
 DECLARE @d3 AS VARCHAR(20); 
 
 SELECT @f= CASE WHEN TRY_CONVERT(VARCHAR(20), TRY_CONVERT(DATE, @dia,103),103)= TRY_CONVERT(VARCHAR(10),TRY_CONVERT(DATE,EOMONTH(@dia),103),103)
---CUANDO EL ULTIMO DIA DE VENTAS SEA IGUAL AL ULTIMO DIA DEL MES(SI EL ULTIMO DIA DEL MES ES MAYOR QUE EL ULTIMO DIA DEL MES ANTERIOR
---SEGUIRA MANDANDO AL ULTIMO DIA DEL MES ANTERIOR, SI EL ULTIMO DIA DEL MES ES MENOR AL ULTIMO DIA DEL MES ANTERIOR , ENTONCES ME MANDARA DIRECTAMENTE
---AL ULTIMO DIA DEL MES ANTERIOR, SI CAE 28FEB, YA NO PASARA AL 28ENE SINO DIRECTAMENTE AL 31ENE
 THEN TRY_CONVERT(DATE,EOMONTH(DATEADD(MONTH,-1,(@dia))),103) ELSE TRY_CONVERT(DATE, DATEADD(MONTH,-1,TRY_CONVERT(DATE, @d1, 103)),103) END;
 SELECT @d2 = TRY_CONVERT(VARCHAR(10), @f, 103);
 SELECT @d3 = TRY_CONVERT(VARCHAR(10), TRY_CONVERT(DATE,DATEADD(YEAR,-1,@dia),103),103); 
---SELECT DATEADD(MONTH,-1,GETDATE()-16) si GETDATE =28FEB ME MANDARA AL 28ENE  POR ESO EOMONTH EN LA FORMULA, SI QUIERES RETOCEDER DE UN MES 
---MAYOR TE MANDARA AL ULTIMO DIA DEL MES MENOR, SI QUIERES RETROCEDER DE UN MES MENOR TE MANDARA AL MISMO DIA EN EL MES ANTERIOR Y NO AL ULTIMO
---DIA DEL MES PARA ESO DEBES PONER EOMONTH
+
 PRINT 'd2  '+ @d2;
 PRINT 'd3  '+@d3;
 
@@ -36,9 +30,9 @@ DECLARE @M3 AS VARCHAR(20);
  SELECT @M2= PER FROM BD_FECHAS WHERE TRY_CONVERT(VARCHAR(10),TRY_CONVERT(DATE,DIA,103),103)  = @d2;
  SELECT @M3= PER FROM BD_FECHAS WHERE TRY_CONVERT(VARCHAR(10),TRY_CONVERT(DATE,DIA,103),103)  = @d3;
 
- PRINT @M1
- PRINT @M2
- PRINT @M3
+ PRINT @M1;
+ PRINT @M2;
+ PRINT @M3;
 
 DECLARE @dm1 AS INTEGER; 
 DECLARE @dm2 AS INTEGER;
@@ -50,9 +44,10 @@ SELECT @dm2 = DIA_UTIL  FROM BD_FECHAS
 WHERE TRY_CONVERT(DATETIME, dia,103) = TRY_CONVERT(DATETIME,@d2,103);
 SELECT @dm3 = DIA_UTIL  FROM BD_FECHAS
 WHERE TRY_CONVERT(DATETIME, dia,103) = TRY_CONVERT(DATETIME,@d3,103);
-PRINT 'dm1 ' + TRY_CONVERT(VARCHAR(10),@dm1)
-PRINT 'dm2 ' +  TRY_CONVERT(VARCHAR(10),@dm2)
-PRINT 'dm3 ' +  TRY_CONVERT(VARCHAR(10),@dm3)
+
+PRINT 'dm1 ' + TRY_CONVERT(VARCHAR(10),@dm1);
+PRINT 'dm2 ' +  TRY_CONVERT(VARCHAR(10),@dm2);
+PRINT 'dm3 ' +  TRY_CONVERT(VARCHAR(10),@dm3);
 
 DECLARE @DMAX AS INTEGER;
 DECLARE @DMAX2 AS INTEGER;
@@ -107,22 +102,21 @@ WHERE TRY_CONVERT(DATETIME, dia,103) <= TRY_CONVERT(DATETIME,@d3,103) AND PER= @
 SELECT @ds12 = MAX(dia_SEM_util)   FROM BD_FECHAS
 WHERE TRY_CONVERT(DATETIME, dia,103) <= TRY_CONVERT(DATETIME,@d3,103) AND PER= @M3 AND SEM LIKE '%22 AL 31%';
 
-print @ds1
-print @ds2
-print @ds3
-print @ds4
-print @ds5
-print @ds6
-PRINT @ds7
-PRINT @ds8
-PRINT @ds9
-PRINT @ds10
-print @ds11
-print @ds12
+print @ds1;
+print @ds2;
+print @ds3;
+print @ds4;
+print @ds5;
+print @ds6;
+PRINT @ds7;
+PRINT @ds8;
+PRINT @ds9;
+PRINT @ds10;
+print @ds11;
+print @ds12;
 
-
-TRUNCATE TABLE MAESTRO_ALICORP
-
+TRUNCATE TABLE MAESTRO_ALICORP;
+--La llave es el CodAlicorp
 BULK INSERT MAESTRO_ALICORP
 FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\MATERIALES_ALICORP_2.csv'
 WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
@@ -138,7 +132,7 @@ UPDATE TABLA_MATERIALES SET Marca = TRIM(Marca);
 UPDATE TABLA_MATERIALES SET Plataforma = TRIM(Plataforma);
 
 TRUNCATE TABLE TABLA_MATERIALES;
-
+--En esta base la llave es CodLaFabril&Descripcion de la Fabril
 BULK INSERT TABLA_MATERIALES
 FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\MATERIALES_ALICORP_1.csv'
 WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
@@ -154,7 +148,6 @@ UPDATE TABLA_MATERIALES SET Familia = TRIM(Familia);
 UPDATE TABLA_MATERIALES SET CodMarca = TRIM(CodMarca);
 UPDATE TABLA_MATERIALES SET Marca = TRIM(Marca);
 UPDATE TABLA_MATERIALES SET Plataforma = TRIM(Plataforma);
-
 
 TRUNCATE TABLE PLAN_LA_FABRIL;
 
@@ -173,8 +166,6 @@ SET OficinaVentas = CASE OficinaVentas
 	WHEN 'EC - Ibarra' THEN '701 EC - Quito'
 	ELSE OficinaVentas END;
 
-
-
 TRUNCATE TABLE BASE_INICIAL_VENTAS;
 
 BULK INSERT BASE_INICIAL_VENTAS
@@ -191,23 +182,18 @@ UPDATE BASE_INICIAL_VENTAS
 SET CodAlicorp = CASE CodArticulo
 	WHEN '8005777' THEN '8312006'
 	WHEN '8005653' THEN '3300123'
-	ELSE CodAlicorp	END
+	ELSE CodAlicorp	END;
 
-	-- SINO PONGO ELSE CodAlicorp donde no encuentre que se cumpla la condicion, lo actualiza con null
 UPDATE BASE_INICIAL_VENTAS
 SET CodAlicorp = CASE DesArticulo
 	WHEN 'NUTREG BOLSA SURTIDA 200G 20BO'	THEN	'4335049'
 	WHEN 'NUTREG BOLSA SURTIDA 400G 12BO'	THEN	'4335048'
-	ELSE CodAlicorp END
+	ELSE CodAlicorp END;
 
 UPDATE BASE_INICIAL_VENTAS
 SET	CodArticulo = '8005796',
 	DesArticulo = 'ALACENA MAYONESA EXP 90CC 24DPK'
-WHERE CodArticulo = '8005634' AND DesArticulo = 'ALACENA MAYONESA 90CC 24DPK'
-
-	
-				
-				
+WHERE CodArticulo = '8005634' AND DesArticulo = 'ALACENA MAYONESA 90CC 24DPK';				
 
 TRUNCATE TABLE NOTAS_CREDITO;
 
@@ -219,51 +205,29 @@ UPDATE A SET CodArticulo = TRIM(CodArticulo) FROM NOTAS_CREDITO A;
 UPDATE A SET Agencia = TRIM(Agencia) FROM NOTAS_CREDITO A;
 UPDATE A SET DesArticulo = TRIM(DesArticulo) FROM NOTAS_CREDITO A;
 
-
-
-
 UPDATE NOTAS_CREDITO
 SET	CodArticulo = '8005796',
 	DesArticulo = 'ALACENA MAYONESA EXP 90CC 24DPK'
-WHERE CodArticulo = '8005634' AND DesArticulo = 'ALACENA MAYONESA 90CC 24DPK'
-
-
-
---UPDATE A SET MaterialLaFabril = TRIM(MaterialLaFabril) FROM TABLA_MATERIALES A; EN CASO DE QUE ME PASEN MAS TENER EN CUENTA
+WHERE CodArticulo = '8005634' AND DesArticulo = 'ALACENA MAYONESA 90CC 24DPK';
 
 UPDATE A
 SET A.CodAlicorp = B.CodAlicorp
---SELECT *
 FROM NOTAS_CREDITO A
 	LEFT JOIN TABLA_MATERIALES B ON A.CodArticulo = B.CodFabril AND A.DesArticulo = B.MaterialLaFabril;  
-	
+--Asignamos código Alicorp a las notas de crédito
+--SELECT * FROM NOTAS_CREDITO WHERE CodAlicorp IS NULL;
 
 UPDATE NOTAS_CREDITO
 SET CodAlicorp = CASE CodArticulo
 	WHEN '8005777' THEN '8312006'
 	WHEN '8005653' THEN '3300123'
-	ELSE CodAlicorp	END
+	ELSE CodAlicorp	END;
 
-	-- SINO PONGO ELSE CodAlicorp donde no encuentre que se cumpla la condicion, lo actualiza con null
 UPDATE NOTAS_CREDITO
 SET CodAlicorp = CASE DesArticulo
 	WHEN 'NUTREG BOLSA SURTIDA 200G 20BO'	THEN	'4335049'
 	WHEN 'NUTREG BOLSA SURTIDA 400G 12BO'	THEN	'4335048'
-	ELSE CodAlicorp END
---select DISTINCT CodArticulo, DesArticulo FROM NOTAS_CREDITO WHERE CodAlicorp IS NULL
-
-
---UPDATE A
--- SET A.Clase_id = B.Clase_id
--- FROM TRASLADO A 
---	LEFT INNER JOIN Negocio$ B ON A.Negocio_id = B.Negocio_id 
-
---EN MI CASO SE SUPONE QUE EL MAESTRO TIENE TODOS LOS CODIGOS, SI HAY LLAVES REPETIDAS AGARRA LA PRIMERA, pues si HACES UN JOIN CON UNA
--- TABLA QUE TIENE LA LLAVE REPETIDA ESE TABLA PRODUCTO DEL JOIN TENDRA UN ROW MAS POR CADA LLAVE REPETIDA, Y CUANDO HACES EL UPDATE PASARA
---TOMARA PARA ACTUALIZAR EL PRIMER VALOR , QUE TENGA EL CAMPO CON EL QUE VOY A ACTUALIZAR , QUE TENGA ESA LLAVE
---SI ESA LLAVE EN SU ROW REPETIDO QUE ESTA EN LA TABLA DEL JOIN TIENE OTRO VALOR NO LO CONSIDERARA PARA EL UPDATE 
---SI HAGO UN LEFT JOIN ENTONCES SI NO ENCUENTRA TODOS LOS ROW, OBVIO TENDRA NULL EN LOS ROS DONDE NO HAYA MACTH,  Y ESE VALOR
---NULL AL ACTUALIZAR SE PONDRA EN LA ACTUALIZACION, PERO SI USO INNER JOIN AL NO ENCONTRAR ESE ROW NO ACTUALIZA NADA
+	ELSE CodAlicorp END;
 
 TRUNCATE TABLE MAESTRO_AGENCIAS;
  
@@ -274,20 +238,17 @@ WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
 UPDATE MAESTRO_AGENCIAS SET Agencia = TRIM(Agencia);
 UPDATE MAESTRO_AGENCIAS SET NomOficina = TRIM(NomOficina);
 
+
 IF OBJECT_ID(N'tempdb..#PLAN') IS NOT NULL DROP TABLE #PLAN;
 
 SELECT LEFT(OficinaVentas,3) CodOficina, RIGHT(OficinaVentas, LEN(OficinaVentas)-4) NomOficina , CodAlicorp, Kilos, Importe
 INTO #PLAN
 FROM PLAN_LA_FABRIL
-
-
---SELECT * FROM #PLAN  A LEFT JOIN [dbo].[TABLA_MATERIALES] B ON A.CodAlicorp = B.CodAlicorp ORDER BY B.CodFabril
---SE SUPONE QUE NO DEBEN HABER CODIGOS ALICORP EN EL PLAN QUE NO ESTEN EN LA TABLA MATERIALES
+--Creo tabla temporal para homologar campos con la tablas NOTAS_CREDITO y BASE_INICIAL_VENTAS
+--SELECT * FROM #PLAN  A LEFT JOIN [dbo].[TABLA_MATERIALES] B ON A.CodAlicorp = B.CodAlicorp WHERE A.CodAlicorp IS  NULL
 
 IF OBJECT_ID(N'tempdb..#VENTAS_Y_NOTAS_CREDITO') IS NOT NULL DROP TABLE #VENTAS_Y_NOTAS_CREDITO;
-
---SELECT * FROM #VENTAS_Y_NOTAS_CREDITO
-
+--Creo tabla temporal para unir las ventas, las notas de crédito y el plan con los campos que se requiere
 SELECT A.FFactura Fecha, A.Agencia Agencia, A.CodArticulo CodLaFabril, A.CodAlicorp CodAlicorp, 0 Plan_Ton, A.Kilos VentaKil, 0 Plan_Dol, A.Importe VentaDolares, A.GrupoProducto TipoProducto
 INTO #VENTAS_Y_NOTAS_CREDITO 
 FROM BASE_INICIAL_VENTAS A;
@@ -296,23 +257,17 @@ INSERT INTO #VENTAS_Y_NOTAS_CREDITO
 SELECT A.FNC Fecha, A.Agencia Agencia, A.CodArticulo CodLaFabril, A.CodAlicorp CodAlicorp, 0 Plan_Ton, 0 VentaKil, 0 Plan_Dol,  A.Importe VentaDolares, 'MARCAS TERCEROS' TipoProducto
 FROM NOTAS_CREDITO  A;
 
-ALTER TABLE #VENTAS_Y_NOTAS_CREDITO ALTER COLUMN Plan_Ton FLOAT
-ALTER TABLE #VENTAS_Y_NOTAS_CREDITO ALTER COLUMN Plan_Dol FLOAT
+ALTER TABLE #VENTAS_Y_NOTAS_CREDITO ALTER COLUMN Plan_Ton FLOAT;
+ALTER TABLE #VENTAS_Y_NOTAS_CREDITO ALTER COLUMN Plan_Dol FLOAT;
 
-/*SELECT *
-FROM #VENTAS_Y_NOTAS_CREDITO
-WHERE AGENCIA ='DCM';*/
-
-
---SELECT * FROM #VENTAS_Y_NOTAS_CREDITO
---SELECT * FROM #PLAN 
  INSERT INTO #VENTAS_Y_NOTAS_CREDITO
  SELECT @dia Fecha, AG.Agencia Agencia,'NC' CodLaFabril, P.CodAlicorp CodAlicorp, P.Kilos Plan_Ton, 0 VentaKil, P.Importe Plan_Dol , 0 VentaDolares, 'MARCAS TERCEROS' TipoProducto
  FROM #PLAN P
 	LEFT JOIN MAESTRO_AGENCIAS AG ON P.CodOficina = AG.CodOficina
+--Le asigno una fecha al plan, puede ser cualquiere dentro del rango de días de venta transcurridos
+--El campo CodLaFabril a este punto ya no es necesario por eso le asignamos un valor NC
 	
 -- UPDATE A LAS AGENCIAS QUE NO SE ENCUENTRAN EN EL MAESTRO AGENCIAS
-
 UPDATE #VENTAS_Y_NOTAS_CREDITO  
 SET Agencia = 'AGG'
 WHERE Agencia = 'DCG'
@@ -325,9 +280,7 @@ UPDATE #VENTAS_Y_NOTAS_CREDITO
 SET Agencia = 'AGM'
 WHERE Agencia = 'PTA'
 
-
-
--------- UPDATE AGENCIAS ( IBAARA VAN HACIA QUITO Y AGENCIA MACHALA A GUAYAQUIL)
+-- UPDATE AGENCIAS ( IBAARA VAN HACIA QUITO Y AGENCIA MACHALA A GUAYAQUIL)
 
 UPDATE #VENTAS_Y_NOTAS_CREDITO 
 SET Agencia = 'AGT'
@@ -339,13 +292,12 @@ SET Agencia = 'AGG'
 WHERE Agencia = 'AGMCH'
 
 IF OBJECT_ID(N'tempdb..#VENTAS_Y_NOTAS') IS NOT NULL DROP TABLE #VENTAS_Y_NOTAS;
-
+--Creo tabla temporal para darle formato varchar a la fecha
 SELECT CONVERT(VARCHAR(20), V.Fecha,103) Fecha, V.Agencia, V.CodLaFabril, V.CodAlicorp, V.Plan_Ton, V.Ventakil, V.Plan_Dol, V.VentaDolares, V.TipoProducto
 INTO #VENTAS_Y_NOTAS
 FROM #VENTAS_Y_NOTAS_CREDITO V
-----SELECT * FROM #VENTAS_Y_NOTAS WHERE CodAlicorp = ''
-
-
+--SELECT * FROM #VENTAS_Y_NOTAS WHERE CodAlicorp = '';
+--SELECT * FROM #VENTAS_Y_NOTAS WHERE CodAlicorp IS NULL;
 
 UPDATE #VENTAS_Y_NOTAS 
 SET Fecha = RIGHT(Fecha,9)
@@ -354,9 +306,11 @@ WHERE Fecha LIKE '0_/%';
 UPDATE #VENTAS_Y_NOTAS
 SET Agencia = 'NC'
 WHERE Agencia = ''
+--Debido a que en las notas de crédito algunos rows salen vacios la agencia
 	 
 IF OBJECT_ID('VENTAS_CONSOLIDADO') IS NOT NULL DROP TABLE VENTAS_CONSOLIDADO;
-
+--Creo tabla donde consolido la información de la tabla temporal #VENTAS_Y_NOTAS agregando los campos que necesito
+--En esta tabla se va a insertar la información de todas las distribuidoras
 SELECT F.DES_MES Mes, A.Fecha Dia,
 	   M.CodCategoria CodCategoria, M.Categoria Categoria, M.CodFamilia CodFamilia, M.Familia Familia, M.CodMarca CodMarca, M.Marca Marca,
 	   AG.ZonaV2 Grupo_Condiciones, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
@@ -372,44 +326,25 @@ GROUP BY F.DES_MES, A.Fecha,
 	   M.CodCategoria, M.Categoria, M.CodFamilia, M.Familia, M.CodMarca, M.Marca,
 	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
 	   IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto),
-	   M.Plataforma
---SELECT   sum(real_ton) SUMA FROM VENTAS_CONSOLIDADO WHERE FAMILIA = 'Don Vittorio Clasico'
---SELECT SUM(VentaKil) FROM #VENTAS_Y_NOTAS A INNER JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp WHERE M.FAMILIA = 'Don Vittorio Clasico'
-
--- Cuando quiero unir cada row con todos los row de otra tabla puedo usar esto LEFT JOIN MAESTRO_AGENCIAS AG ON AG.Agencia IS NOT NULL
---o ese tambien LEFT JOIN MAESTRO_AGENCIAS AG ON A.Agencia=A.Agencia donde A es la tabla izquierda
-	
----SELECT DISTINCT CodAlicorp FROM VENTAS_CONSOLIDADO where CodCategoria IS NULL; le agregas ese campo antes
---SELECT  * FROM VENTAS_CONSOLIDADO where  Plan_ton is null;
---SELECT  * FROM VENTAS_CONSOLIDADO where CodOficina IS NULL 
---SELECT  * FROM VENTAS_CONSOLIDADO where CodAlicorp IS NULL le agregas ese campo antes
---SELECT  * FROM VENTAS_CONSOLIDADO where real_ton IS NULL
---SELECT  * FROM VENTAS_CONSOLIDADO where MES IS NULL
-
--- CONVERT O TRY_CPONVERT DESPUES DE REALIZAR LA CONVERSION NO MW
---MANTIENE EL TIPO DE DATO AL QUE LO CONVERTI SI ES EN LA MISMA TABLA
--- PERO SI  ES EN OTRA TABLA NUEVA COMO ES EN ESTE CASO SI LO HACE
-
---VER SI ES NECESARIO APLICAR EL UPDATE A LA FECHA POR LO DEL WHERE 0_/%
+	   M.Plataforma;
 
 IF OBJECT_ID('DBO.TMP_SELL_OUT_21') IS NOT NULL DROP TABLE DBO.TMP_SELL_OUT_21;
-
-select *
+--Creo tabla final donde se van a elaborar todos los indicadores
+SELECT *
 INTO TMP_SELL_OUT_21 FROM 
 (SELECT 
 A.Mes "MES",
 'Sem' "Semana",
 A.DIA DIA,
 B.DIA_2 dia_2,
-/**a.COD_CATEGORIA+' '+**/CONCAT(A.CodCategoria,' ', A.Categoria) "Categoria",
+CONCAT(A.CodCategoria,' ', A.Categoria) "Categoria",
 A.Negocio Negocio,
-/**COD_FAMILIA+' '+**/CONCAT(A.CodFamilia,' ',A.Familia) Familia,
+CONCAT(A.CodFamilia,' ',A.Familia) Familia,
 CONCAT(A.CodMarca,' ',A.Marca) Marca,
-/**COD_REGION_GEO+' '+**/A.Grupo_Condiciones "Grupo_Condiciones",
-/**COD_REGION + ' '+**/CONCAT(A.CodOficina,' ',A.NomOficina) "Oficina_Ventas",
-/**COD_ZONA+ ' '+**/CONCAT(A.CodTerritorio,' ',A.NomTerritorio) "Grupo_Vendedores",
-/**COD_OFICINA+ ' '+**/CONCAT(A.CodZona,' ',A.NomZona) "Zona_Clientes",
----restructurado ¨??
+A.Grupo_Condiciones "Grupo_Condiciones",
+CONCAT(A.CodOficina,' ',A.NomOficina) "Oficina_Ventas",
+CONCAT(A.CodTerritorio,' ',A.NomTerritorio) "Grupo_Vendedores",
+CONCAT(A.CodZona,' ',A.NomZona) "Zona_Clientes",
 A.DEX "DEX",
 A.Plan_Ton plan_ton,
 A.real_ton real_ton,
@@ -417,64 +352,64 @@ A.Plan_Dol plan_soles,
 A.real_Dolares real_soles,
 A.real_ton/@dm1 * @DMAX	 PROY_LIN_TON,
 A.real_Dolares/@dm1 * @DMAX	PROY_LIN_SOLES,
---case when @DMAX>=@dm1 then isnull(real_ton,0)/@dm1 * @DMAX	end PROY_LIN_TON,
---case when @DMAX>=@dm1 then isnull(REAL_SOLES,0)/@dm1 * @DMAX	end	PROY_LIN_SOLES,
 0 PROY_TON,
 0 PROY_SOLES,
 B.ANIO ANIO,
 B.SEM SEM,
 B.MES MES2,
-CASE WHEN B.PER=@M1 AND try_convert(DATE, A.Dia, 103) <=try_convert(date,@d1,103) THEN  A.real_ton/@dm1 
-WHEN B.PER=@M2  and try_convert(date, a.Dia,103) <=try_convert(date,@d2,103) THEN  A.real_ton/@dm2 
-WHEN B.PER=@M3  and try_convert(date, a.Dia,103) <=try_convert(date,@d3,103) THEN  A.real_ton/@dm3 END  PROM_AV,  --- PROMEDIO AL AVANCE TONELADAS
-CASE WHEN B.PER=@M1 AND B.SEM LIKE '%1 AL 7%' and try_convert(date, a.dia,103) <=try_convert(date,@d1,103) THEN  iif(@ds1=0,null,A.real_ton/@DS1 )
-	WHEN B.PER=@M1 AND B.SEM LIKE '%8 AL 14%' and try_convert(date, a.dia,103) <=try_convert(date,@d1,103) THEN  iif(@ds2=0,null,A.real_ton/@DS2 )
-	WHEN B.PER=@M1 AND B.SEM LIKE '%15 AL 21%' and try_convert(date, a.dia,103) <=try_convert(date,@d1,103) THEN  iif(@ds3=0,null,A.real_ton/@DS3 )
-	WHEN B.PER=@M1 AND B.SEM LIKE '%22 AL 31%' and try_convert(date, a.dia,103) <=try_convert(date,@d1,103) THEN  iif(@ds4=0,null,A.real_ton/@DS4 )
-	 WHEN B.PER=@M2 AND B.SEM LIKE '%1 AL 7%' and try_convert(date, a.dia,103) <=try_convert(date,@d2,103) THEN iif(@ds5=0,null,A.real_ton/@DS5 )
-	WHEN B.PER=@M2 AND B.SEM LIKE '%8 AL 14%' and try_convert(date, a.dia,103) <=try_convert(date,@d2,103) THEN  iif(@ds6=0,null,A.real_ton/@DS6 )
-	WHEN B.PER=@M2 AND B.SEM LIKE '%15 AL 21%' and try_convert(date, a.dia,103) <=try_convert(date,@d2,103) THEN iif(@ds7=0,null,A.real_ton/@DS7 )
-	WHEN B.PER=@M2 AND B.SEM LIKE '%22 AL 31%' and try_convert(date, a.dia,103) <=try_convert(date,@d2,103) THEN  iif(@ds8=0,null,A.real_ton/@DS8 )
-	 WHEN B.PER=@M3 AND B.SEM LIKE '%1 AL 7%' and try_convert(date, a.dia,103) <=try_convert(date,@d3,103) THEN  iif(@ds9=0,null,A.real_ton/@DS9 )
-	WHEN B.PER=@M3 AND B.SEM LIKE '%8 AL 14%' and try_convert(date, a.dia,103) <=try_convert(date,@d3,103) THEN  iif(@ds10=0,null,A.real_ton/@DS10 )
-	WHEN B.PER=@M3 AND B.SEM LIKE '%15 AL 21%' and try_convert(date, a.dia,103) <=try_convert(date,@d3,103) THEN  iif(@ds11=0,null,A.real_ton/@DS11 )
-	WHEN B.PER=@M3 AND B.SEM LIKE '%22 AL 31%' and try_convert(date, a.dia,103) <=try_convert(date,@d3,103) THEN  iif(@ds12=0,null,A.real_ton/@DS12 ) END  PROM_SEM,-- PROMEDIO SEMANAL TONELADAS
-
-CASE WHEN  @DMAX=@DM1 THEN A.Plan_Ton - A.real_ton ELSE (A.Plan_Ton - A.real_ton)/(@DMAX-@dm1) END OBJ_DIA, --- OBJETIVO DIARIO TONELADAS
-CASE WHEN  @DMAX=@DM1 THEN (A.Plan_Ton - A.real_ton) - A.real_ton/@DM1 ELSE (A.Plan_Ton - A.real_ton)/(@DMAX-@dm1) - A.real_ton/@DM1 END INCREMENTO_TON,
-
-CASE WHEN B.PER=@M1  and try_convert(date, a.dia,103) <=try_convert(date,@d1,103)  THEN  A.real_Dolares/@dm1 
-WHEN B.PER=@M2  and try_convert(date, a.dia,103) <=try_convert(date,@d2,103)  THEN  A.real_Dolares/@dm2 
-WHEN B.PER=@M3  and try_convert(date, a.dia,103) <=try_convert(date,@d3,103)  THEN  A.real_Dolares/@dm3 END  PROM_AV_SOLES,  --- PROMEDIO AL AVANCE TONELADAS
-CASE WHEN B.PER=@M1 AND B.SEM LIKE '%1 AL 7%' and try_convert(date, a.dia,103) <=try_convert(date,@d1,103) THEN iif(@ds1=0,null,A.real_Dolares/@DS1)
-	 WHEN B.PER=@M1 AND B.SEM LIKE '%8 AL 14%' and try_convert(date, a.dia,103) <=try_convert(date,@d1,103)THEN  iif(@ds2=0,null,A.real_Dolares/@DS2)
-	 WHEN B.PER=@M1 AND B.SEM LIKE '%15 AL 21%' and try_convert(date, a.dia,103) <=try_convert(date,@d1,103) THEN  iif(@ds3=0,null,A.real_Dolares/@DS3)
-	 WHEN B.PER=@M1 AND B.SEM LIKE '%22 AL 31%' and try_convert(date, a.dia,103) <=try_convert(date,@d1,103) THEN  iif(@ds4=0,null,A.real_Dolares/@DS4)
-	 WHEN B.PER=@M2 AND B.SEM LIKE '%1 AL 7%' and try_convert(date, a.dia,103) <=try_convert(date,@d2,103) THEN  iif(@ds5=0,null,A.real_Dolares/@DS5)
-	 WHEN B.PER=@M2 AND B.SEM LIKE '%8 AL 14%' and try_convert(date, a.dia,103) <=try_convert(date,@d2,103) THEN  iif(@ds6=0,null,A.real_Dolares/@DS6)
-	 WHEN B.PER=@M2 AND B.SEM LIKE '%15 AL 21%' and try_convert(date, a.dia,103) <=try_convert(date,@d2,103) THEN  iif(@ds7=0,null,A.real_Dolares/@DS7)
-	 WHEN B.PER=@M2 AND B.SEM LIKE '%22 AL 31%' and try_convert(date, a.dia,103) <=try_convert(date,@d2,103) THEN  iif(@ds8=0,null,A.real_Dolares/@DS8)
-	 WHEN B.PER=@M3 AND B.SEM LIKE '%1 AL 7%' and try_convert(date, a.dia,103) <=try_convert(date,@d3,103) THEN  iif(@ds9=0,null,A.real_Dolares/@DS9)
-	 WHEN B.PER=@M3 AND B.SEM LIKE '%8 AL 14%' and try_convert(date, a.dia,103) <=try_convert(date,@d3,103) THEN  iif(@ds10=0,null,A.real_Dolares/@DS10)
-	 WHEN B.PER=@M3 AND B.SEM LIKE '%15 AL 21%' and try_convert(date, a.dia,103) <=try_convert(date,@d3,103) THEN  iif(@ds11=0,null,A.real_Dolares/@DS11)
-	 WHEN B.PER=@M3 AND B.SEM LIKE '%22 AL 31%' and try_convert(date, a.dia,103) <=try_convert(date,@d3,103) THEN  iif(@ds12=0,null,A.real_Dolares/@DS12) END  PROM_SEM_SOLES,-- PROMEDIO SEMANAL TONELADAS
-
-CASE WHEN  @DMAX=@DM1 THEN A.Plan_Dol - A.real_Dolares ELSE (A.Plan_Dol - A.real_Dolares)/(@DMAX-@dm1) END OBJ_DIA_SOLES, --- OBJETIVO DIARIO SOLES
-CASE WHEN  @DMAX=@DM1 THEN (A.Plan_Dol - A.real_Dolares) - A.real_Dolares/@DM1 ELSE (A.Plan_Dol- A.real_Dolares)/(@DMAX-@dm1) - A.real_Dolares/@DM1 END INCREMENTO_SOLES,
-case when B.PER = @m1 then A.real_ton/@dm1 
-when B.PER = @m2 then A.real_ton/@dmax2 
-when B.PER = @m3 then A.real_ton/@dmax3
-end prom_mes,
-case when B.PER = @m1 then A.real_Dolares/@dm1 
-when B.PER = @m2 then A.real_Dolares/@dmax2 
-when B.PER = @m3 then A.real_Dolares/@dmax3
-end prom_mes_soles,
+CASE WHEN B.PER=@M1 AND TRY_CONVERT(DATE, A.Dia, 103) <=TRY_CONVERT(DATE,@d1,103) THEN  A.real_ton/@dm1 
+WHEN B.PER=@M2  AND TRY_CONVERT(date, A.Dia,103) <=TRY_CONVERT(DATE,@d2,103) THEN  A.real_ton/@dm2 
+WHEN B.PER=@M3  AND TRY_CONVERT(date, A.Dia,103) <=TRY_CONVERT(DATE,@d3,103) THEN  A.real_ton/@dm3 END  PROM_AV,
+-- PROMEDIO AL AVANCE TONELADAS
+CASE WHEN B.PER=@M1 AND B.SEM LIKE '%1 AL 7%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d1,103) THEN  IIF(@ds1=0,null,A.real_ton/@ds1 )
+WHEN B.PER=@M1 AND B.SEM LIKE '%8 AL 14%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d1,103) THEN  IIF(@ds2=0,null,A.real_ton/@ds2 )
+WHEN B.PER=@M1 AND B.SEM LIKE '%15 AL 21%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d1,103) THEN  IIF(@ds3=0,null,A.real_ton/@ds3 )
+WHEN B.PER=@M1 AND B.SEM LIKE '%22 AL 31%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d1,103) THEN  IIF(@ds4=0,null,A.real_ton/@ds4 )
+WHEN B.PER=@M2 AND B.SEM LIKE '%1 AL 7%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d2,103) THEN IIF(@ds5=0,null,A.real_ton/@ds5)
+WHEN B.PER=@M2 AND B.SEM LIKE '%8 AL 14%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d2,103) THEN  IIF(@ds6=0,null,A.real_ton/@ds6 )
+WHEN B.PER=@M2 AND B.SEM LIKE '%15 AL 21%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d2,103) THEN IIF(@ds7=0,null,A.real_ton/@ds7 )
+WHEN B.PER=@M2 AND B.SEM LIKE '%22 AL 31%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d2,103) THEN  IIF(@ds8=0,null,A.real_ton/@ds8 )
+WHEN B.PER=@M3 AND B.SEM LIKE '%1 AL 7%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d3,103) THEN  IIF(@ds9=0,null,A.real_ton/@ds9)
+WHEN B.PER=@M3 AND B.SEM LIKE '%8 AL 14%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d3,103) THEN  IIF(@ds10=0,null,A.real_ton/@ds10 )
+WHEN B.PER=@M3 AND B.SEM LIKE '%15 AL 21%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d3,103) THEN  IIF(@ds11=0,null,A.real_ton/@ds11 )
+WHEN B.PER=@M3 AND B.SEM LIKE '%22 AL 31%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d3,103) THEN  IIF(@ds12=0,null,A.real_ton/@ds12 ) END  PROM_SEM,
+-- PROMEDIO SEMANAL TONELADAS
+CASE WHEN  @DMAX=@dm1 THEN A.Plan_Ton - A.real_ton ELSE (A.Plan_Ton - A.real_ton)/(@DMAX-@dm1) END OBJ_DIA,
+-- OBJETIVO DIARIO TONELADAS
+CASE WHEN  @DMAX=@dm1 THEN (A.Plan_Ton - A.real_ton) - A.real_ton/@dm1 ELSE (A.Plan_Ton - A.real_ton)/(@DMAX-@dm1) - A.real_ton/@dm1 END INCREMENTO_TON,
+--INCREMENTO_TON
+CASE WHEN B.PER=@M1  AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d1,103)  THEN  A.real_Dolares/@dm1 
+WHEN B.PER=@M2  AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d2,103)  THEN  A.real_Dolares/@dm2 
+WHEN B.PER=@M3  AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d3,103)  THEN  A.real_Dolares/@dm3 END  PROM_AV_SOLES,
+-- PROMEDIO AL AVANCE DOLARES
+CASE WHEN B.PER=@M1 AND B.SEM LIKE '%1 AL 7%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d1,103) THEN IIF(@ds1=0,null,A.real_Dolares/@ds1)
+WHEN B.PER=@M1 AND B.SEM LIKE '%8 AL 14%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d1,103)THEN  IIF(@ds2=0,null,A.real_Dolares/@ds2)
+WHEN B.PER=@M1 AND B.SEM LIKE '%15 AL 21%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d1,103) THEN  IIF(@ds3=0,null,A.real_Dolares/@ds3)
+WHEN B.PER=@M1 AND B.SEM LIKE '%22 AL 31%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d1,103) THEN  IIF(@ds4=0,null,A.real_Dolares/@ds4)
+WHEN B.PER=@M2 AND B.SEM LIKE '%1 AL 7%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d2,103) THEN  IIF(@ds5=0,null,A.real_Dolares/@ds5)
+WHEN B.PER=@M2 AND B.SEM LIKE '%8 AL 14%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d2,103) THEN  IIF(@ds6=0,null,A.real_Dolares/@ds6)
+WHEN B.PER=@M2 AND B.SEM LIKE '%15 AL 21%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d2,103) THEN  IIF(@ds7=0,null,A.real_Dolares/@ds7)
+WHEN B.PER=@M2 AND B.SEM LIKE '%22 AL 31%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d2,103) THEN  IIF(@ds8=0,null,A.real_Dolares/@ds8)
+WHEN B.PER=@M3 AND B.SEM LIKE '%1 AL 7%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d3,103) THEN  IIF(@ds9=0,null,A.real_Dolares/@ds9)
+WHEN B.PER=@M3 AND B.SEM LIKE '%8 AL 14%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d3,103) THEN  IIF(@ds10=0,null,A.real_Dolares/@ds10)
+WHEN B.PER=@M3 AND B.SEM LIKE '%15 AL 21%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d3,103) THEN  IIF(@ds11=0,null,A.real_Dolares/@ds11)
+WHEN B.PER=@M3 AND B.SEM LIKE '%22 AL 31%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d3,103) THEN  IIF(@ds12=0,null,A.real_Dolares/@ds12) END  PROM_SEM_SOLES,
+-- PROMEDIO SEMANAL DOLARES
+CASE WHEN  @DMAX=@dm1 THEN A.Plan_Dol - A.real_Dolares ELSE (A.Plan_Dol - A.real_Dolares)/(@DMAX-@dm1) END OBJ_DIA_SOLES,
+--- OBJETIVO DIARIO DOLARES
+CASE WHEN  @DMAX=@dm1 THEN (A.Plan_Dol - A.real_Dolares) - A.real_Dolares/@dm1 ELSE (A.Plan_Dol- A.real_Dolares)/(@DMAX-@dm1) - A.real_Dolares/@dm1 END INCREMENTO_SOLES,
+--INCREMENTO_DOLARES
+CASE WHEN B.PER = @M1 THEN A.real_ton/@dm1 
+WHEN B.PER = @M2 THEN A.real_ton/@DMAX2 
+WHEN B.PER = @M3 THEN A.real_ton/@DMAX3
+END prom_mes,
+--VENTA PROMEDIO MENSUAL TONELADAS
+CASE WHEN B.PER = @M1 THEN A.real_Dolares/@dm1 
+WHEN B.PER = @M2 THEN A.real_Dolares/@DMAX2 
+WHEN B.PER = @M3 THEN A.real_Dolares/@DMAX3
+END prom_mes_soles,
+--VENTA PROMEDIO MENSUAL DOLARES
 A.Plataforma as Plataforma
---CASE WHEN A.CLIENTE_ACTUAL IN 
---('D L F MEDINA RIVERA SA', 'DISTRIBUIDORA CUNZA S.A.', 'DISTRIBUIDORA NUGENT SA', 'COBERDEX SOCIEDAD ANONIMA CERRADA', 
---'ATIPANA DEX S.A.C.', 'FUERZADEX S.A.C.', 'DISTRIBUCIONES EXCLUSIVAS DEL SUR', 'DISTRIBUCIONES EXCLUSIVAS DEL SUR S') THEN 'SÍ' ELSE 'NO' END NITRO,
-
 FROM VENTAS_CONSOLIDADO  A 
 left JOIN BD_FECHAS  B ON A.DIA = B.DIA) A WHERE A.ANIO IS NOT NULL ;
 
---select *FROM TMP_SELL_OUT_21
