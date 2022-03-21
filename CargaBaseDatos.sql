@@ -3,7 +3,7 @@ USE CmiSellOutEcuador;
 DECLARE @dia DATE;
 DECLARE @d1 AS VARCHAR(20);
 
-SELECT @dia= DATEADD(DAY,-4,SYSDATETIME());
+SELECT @dia= DATEADD(DAY,-7,SYSDATETIME());
 -- poner el último día de ventas
 SELECT @d1= TRY_CONVERT(VARCHAR(20), TRY_CONVERT(DATE, @dia,103),103);
 
@@ -166,6 +166,16 @@ SET OficinaVentas = CASE OficinaVentas
 	WHEN 'EC - Ibarra' THEN '701 EC - Quito'
 	ELSE OficinaVentas END;
 
+UPDATE PLAN_LA_FABRIL
+SET CodAlicorp = CASE CodAlicorp
+	WHEN '8309000' THEN '8309119'
+	WHEN '8309001' THEN '8309120'
+	WHEN '8309002' THEN '8309121'
+	WHEN '8309003' THEN '8309122'
+	WHEN '8309007' THEN '8309126'
+	WHEN '8309009' THEN '8309128' ELSE CodAlicorp END;
+--Cambiamos los codigos antiguos por los nuevos codigos afo
+
 TRUNCATE TABLE BASE_INICIAL_VENTAS;
 
 BULK INSERT BASE_INICIAL_VENTAS
@@ -193,7 +203,17 @@ SET CodAlicorp = CASE DesArticulo
 UPDATE BASE_INICIAL_VENTAS
 SET	CodArticulo = '8005796',
 	DesArticulo = 'ALACENA MAYONESA EXP 90CC 24DPK'
-WHERE CodArticulo = '8005634' AND DesArticulo = 'ALACENA MAYONESA 90CC 24DPK';				
+WHERE CodArticulo = '8005634' AND DesArticulo = 'ALACENA MAYONESA 90CC 24DPK';	
+
+UPDATE BASE_INICIAL_VENTAS
+SET CodAlicorp = CASE CodAlicorp
+	WHEN '8309000' THEN '8309119'
+	WHEN '8309001' THEN '8309120'
+	WHEN '8309002' THEN '8309121'
+	WHEN '8309003' THEN '8309122'
+	WHEN '8309007' THEN '8309126'
+	WHEN '8309009' THEN '8309128' ELSE CodAlicorp END;
+--Cambiamos los codigos antiguos por los nuevos codigos afo
 
 TRUNCATE TABLE NOTAS_CREDITO;
 
@@ -348,12 +368,12 @@ CONCAT(A.CodZona,' ',A.NomZona) "Zona_Clientes",
 A.DEX "DEX",
 A.Plan_Ton plan_ton,
 A.real_ton real_ton,
-A.Plan_Dol plan_soles,
-A.real_Dolares real_soles,
+A.Plan_Dol plan_dol,
+A.real_Dolares real_dol,
 A.real_ton/@dm1 * @DMAX	 PROY_LIN_TON,
-A.real_Dolares/@dm1 * @DMAX	PROY_LIN_SOLES,
+A.real_Dolares/@dm1 * @DMAX	PROY_LIN_DOL,
 0 PROY_TON,
-0 PROY_SOLES,
+0 PROY_DOL,
 B.ANIO ANIO,
 B.SEM SEM,
 B.MES MES2,
@@ -380,7 +400,7 @@ CASE WHEN  @DMAX=@dm1 THEN (A.Plan_Ton - A.real_ton) - A.real_ton/@dm1 ELSE (A.P
 --INCREMENTO_TON
 CASE WHEN B.PER=@M1  AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d1,103)  THEN  A.real_Dolares/@dm1 
 WHEN B.PER=@M2  AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d2,103)  THEN  A.real_Dolares/@dm2 
-WHEN B.PER=@M3  AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d3,103)  THEN  A.real_Dolares/@dm3 END  PROM_AV_SOLES,
+WHEN B.PER=@M3  AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d3,103)  THEN  A.real_Dolares/@dm3 END  PROM_AV_DOL,
 -- PROMEDIO AL AVANCE DOLARES
 CASE WHEN B.PER=@M1 AND B.SEM LIKE '%1 AL 7%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d1,103) THEN IIF(@ds1=0,null,A.real_Dolares/@ds1)
 WHEN B.PER=@M1 AND B.SEM LIKE '%8 AL 14%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d1,103)THEN  IIF(@ds2=0,null,A.real_Dolares/@ds2)
@@ -393,11 +413,11 @@ WHEN B.PER=@M2 AND B.SEM LIKE '%22 AL 31%' AND TRY_CONVERT(DATE, A.Dia,103) <=TR
 WHEN B.PER=@M3 AND B.SEM LIKE '%1 AL 7%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d3,103) THEN  IIF(@ds9=0,null,A.real_Dolares/@ds9)
 WHEN B.PER=@M3 AND B.SEM LIKE '%8 AL 14%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d3,103) THEN  IIF(@ds10=0,null,A.real_Dolares/@ds10)
 WHEN B.PER=@M3 AND B.SEM LIKE '%15 AL 21%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d3,103) THEN  IIF(@ds11=0,null,A.real_Dolares/@ds11)
-WHEN B.PER=@M3 AND B.SEM LIKE '%22 AL 31%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d3,103) THEN  IIF(@ds12=0,null,A.real_Dolares/@ds12) END  PROM_SEM_SOLES,
+WHEN B.PER=@M3 AND B.SEM LIKE '%22 AL 31%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d3,103) THEN  IIF(@ds12=0,null,A.real_Dolares/@ds12) END  PROM_SEM_DOL,
 -- PROMEDIO SEMANAL DOLARES
-CASE WHEN  @DMAX=@dm1 THEN A.Plan_Dol - A.real_Dolares ELSE (A.Plan_Dol - A.real_Dolares)/(@DMAX-@dm1) END OBJ_DIA_SOLES,
+CASE WHEN  @DMAX=@dm1 THEN A.Plan_Dol - A.real_Dolares ELSE (A.Plan_Dol - A.real_Dolares)/(@DMAX-@dm1) END OBJ_DIA_DOL,
 --- OBJETIVO DIARIO DOLARES
-CASE WHEN  @DMAX=@dm1 THEN (A.Plan_Dol - A.real_Dolares) - A.real_Dolares/@dm1 ELSE (A.Plan_Dol- A.real_Dolares)/(@DMAX-@dm1) - A.real_Dolares/@dm1 END INCREMENTO_SOLES,
+CASE WHEN  @DMAX=@dm1 THEN (A.Plan_Dol - A.real_Dolares) - A.real_Dolares/@dm1 ELSE (A.Plan_Dol- A.real_Dolares)/(@DMAX-@dm1) - A.real_Dolares/@dm1 END INCREMENTO_DOL,
 --INCREMENTO_DOLARES
 CASE WHEN B.PER = @M1 THEN A.real_ton/@dm1 
 WHEN B.PER = @M2 THEN A.real_ton/@DMAX2 
@@ -407,7 +427,7 @@ END prom_mes,
 CASE WHEN B.PER = @M1 THEN A.real_Dolares/@dm1 
 WHEN B.PER = @M2 THEN A.real_Dolares/@DMAX2 
 WHEN B.PER = @M3 THEN A.real_Dolares/@DMAX3
-END prom_mes_soles,
+END prom_mes_dol,
 --VENTA PROMEDIO MENSUAL DOLARES
 A.Plataforma as Plataforma
 FROM VENTAS_CONSOLIDADO  A 
