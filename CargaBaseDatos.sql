@@ -3,7 +3,7 @@ USE CmiSellOutEcuador;
 DECLARE @dia DATE;
 DECLARE @d1 AS VARCHAR(20);
 
-SELECT @dia= DATEADD(DAY,-7,SYSDATETIME());
+SELECT @dia= DATEADD(DAY,-2,SYSDATETIME());
 -- poner el último día de ventas
 SELECT @d1= TRY_CONVERT(VARCHAR(20), TRY_CONVERT(DATE, @dia,103),103);
 
@@ -339,6 +339,50 @@ SELECT F.DES_MES Mes, A.Fecha Dia,
 	  M.Plataforma Plataforma
 INTO VENTAS_CONSOLIDADO
 FROM #VENTAS_Y_NOTAS A
+	LEFT JOIN BD_FECHAS F ON  A.Fecha= F.DIA
+	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp
+	LEFT JOIN MAESTRO_AGENCIAS AG ON A.Agencia = AG.Agencia
+GROUP BY F.DES_MES, A.Fecha,
+	   M.CodCategoria, M.Categoria, M.CodFamilia, M.Familia, M.CodMarca, M.Marca,
+	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
+	   IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto),
+	   M.Plataforma;
+
+--Panales
+TRUNCATE TABLE BASE_MOBILVENDOR_AUTOMATICA;
+
+BULK INSERT BASE_MOBILVENDOR_AUTOMATICA
+FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\userConcretions3.txt'
+WITH (FIELDTERMINATOR='|',FIRSTROW=2,CODEPAGE='ACP');
+
+DELETE FROM [BASE_MOBILVENDOR_AUTOMATICA] WHERE Importe = 0;
+DELETE FROM [BASE_MOBILVENDOR_AUTOMATICA] WHERE Importe IS NULL;
+UPDATE BASE_MOBILVENDOR_AUTOMATICA SET CodAlicorp = [Codigo Articulo] WHERE CodAlicorp IS NULL;
+
+IF OBJECT_ID(N'tempdb..#PANALES') IS NOT NULL DROP TABLE #PANALES;
+
+SELECT CONVERT(VARCHAR(20), A.Fecha,103) Fecha, A.Agencia Agencia, A.CodAlicorp CodAlicorp, 0  Plan_Ton, 0 VentaTon, 0 Plan_Dol, A.Importe VentaDolares,
+	   'MARCAS TERCEROS' TipoProducto
+INTO #PANALES
+FROM BASE_MOBILVENDOR_AUTOMATICA A;
+--SELECT * FROM #PANALES
+
+ALTER TABLE #PANALES ALTER COLUMN Plan_Ton FLOAT;
+ALTER TABLE #PANALES ALTER COLUMN VentaTon FLOAT;
+ALTER TABLE #PANALES ALTER COLUMN Plan_Dol FLOAT;
+
+UPDATE #PANALES 
+SET Fecha = RIGHT(Fecha,9)
+WHERE Fecha LIKE '0_/%'
+
+INSERT INTO VENTAS_CONSOLIDADO
+SELECT F.DES_MES Mes, A.Fecha Dia,
+	   M.CodCategoria CodCategoria, M.Categoria Categoria, M.CodFamilia CodFamilia, M.Familia Familia, M.CodMarca CodMarca, M.Marca Marca,
+	   AG.ZonaV2 Grupo_Condiciones, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
+	  'Panales' DEX, IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto) Negocio, SUM(ISNULL(A.Plan_Ton,0)) Plan_Ton,
+	  SUM(ISNULL(A.VentaTon,0)) real_ton, SUM(ISNULL(A.Plan_Dol,0)) Plan_Dol, SUM(ISNULL(A.VentaDolares,0)/1000) real_Dolares,
+	  M.Plataforma Plataforma
+FROM #PANALES A
 	LEFT JOIN BD_FECHAS F ON  A.Fecha= F.DIA
 	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp
 	LEFT JOIN MAESTRO_AGENCIAS AG ON A.Agencia = AG.Agencia
