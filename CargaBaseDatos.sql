@@ -3,7 +3,7 @@ USE CmiSellOutEcuador;
 DECLARE @dia DATE;
 DECLARE @d1 AS VARCHAR(20);
 
-SELECT @dia= DATEADD(DAY,-2,SYSDATETIME());
+SELECT @dia= DATEADD(DAY,-1,SYSDATETIME());
 -- poner el último día de ventas
 SELECT @d1= TRY_CONVERT(VARCHAR(20), TRY_CONVERT(DATE, @dia,103),103);
 
@@ -347,7 +347,8 @@ GROUP BY F.DES_MES, A.Fecha,
 	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
 	   IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto),
 	   M.Plataforma;
-
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 --Panales
 TRUNCATE TABLE BASE_MOBILVENDOR_AUTOMATICA;
 
@@ -358,6 +359,52 @@ WITH (FIELDTERMINATOR='|',FIRSTROW=2,CODEPAGE='ACP');
 DELETE FROM [BASE_MOBILVENDOR_AUTOMATICA] WHERE Importe = 0;
 DELETE FROM [BASE_MOBILVENDOR_AUTOMATICA] WHERE Importe IS NULL;
 UPDATE BASE_MOBILVENDOR_AUTOMATICA SET CodAlicorp = [Codigo Articulo] WHERE CodAlicorp IS NULL;
+UPDATE A SET CodAlicorp = TRIM(CodAlicorp) FROM BASE_MOBILVENDOR_AUTOMATICA A;
+UPDATE A SET Agencia = TRIM(Agencia) FROM BASE_MOBILVENDOR_AUTOMATICA A;
+
+UPDATE BASE_MOBILVENDOR_AUTOMATICA
+SET CodAlicorp = CASE CodAlicorp
+	WHEN '8309000' THEN '8309119'
+	WHEN '8309001' THEN '8309120'
+	WHEN '8309002' THEN '8309121'
+	WHEN '8309003' THEN '8309122'
+	WHEN '8309007' THEN '8309126'
+	WHEN '8309009' THEN '8309128' ELSE CodAlicorp END;
+
+TRUNCATE TABLE PLAN_PANALES;
+
+BULK INSERT PLAN_PANALES
+FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\PLAN_PANALES.csv'
+WITH (FIELDTERMINATOR=';', FIRSTROW=2, CODEPAGE='ACP');
+
+DELETE PLAN_PANALES WHERE Plan_Dol = 0 AND Plan_Ton = 0;
+DELETE FROM PLAN_PANALES WHERE Plan_Dol IS NULL AND Plan_Ton IS NULL;
+
+UPDATE A SET CodCategoria = TRIM(CodCategoria) FROM PLAN_PANALES A;
+UPDATE A SET Categoria = TRIM(Categoria) FROM PLAN_PANALES A;
+UPDATE A SET CodMarca = TRIM(CodMarca) FROM PLAN_PANALES A;
+UPDATE A SET Marca = TRIM(Marca) FROM PLAN_PANALES A;
+UPDATE A SET CodFamilia = TRIM(CodFamilia) FROM PLAN_PANALES A;
+UPDATE A SET Familia = TRIM(Familia) FROM PLAN_PANALES A;
+UPDATE A SET CodAlicorp = TRIM(CodAlicorp) FROM PLAN_PANALES A;
+UPDATE A SET Des_Material = TRIM(Des_Material) FROM PLAN_PANALES A;
+UPDATE A SET NomOficina = TRIM(NomOficina) FROM PLAN_PANALES A;
+UPDATE A SET Plataforma = TRIM(Plataforma) FROM PLAN_PANALES A;
+
+UPDATE PLAN_PANALES
+SET CodAlicorp = CASE CodAlicorp
+	WHEN '8309000' THEN '8309119'
+	WHEN '8309001' THEN '8309120'
+	WHEN '8309002' THEN '8309121'
+	WHEN '8309003' THEN '8309122'
+	WHEN '8309007' THEN '8309126'
+	WHEN '8309009' THEN '8309128' ELSE CodAlicorp END;
+
+UPDATE PLAN_PANALES
+SET NomOficina = CASE NomOficina
+	WHEN 'JINES CAJAS CESAR XAVIER' THEN 'JINES CAJAS XAVIER CESAR'
+	WHEN 'ZAMORA BRIONES MARIA MAGDALENA' THEN 'MOREJON QUISPE LUIS ALFREDO'
+	WHEN 'ESPINOZA ZEAS MANUEL JOHN' THEN 'ESPINOZA ZEAS MANUEL JHON' ELSE NomOficina END
 
 IF OBJECT_ID(N'tempdb..#PANALES') IS NOT NULL DROP TABLE #PANALES;
 
@@ -375,6 +422,7 @@ UPDATE #PANALES
 SET Fecha = RIGHT(Fecha,9)
 WHERE Fecha LIKE '0_/%'
 
+--Inserto la ventas de Panales
 INSERT INTO VENTAS_CONSOLIDADO
 SELECT F.DES_MES Mes, A.Fecha Dia,
 	   M.CodCategoria CodCategoria, M.Categoria Categoria, M.CodFamilia CodFamilia, M.Familia Familia, M.CodMarca CodMarca, M.Marca Marca,
@@ -391,6 +439,23 @@ GROUP BY F.DES_MES, A.Fecha,
 	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
 	   IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto),
 	   M.Plataforma;
+
+--Inserto el Plan de Panales
+
+INSERT INTO VENTAS_CONSOLIDADO
+SELECT F.DES_MES Mes, A.Fecha Dia,
+	   A.CodCategoria CodCategoria, A.Categoria Categoria, A.CodFamilia CodFamilia, A.Familia Familia, A.CodMarca CodMarca, A.Marca Marca,
+	   AG.ZonaV2 Grupo_Condiciones, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
+	  'Panales' DEX, 'Consumo Masivo' Negocio, SUM(ISNULL(A.Plan_Ton,0)) Plan_Ton,
+	  SUM(ISNULL(A.Ventas_Ton,0)) real_ton, SUM(ISNULL(A.Plan_Dol,0)) Plan_Dol, SUM(ISNULL(A.Ventas_Reales,0)) real_Dolares,
+	  A.Plataforma Plataforma
+FROM PLAN_PANALES A
+	LEFT JOIN BD_FECHAS F ON  A.Fecha= F.DIA
+	LEFT JOIN MAESTRO_AGENCIAS AG ON A.NomOficina = AG.NomOficina
+GROUP BY F.DES_MES, A.Fecha,
+	   A.CodCategoria, A.Categoria, A.CodFamilia, A.Familia, A.CodMarca, A.Marca,
+	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
+	   A.Plataforma;
 
 IF OBJECT_ID('DBO.TMP_SELL_OUT_21') IS NOT NULL DROP TABLE DBO.TMP_SELL_OUT_21;
 --Creo tabla final donde se van a elaborar todos los indicadores
