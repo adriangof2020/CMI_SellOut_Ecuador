@@ -3,7 +3,7 @@ USE CmiSellOutEcuador;
 DECLARE @dia DATE;
 DECLARE @d1 AS VARCHAR(20);
 
-SELECT @dia= DATEADD(DAY,-1,SYSDATETIME());
+SELECT @dia= DATEADD(DAY,-2,SYSDATETIME());
 -- poner el último día de ventas
 SELECT @d1= TRY_CONVERT(VARCHAR(20), TRY_CONVERT(DATE, @dia,103),103);
 
@@ -347,6 +347,30 @@ GROUP BY F.DES_MES, A.Fecha,
 	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
 	   IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto),
 	   M.Plataforma;
+
+
+---------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------
+--Para el proyecto de tableros de Valery, pendiente quitar agrupadores no son necesarios por ejemplo sumar
+IF OBJECT_ID('VENTAS_TABLERO') IS NOT NULL DROP TABLE VENTAS_TABLERO;
+--Creo tabla donde consolido la información de la tabla temporal #VENTAS_Y_NOTAS agregando los campos que necesito
+--En esta tabla se va a insertar la información de todas las distribuidoras
+SELECT F.DES_MES Mes, A.Fecha Dia,
+	   M.CodCategoria CodCategoria, M.Categoria Categoria, M.CodFamilia CodFamilia, M.Familia Familia, M.CodAlicorp CodAlicorp, M.Material Material,  M.CodMarca CodMarca, M.Marca Marca,
+	   AG.ZonaV2 Grupo_Condiciones, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
+	  'La Fabril S.A.' DEX, IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto) Negocio, SUM(ISNULL(A.Plan_Ton,0)) Plan_Ton,
+	  SUM(ISNULL(A.VentaKil,0)/1000) real_ton, SUM(ISNULL(A.Plan_Dol,0)/1000) Plan_Dol, SUM(ISNULL(A.VentaDolares,0)/1000) real_Dolares,
+	  M.Plataforma Plataforma
+INTO VENTAS_TABLERO
+FROM #VENTAS_Y_NOTAS A
+	LEFT JOIN BD_FECHAS F ON  A.Fecha= F.DIA
+	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp
+	LEFT JOIN MAESTRO_AGENCIAS AG ON A.Agencia = AG.Agencia
+GROUP BY F.DES_MES, A.Fecha,
+	   M.CodCategoria, M.Categoria, M.CodFamilia, M.Familia, M.CodAlicorp, M.Material , M.CodMarca, M.Marca,
+	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
+	   IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto),
+	   M.Plataforma;
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 --Panales
@@ -365,6 +389,8 @@ DELETE FROM [BASE_MOBILVENDOR_AUTOMATICA] WHERE Importe IS NULL;
 UPDATE BASE_MOBILVENDOR_AUTOMATICA SET CodAlicorp = [Codigo Articulo] WHERE CodAlicorp IS NULL;
 UPDATE A SET CodAlicorp = TRIM(CodAlicorp) FROM BASE_MOBILVENDOR_AUTOMATICA A;
 UPDATE A SET Agencia = TRIM(Agencia) FROM BASE_MOBILVENDOR_AUTOMATICA A;
+--UPDATE A SET PesoKG = TRIM(PesoKG) FROM BASE_MOBILVENDOR_AUTOMATICA A;
+--UPDATE A SET PesoTon = TRIM(PesoTon) FROM BASE_MOBILVENDOR_AUTOMATICA A;
 
 UPDATE BASE_MOBILVENDOR_AUTOMATICA
 SET CodAlicorp = CASE CodAlicorp
@@ -398,6 +424,16 @@ UPDATE A SET NomOficina = TRIM(NomOficina) FROM PLAN_PANALES A;
 UPDATE A SET Plataforma = TRIM(Plataforma) FROM PLAN_PANALES A;
 
 UPDATE PLAN_PANALES
+SET CodMarca = RIGHT(CodMarca,1)
+WHERE CodMarca LIKE '00%';
+
+UPDATE PLAN_PANALES
+SET CodMarca = RIGHT(CodMarca,2)
+WHERE CodMarca LIKE '0%';
+-- Debido a que cuando subo la información del csv se agrega un cero a la izquierda
+	 
+
+UPDATE PLAN_PANALES
 SET CodAlicorp = CASE CodAlicorp
 	WHEN '8309000' THEN '8309119'
 	WHEN '8309001' THEN '8309120'
@@ -413,13 +449,15 @@ SET NomOficina = CASE NomOficina
 	WHEN 'ZAMORA BRIONES MARIA MAGDALENA' THEN 'MOREJON QUISPE LUIS ALFREDO'
 	WHEN 'ESPINOZA ZEAS MANUEL JOHN' THEN 'ESPINOZA ZEAS MANUEL JHON' ELSE NomOficina END
 
+--Creo tabla temporal para homologar los campos y darle formato a la fecha, tambien calculo las toneladas
 IF OBJECT_ID(N'tempdb..#PANALES') IS NOT NULL DROP TABLE #PANALES;
 
-SELECT CONVERT(VARCHAR(20), A.Fecha,103) Fecha, A.Agencia Agencia, A.CodAlicorp CodAlicorp, 0  Plan_Ton, 0 VentaTon, 0 Plan_Dol, A.Importe VentaDolares,
+SELECT CONVERT(VARCHAR(20), A.Fecha,103) Fecha, A.Agencia Agencia, A.CodAlicorp CodAlicorp, 0  Plan_Ton, (M.PesoTon)*(A.Cantidad)*(A.UnidadCaja) VentaTon, 0 Plan_Dol, A.Importe VentaDolares,
 	   'MARCAS TERCEROS' TipoProducto
 INTO #PANALES
-FROM BASE_MOBILVENDOR_AUTOMATICA A;
---SELECT * FROM #PANALES
+FROM BASE_MOBILVENDOR_AUTOMATICA A
+	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp;
+--SELECT SUM(VentaTon) FROM #PANALES
 
 ALTER TABLE #PANALES ALTER COLUMN Plan_Ton FLOAT;
 ALTER TABLE #PANALES ALTER COLUMN VentaTon FLOAT;
@@ -455,6 +493,26 @@ GROUP BY F.DES_MES, A.Fecha,
 	   IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto),
 	   M.Plataforma;
 
+--------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------
+-- Para el proyecto de tablero de Valery
+INSERT INTO VENTAS_TABLERO
+SELECT F.DES_MES Mes, A.Fecha Dia,
+	   M.CodCategoria CodCategoria, M.Categoria Categoria, M.CodFamilia CodFamilia, M.Familia Familia, M.CodAlicorp CodAlicorp, M.Material Material, M.CodMarca CodMarca, M.Marca Marca,
+	   AG.ZonaV2 Grupo_Condiciones, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
+	  'Panales' DEX, IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto) Negocio, SUM(ISNULL(A.Plan_Ton,0)) Plan_Ton,
+	  SUM(ISNULL(A.VentaTon,0)) real_ton, SUM(ISNULL(A.Plan_Dol,0)) Plan_Dol, SUM(ISNULL(A.VentaDolares,0)/1000) real_Dolares,
+	  M.Plataforma Plataforma
+FROM #PANALES A
+	LEFT JOIN BD_FECHAS F ON  A.Fecha= F.DIA
+	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp
+	LEFT JOIN MAESTRO_AGENCIAS AG ON A.Agencia = AG.Agencia
+GROUP BY F.DES_MES, A.Fecha,
+	   M.CodCategoria, M.Categoria, M.CodFamilia, M.Familia, M.CodAlicorp, M.Material, M.CodMarca, M.Marca,
+	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
+	   IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto),
+	   M.Plataforma;
+
 --Inserto el Plan de Panales
 
 INSERT INTO VENTAS_CONSOLIDADO
@@ -468,7 +526,25 @@ FROM PLAN_PANALES A
 	LEFT JOIN BD_FECHAS F ON  A.Fecha= F.DIA
 	LEFT JOIN MAESTRO_AGENCIAS AG ON A.NomOficina = AG.NomOficina
 GROUP BY F.DES_MES, A.Fecha,
-	   A.CodCategoria, A.Categoria, A.CodFamilia, A.Familia, A.CodMarca, A.Marca,
+	   A.CodCategoria, A.Categoria, A.CodFamilia, A.Familia,  A.CodMarca, A.Marca,
+	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
+	   A.Plataforma;
+--------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------
+--Para el proyecto tablero de Valery
+
+INSERT INTO VENTAS_TABLERO
+SELECT F.DES_MES Mes, A.Fecha Dia,
+	   A.CodCategoria CodCategoria, A.Categoria Categoria, A.CodFamilia CodFamilia, A.Familia Familia, A.CodAlicorp CodAlicorp, A.Des_Material Material, A.CodMarca CodMarca, A.Marca Marca,
+	   AG.ZonaV2 Grupo_Condiciones, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
+	  'Panales' DEX, 'Consumo Masivo' Negocio, SUM(ISNULL(A.Plan_Ton,0)) Plan_Ton,
+	  SUM(ISNULL(A.Ventas_Ton,0)) real_ton, SUM(ISNULL(A.Plan_Dol,0)) Plan_Dol, SUM(ISNULL(A.Ventas_Reales,0)) real_Dolares,
+	  A.Plataforma Plataforma
+FROM PLAN_PANALES A
+	LEFT JOIN BD_FECHAS F ON  A.Fecha= F.DIA
+	LEFT JOIN MAESTRO_AGENCIAS AG ON A.NomOficina = AG.NomOficina
+GROUP BY F.DES_MES, A.Fecha,
+	   A.CodCategoria, A.Categoria, A.CodFamilia, A.Familia, A.CodAlicorp, A.Des_Material, A.CodMarca, A.Marca,
 	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
 	   A.Plataforma;
 
