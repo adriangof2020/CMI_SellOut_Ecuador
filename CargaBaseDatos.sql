@@ -3,7 +3,7 @@ USE CmiSellOutEcuador;
 DECLARE @dia DATE;
 DECLARE @d1 AS VARCHAR(20);
 
-SELECT @dia= DATEADD(DAY,-2,SYSDATETIME());
+SELECT @dia= DATEADD(DAY,-3,SYSDATETIME());
 -- poner el último día de ventas
 SELECT @d1= TRY_CONVERT(VARCHAR(20), TRY_CONVERT(DATE, @dia,103),103);
 
@@ -165,6 +165,11 @@ SET OficinaVentas = CASE OficinaVentas
 	WHEN 'EC - Machala' THEN '700 EC - Guayaquil'
 	WHEN 'EC - Ibarra' THEN '701 EC - Quito'
 	ELSE OficinaVentas END;
+--UPDATE PLAN_LA_FABRIL
+--SET OficinaVentas = CASE OficinaVentas
+--	WHEN 'EC - Machala' THEN '700 EC - Guayaquil'
+--	WHEN 'EC - Ibarra' THEN '701 EC - Quito'
+--	ELSE OficinaVentas END;
 
 UPDATE PLAN_LA_FABRIL
 SET CodAlicorp = CASE CodAlicorp
@@ -286,8 +291,8 @@ ALTER TABLE #VENTAS_Y_NOTAS_CREDITO ALTER COLUMN Plan_Dol FLOAT;
 	LEFT JOIN MAESTRO_AGENCIAS AG ON P.CodOficina = AG.CodOficina
 --Le asigno una fecha al plan, puede ser cualquiere dentro del rango de días de venta transcurridos
 --El campo CodLaFabril a este punto ya no es necesario por eso le asignamos un valor NC
-	
--- UPDATE A LAS AGENCIAS QUE NO SE ENCUENTRAN EN EL MAESTRO AGENCIAS
+
+--- UPDATE A LAS AGENCIAS QUE NO SE ENCUENTRAN EN EL MAESTRO AGENCIAS
 UPDATE #VENTAS_Y_NOTAS_CREDITO  
 SET Agencia = 'AGG'
 WHERE Agencia = 'DCG'
@@ -310,6 +315,30 @@ WHERE Agencia = 'AGI'
 UPDATE #VENTAS_Y_NOTAS_CREDITO 
 SET Agencia = 'AGG'
 WHERE Agencia = 'AGMCH'
+	
+---- UPDATE A LAS AGENCIAS QUE NO SE ENCUENTRAN EN EL MAESTRO AGENCIAS
+--UPDATE #VENTAS_Y_NOTAS_CREDITO  
+--SET Agencia = 'AGG'
+--WHERE Agencia = 'DCG'
+
+--UPDATE #VENTAS_Y_NOTAS_CREDITO 
+--SET Agencia = 'AGM'
+--WHERE Agencia = 'DCM'
+
+--UPDATE #VENTAS_Y_NOTAS_CREDITO
+--SET Agencia = 'AGM'
+--WHERE Agencia = 'PTA'
+
+---- UPDATE AGENCIAS ( IBAARA VAN HACIA QUITO Y AGENCIA MACHALA A GUAYAQUIL)
+
+--UPDATE #VENTAS_Y_NOTAS_CREDITO 
+--SET Agencia = 'AGT'
+--WHERE Agencia = 'AGI' 
+---- AGT ES TUCAN PORQUE ACASO NO ERA QUITO?
+
+--UPDATE #VENTAS_Y_NOTAS_CREDITO 
+--SET Agencia = 'AGG'
+--WHERE Agencia = 'AGMCH'
 
 IF OBJECT_ID(N'tempdb..#VENTAS_Y_NOTAS') IS NOT NULL DROP TABLE #VENTAS_Y_NOTAS;
 --Creo tabla temporal para darle formato varchar a la fecha
@@ -327,27 +356,6 @@ UPDATE #VENTAS_Y_NOTAS
 SET Agencia = 'NC'
 WHERE Agencia = ''
 --Debido a que en las notas de crédito algunos rows salen vacios la agencia
-	 
-IF OBJECT_ID('VENTAS_CONSOLIDADO') IS NOT NULL DROP TABLE VENTAS_CONSOLIDADO;
---Creo tabla donde consolido la información de la tabla temporal #VENTAS_Y_NOTAS agregando los campos que necesito
---En esta tabla se va a insertar la información de todas las distribuidoras
-SELECT F.DES_MES Mes, A.Fecha Dia,
-	   M.CodCategoria CodCategoria, M.Categoria Categoria, M.CodFamilia CodFamilia, M.Familia Familia, M.CodMarca CodMarca, M.Marca Marca,
-	   AG.ZonaV2 Grupo_Condiciones, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
-	  'La Fabril S.A.' DEX, IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto) Negocio, SUM(ISNULL(A.Plan_Ton,0)) Plan_Ton,
-	  SUM(ISNULL(A.VentaKil,0)/1000) real_ton, SUM(ISNULL(A.Plan_Dol,0)/1000) Plan_Dol, SUM(ISNULL(A.VentaDolares,0)/1000) real_Dolares,
-	  M.Plataforma Plataforma
-INTO VENTAS_CONSOLIDADO
-FROM #VENTAS_Y_NOTAS A
-	LEFT JOIN BD_FECHAS F ON  A.Fecha= F.DIA
-	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp
-	LEFT JOIN MAESTRO_AGENCIAS AG ON A.Agencia = AG.Agencia
-GROUP BY F.DES_MES, A.Fecha,
-	   M.CodCategoria, M.Categoria, M.CodFamilia, M.Familia, M.CodMarca, M.Marca,
-	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
-	   IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto),
-	   M.Plataforma;
-
 
 ---------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------
@@ -371,6 +379,13 @@ GROUP BY F.DES_MES, A.Fecha,
 	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
 	   IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto),
 	   M.Plataforma;
+
+
+	 
+
+
+
+
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 --Panales
@@ -475,24 +490,6 @@ UPDATE #PANALES
 SET Fecha = RIGHT(Fecha,9)
 WHERE Fecha LIKE '0_/%'
 
---Inserto la ventas de Panales
-INSERT INTO VENTAS_CONSOLIDADO
-SELECT F.DES_MES Mes, A.Fecha Dia,
-	   M.CodCategoria CodCategoria, M.Categoria Categoria, M.CodFamilia CodFamilia, M.Familia Familia, M.CodMarca CodMarca, M.Marca Marca,
-	   AG.ZonaV2 Grupo_Condiciones, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
-	  'Panales' DEX, IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto) Negocio, SUM(ISNULL(A.Plan_Ton,0)) Plan_Ton,
-	  SUM(ISNULL(A.VentaTon,0)) real_ton, SUM(ISNULL(A.Plan_Dol,0)) Plan_Dol, SUM(ISNULL(A.VentaDolares,0)/1000) real_Dolares,
-	  M.Plataforma Plataforma
-FROM #PANALES A
-	LEFT JOIN BD_FECHAS F ON  A.Fecha= F.DIA
-	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp
-	LEFT JOIN MAESTRO_AGENCIAS AG ON A.Agencia = AG.Agencia
-GROUP BY F.DES_MES, A.Fecha,
-	   M.CodCategoria, M.Categoria, M.CodFamilia, M.Familia, M.CodMarca, M.Marca,
-	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
-	   IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto),
-	   M.Plataforma;
-
 --------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------
 -- Para el proyecto de tablero de Valery
@@ -513,24 +510,16 @@ GROUP BY F.DES_MES, A.Fecha,
 	   IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto),
 	   M.Plataforma;
 
+
+
+
+
+
+
 --Inserto el Plan de Panales
 
-INSERT INTO VENTAS_CONSOLIDADO
-SELECT F.DES_MES Mes, A.Fecha Dia,
-	   A.CodCategoria CodCategoria, A.Categoria Categoria, A.CodFamilia CodFamilia, A.Familia Familia, A.CodMarca CodMarca, A.Marca Marca,
-	   AG.ZonaV2 Grupo_Condiciones, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
-	  'Panales' DEX, 'Consumo Masivo' Negocio, SUM(ISNULL(A.Plan_Ton,0)) Plan_Ton,
-	  SUM(ISNULL(A.Ventas_Ton,0)) real_ton, SUM(ISNULL(A.Plan_Dol,0)) Plan_Dol, SUM(ISNULL(A.Ventas_Reales,0)) real_Dolares,
-	  A.Plataforma Plataforma
-FROM PLAN_PANALES A
-	LEFT JOIN BD_FECHAS F ON  A.Fecha= F.DIA
-	LEFT JOIN MAESTRO_AGENCIAS AG ON A.NomOficina = AG.NomOficina
-GROUP BY F.DES_MES, A.Fecha,
-	   A.CodCategoria, A.Categoria, A.CodFamilia, A.Familia,  A.CodMarca, A.Marca,
-	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
-	   A.Plataforma;
---------------------------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------
 --Para el proyecto tablero de Valery
 
 INSERT INTO VENTAS_TABLERO
@@ -547,6 +536,30 @@ GROUP BY F.DES_MES, A.Fecha,
 	   A.CodCategoria, A.Categoria, A.CodFamilia, A.Familia, A.CodAlicorp, A.Des_Material, A.CodMarca, A.Marca,
 	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
 	   A.Plataforma;
+
+
+
+
+IF OBJECT_ID('VENTAS_CONSOLIDADO') IS NOT NULL DROP TABLE VENTAS_CONSOLIDADO;
+--Creo tabla donde consolido la información de la tabla tablero 
+--En esta tabla se va a insertar la información de todas las distribuidoras
+SELECT A.Mes, A.Dia,
+	   A.CodCategoria, A.Categoria, A.CodFamilia, A.Familia, A.CodMarca, A.Marca,
+	   A.Grupo_Condiciones, A.CodOficina, A.NomOficina, A.CodTerritorio, A.NomTerritorio, A.CodZona, A.NomZona,
+	  A.DEX, A.Negocio, SUM(A.Plan_Ton) Plan_Ton,
+	  SUM(A.real_ton) real_ton, SUM(A.Plan_Dol) Plan_Dol, SUM(A.real_Dolares) real_Dolares,
+	  A.Plataforma Plataforma
+INTO VENTAS_CONSOLIDADO
+FROM VENTAS_TABLERO A
+GROUP BY A.MES, A.Dia,
+	   A.CodCategoria, A.Categoria, A.CodFamilia, A.Familia, A.CodMarca, A.Marca,
+	    A.Grupo_Condiciones, A.CodOficina, A.NomOficina, A.CodTerritorio, A.NomTerritorio, A.CodZona, A.NomZona,
+	   A.DEX, A.Negocio,
+	   A.Plataforma;
+
+
+
+
 
 IF OBJECT_ID('DBO.TMP_SELL_OUT_21') IS NOT NULL DROP TABLE DBO.TMP_SELL_OUT_21;
 --Creo tabla final donde se van a elaborar todos los indicadores
