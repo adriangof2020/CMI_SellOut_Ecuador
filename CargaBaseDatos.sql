@@ -3,7 +3,7 @@ USE CmiSellOutEcuador;
 DECLARE @dia DATE;
 DECLARE @d1 AS VARCHAR(20);
 
-SELECT @dia= DATEADD(DAY,-3,SYSDATETIME());
+SELECT @dia= DATEADD(DAY,-1,SYSDATETIME());
 -- poner el último día de ventas
 SELECT @d1= TRY_CONVERT(VARCHAR(20), TRY_CONVERT(DATE, @dia,103),103);
 
@@ -133,6 +133,7 @@ UPDATE TABLA_MATERIALES SET Plataforma = TRIM(Plataforma);
 
 TRUNCATE TABLE TABLA_MATERIALES;
 --En esta base la llave es CodLaFabril&Descripcion de la Fabril
+-- se usa para poner los codigos alicorp a las notas de credito
 BULK INSERT TABLA_MATERIALES
 FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\MATERIALES_ALICORP_1.csv'
 WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
@@ -162,14 +163,11 @@ UPDATE PLAN_LA_FABRIL SET CodAlicorp = TRIM(CodAlicorp);
 
 UPDATE PLAN_LA_FABRIL
 SET OficinaVentas = CASE OficinaVentas
-	WHEN 'EC - Machala' THEN '700 EC - Guayaquil'
-	WHEN 'EC - Ibarra' THEN '701 EC - Quito'
+	WHEN 'EC - Machala' THEN '704 EC - Machala'
+	WHEN 'EC - Ibarra' THEN '713 EC - Ibarra'
 	ELSE OficinaVentas END;
---UPDATE PLAN_LA_FABRIL
+--UPDATE PLAN_LA_FABRIL necesito el codigo cuando lo separo
 --SET OficinaVentas = CASE OficinaVentas
---	WHEN 'EC - Machala' THEN '700 EC - Guayaquil'
---	WHEN 'EC - Ibarra' THEN '701 EC - Quito'
---	ELSE OficinaVentas END;
 
 UPDATE PLAN_LA_FABRIL
 SET CodAlicorp = CASE CodAlicorp
@@ -192,6 +190,11 @@ UPDATE A SET CodArticulo = TRIM(CodArticulo) FROM BASE_INICIAL_VENTAS A;
 UPDATE A SET GrupoProducto = TRIM(GrupoProducto) FROM BASE_INICIAL_VENTAS A;
 UPDATE A SET CodAlicorp = TRIM(CodAlicorp) FROM BASE_INICIAL_VENTAS A;
 UPDATE A SET DesArticulo = TRIM(DesArticulo) FROM BASE_INICIAL_VENTAS A;
+UPDATE A SET NSupervisor = TRIM(NSupervisor) FROM BASE_INICIAL_VENTAS A;
+
+UPDATE BASE_INICIAL_VENTAS
+SET NSupervisor ='SIN ASIGNAR'
+WHERE NSupervisor = ''
 
 UPDATE BASE_INICIAL_VENTAS
 SET CodAlicorp = CASE CodArticulo
@@ -262,7 +265,7 @@ WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
 
 UPDATE MAESTRO_AGENCIAS SET Agencia = TRIM(Agencia);
 UPDATE MAESTRO_AGENCIAS SET NomOficina = TRIM(NomOficina);
-
+UPDATE MAESTRO_AGENCIAS SET CodOficina = TRIM(CodOficina);
 
 IF OBJECT_ID(N'tempdb..#PLAN') IS NOT NULL DROP TABLE #PLAN;
 
@@ -286,7 +289,7 @@ ALTER TABLE #VENTAS_Y_NOTAS_CREDITO ALTER COLUMN Plan_Ton FLOAT;
 ALTER TABLE #VENTAS_Y_NOTAS_CREDITO ALTER COLUMN Plan_Dol FLOAT;
 
  INSERT INTO #VENTAS_Y_NOTAS_CREDITO
- SELECT @dia Fecha, AG.Agencia Agencia,'NC' CodLaFabril, P.CodAlicorp CodAlicorp, P.Kilos Plan_Ton, 0 VentaKil, P.Importe Plan_Dol , 0 VentaDolares, 'MARCAS TERCEROS' TipoProducto
+ SELECT @dia Fecha, AG.Agencia Agencia, 'NC' CodLaFabril, P.CodAlicorp CodAlicorp, P.Kilos Plan_Ton, 0 VentaKil, P.Importe Plan_Dol , 0 VentaDolares, 'MARCAS TERCEROS' TipoProducto
  FROM #PLAN P
 	LEFT JOIN MAESTRO_AGENCIAS AG ON P.CodOficina = AG.CodOficina
 --Le asigno una fecha al plan, puede ser cualquiere dentro del rango de días de venta transcurridos
@@ -305,40 +308,6 @@ UPDATE #VENTAS_Y_NOTAS_CREDITO
 SET Agencia = 'AGM'
 WHERE Agencia = 'PTA'
 
--- UPDATE AGENCIAS ( IBAARA VAN HACIA QUITO Y AGENCIA MACHALA A GUAYAQUIL)
-
-UPDATE #VENTAS_Y_NOTAS_CREDITO 
-SET Agencia = 'AGT'
-WHERE Agencia = 'AGI' 
--- AGT ES TUCAN PORQUE ACASO NO ERA QUITO?
-
-UPDATE #VENTAS_Y_NOTAS_CREDITO 
-SET Agencia = 'AGG'
-WHERE Agencia = 'AGMCH'
-	
----- UPDATE A LAS AGENCIAS QUE NO SE ENCUENTRAN EN EL MAESTRO AGENCIAS
---UPDATE #VENTAS_Y_NOTAS_CREDITO  
---SET Agencia = 'AGG'
---WHERE Agencia = 'DCG'
-
---UPDATE #VENTAS_Y_NOTAS_CREDITO 
---SET Agencia = 'AGM'
---WHERE Agencia = 'DCM'
-
---UPDATE #VENTAS_Y_NOTAS_CREDITO
---SET Agencia = 'AGM'
---WHERE Agencia = 'PTA'
-
----- UPDATE AGENCIAS ( IBAARA VAN HACIA QUITO Y AGENCIA MACHALA A GUAYAQUIL)
-
---UPDATE #VENTAS_Y_NOTAS_CREDITO 
---SET Agencia = 'AGT'
---WHERE Agencia = 'AGI' 
----- AGT ES TUCAN PORQUE ACASO NO ERA QUITO?
-
---UPDATE #VENTAS_Y_NOTAS_CREDITO 
---SET Agencia = 'AGG'
---WHERE Agencia = 'AGMCH'
 
 IF OBJECT_ID(N'tempdb..#VENTAS_Y_NOTAS') IS NOT NULL DROP TABLE #VENTAS_Y_NOTAS;
 --Creo tabla temporal para darle formato varchar a la fecha
@@ -359,14 +328,15 @@ WHERE Agencia = ''
 
 ---------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------
---Para el proyecto de tableros de Valery, pendiente quitar agrupadores no son necesarios por ejemplo sumar
+--Para el proyecto de tableros de Valery
 IF OBJECT_ID('VENTAS_TABLERO') IS NOT NULL DROP TABLE VENTAS_TABLERO;
 --Creo tabla donde consolido la información de la tabla temporal #VENTAS_Y_NOTAS agregando los campos que necesito
 --En esta tabla se va a insertar la información de todas las distribuidoras
 SELECT F.DES_MES Mes, A.Fecha Dia,
 	   M.CodCategoria CodCategoria, M.Categoria Categoria, M.CodFamilia CodFamilia, M.Familia Familia, M.CodAlicorp CodAlicorp, M.Material Material,  M.CodMarca CodMarca, M.Marca Marca,
-	   AG.ZonaV2 Grupo_Condiciones, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
-	  'La Fabril S.A.' DEX, IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto) Negocio, SUM(ISNULL(A.Plan_Ton,0)) Plan_Ton,
+	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
+	   AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
+	  IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto) Negocio, SUM(ISNULL(A.Plan_Ton,0)) Plan_Ton,
 	  SUM(ISNULL(A.VentaKil,0)/1000) real_ton, SUM(ISNULL(A.Plan_Dol,0)/1000) Plan_Dol, SUM(ISNULL(A.VentaDolares,0)/1000) real_Dolares,
 	  M.Plataforma Plataforma
 INTO VENTAS_TABLERO
@@ -377,6 +347,7 @@ FROM #VENTAS_Y_NOTAS A
 GROUP BY F.DES_MES, A.Fecha,
 	   M.CodCategoria, M.Categoria, M.CodFamilia, M.Familia, M.CodAlicorp, M.Material , M.CodMarca, M.Marca,
 	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
+	   AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
 	   IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto),
 	   M.Plataforma;
 
@@ -389,6 +360,13 @@ GROUP BY F.DES_MES, A.Fecha,
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 --Panales
+TRUNCATE TABLE VENDEDORES_PANALES;
+
+BULK INSERT VENDEDORES_PANALES
+FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\VenderoresPanales.csv'
+WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
+
+
 TRUNCATE TABLE BASE_MOBILVENDOR_AUTOMATICA;
 
 BULK INSERT BASE_MOBILVENDOR_AUTOMATICA
@@ -399,11 +377,19 @@ BULK INSERT BASE_MOBILVENDOR_AUTOMATICA
 FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\Panales_MAR.txt'
 WITH (FIELDTERMINATOR='|',FIRSTROW=2,CODEPAGE='ACP');
 
+--BULK INSERT BASE_MOBILVENDOR_AUTOMATICA
+--FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\Panales_ENE.txt'
+--WITH (FIELDTERMINATOR='|',FIRSTROW=2,CODEPAGE='ACP')
+
 DELETE FROM [BASE_MOBILVENDOR_AUTOMATICA] WHERE Importe = 0;
 DELETE FROM [BASE_MOBILVENDOR_AUTOMATICA] WHERE Importe IS NULL;
+DELETE FROM [BASE_MOBILVENDOR_AUTOMATICA] WHERE Importe < 0; 
+--Esos importes menores a 0 son los regalos
 UPDATE BASE_MOBILVENDOR_AUTOMATICA SET CodAlicorp = [Codigo Articulo] WHERE CodAlicorp IS NULL;
 UPDATE A SET CodAlicorp = TRIM(CodAlicorp) FROM BASE_MOBILVENDOR_AUTOMATICA A;
 UPDATE A SET Agencia = TRIM(Agencia) FROM BASE_MOBILVENDOR_AUTOMATICA A;
+UPDATE A SET Usuario = TRIM(Usuario) FROM BASE_MOBILVENDOR_AUTOMATICA A;
+
 --UPDATE A SET PesoKG = TRIM(PesoKG) FROM BASE_MOBILVENDOR_AUTOMATICA A;
 --UPDATE A SET PesoTon = TRIM(PesoTon) FROM BASE_MOBILVENDOR_AUTOMATICA A;
 
@@ -467,10 +453,11 @@ SET NomOficina = CASE NomOficina
 --Creo tabla temporal para homologar los campos y darle formato a la fecha, tambien calculo las toneladas
 IF OBJECT_ID(N'tempdb..#PANALES') IS NOT NULL DROP TABLE #PANALES;
 
-SELECT CONVERT(VARCHAR(20), A.Fecha,103) Fecha, A.Agencia Agencia, A.CodAlicorp CodAlicorp, 0  Plan_Ton, (M.PesoTon)*(A.Cantidad)*(A.UnidadCaja) VentaTon, 0 Plan_Dol, A.Importe VentaDolares,
-	   'MARCAS TERCEROS' TipoProducto
+SELECT CONVERT(VARCHAR(20), A.Fecha,103) Fecha, A.Agencia Agencia, A.CodAlicorp CodAlicorp, 0  Plan_Ton, (M.PesoTon)*(A.Cantidad) VentaTon, 0 Plan_Dol, A.Importe VentaDolares,
+	   'Consumo Masivo' Negocio
 INTO #PANALES
 FROM BASE_MOBILVENDOR_AUTOMATICA A
+	--LEFT JOIN VENDEDORES_PANALES V ON A.Usuario = V.Codigo
 	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp;
 --SELECT SUM(VentaTon) FROM #PANALES
 
@@ -478,10 +465,10 @@ ALTER TABLE #PANALES ALTER COLUMN Plan_Ton FLOAT;
 ALTER TABLE #PANALES ALTER COLUMN VentaTon FLOAT;
 ALTER TABLE #PANALES ALTER COLUMN Plan_Dol FLOAT;
 
---Inserto información ficticia del año pasado para que no altere el reporte de excel
-INSERT INTO #PANALES VALUES (@d3,'156150076','8410177',0,0,0,0,'MARCAS TERCEROS');
-INSERT INTO #PANALES VALUES (@d3,'156131204','8410177',0,0,0,0,'MARCAS TERCEROS');
-INSERT INTO #PANALES VALUES (@d3,'156163360','8410177',0,0,0,0,'MARCAS TERCEROS');
+--Inserto información ficticia del año pasado para que no altere el reporte de excel esta informacion tiene ventas y plan 0
+INSERT INTO #PANALES VALUES (@d3,'156150076','8410177',0,0,0,0,'Consumo Masivo');
+INSERT INTO #PANALES VALUES (@d3,'156131204','8410177',0,0,0,0,'Consumo Masivo');
+INSERT INTO #PANALES VALUES (@d3,'156163360','8410177',0,0,0,0,'Consumo Masivo');
 
 --INSERT INTO #PANALES VALUES (@d3,'156150076','8410177',0,0,0,0.000001,'MARCAS TERCEROS');
 --INSERT INTO #PANALES VALUES (@d3,'156131204','8410177',0,0,0,0.000001,'MARCAS TERCEROS');
@@ -496,8 +483,9 @@ WHERE Fecha LIKE '0_/%'
 INSERT INTO VENTAS_TABLERO
 SELECT F.DES_MES Mes, A.Fecha Dia,
 	   M.CodCategoria CodCategoria, M.Categoria Categoria, M.CodFamilia CodFamilia, M.Familia Familia, M.CodAlicorp CodAlicorp, M.Material Material, M.CodMarca CodMarca, M.Marca Marca,
-	   AG.ZonaV2 Grupo_Condiciones, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
-	  'Panales' DEX, IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto) Negocio, SUM(ISNULL(A.Plan_Ton,0)) Plan_Ton,
+	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
+	   AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
+	   A.Negocio, SUM(ISNULL(A.Plan_Ton,0)) Plan_Ton,
 	  SUM(ISNULL(A.VentaTon,0)) real_ton, SUM(ISNULL(A.Plan_Dol,0)) Plan_Dol, SUM(ISNULL(A.VentaDolares,0)/1000) real_Dolares,
 	  M.Plataforma Plataforma
 FROM #PANALES A
@@ -507,8 +495,8 @@ FROM #PANALES A
 GROUP BY F.DES_MES, A.Fecha,
 	   M.CodCategoria, M.Categoria, M.CodFamilia, M.Familia, M.CodAlicorp, M.Material, M.CodMarca, M.Marca,
 	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
-	   IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto),
-	   M.Plataforma;
+	   AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
+	   A.Negocio, M.Plataforma;
 
 
 
@@ -525,8 +513,9 @@ GROUP BY F.DES_MES, A.Fecha,
 INSERT INTO VENTAS_TABLERO
 SELECT F.DES_MES Mes, A.Fecha Dia,
 	   A.CodCategoria CodCategoria, A.Categoria Categoria, A.CodFamilia CodFamilia, A.Familia Familia, A.CodAlicorp CodAlicorp, A.Des_Material Material, A.CodMarca CodMarca, A.Marca Marca,
-	   AG.ZonaV2 Grupo_Condiciones, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
-	  'Panales' DEX, 'Consumo Masivo' Negocio, SUM(ISNULL(A.Plan_Ton,0)) Plan_Ton,
+	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
+	   AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
+	   'Consumo Masivo' Negocio, SUM(ISNULL(A.Plan_Ton,0)) Plan_Ton,
 	  SUM(ISNULL(A.Ventas_Ton,0)) real_ton, SUM(ISNULL(A.Plan_Dol,0)) Plan_Dol, SUM(ISNULL(A.Ventas_Reales,0)) real_Dolares,
 	  A.Plataforma Plataforma
 FROM PLAN_PANALES A
@@ -535,6 +524,7 @@ FROM PLAN_PANALES A
 GROUP BY F.DES_MES, A.Fecha,
 	   A.CodCategoria, A.Categoria, A.CodFamilia, A.Familia, A.CodAlicorp, A.Des_Material, A.CodMarca, A.Marca,
 	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
+	   AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
 	   A.Plataforma;
 
 
@@ -545,16 +535,18 @@ IF OBJECT_ID('VENTAS_CONSOLIDADO') IS NOT NULL DROP TABLE VENTAS_CONSOLIDADO;
 --En esta tabla se va a insertar la información de todas las distribuidoras
 SELECT A.Mes, A.Dia,
 	   A.CodCategoria, A.Categoria, A.CodFamilia, A.Familia, A.CodMarca, A.Marca,
-	   A.Grupo_Condiciones, A.CodOficina, A.NomOficina, A.CodTerritorio, A.NomTerritorio, A.CodZona, A.NomZona,
-	  A.DEX, A.Negocio, SUM(A.Plan_Ton) Plan_Ton,
+	   A.ZonaV2, A.CodOficina, A.NomOficina, A.CodTerritorio, A.NomTerritorio, A.CodZona, A.NomZona,
+	   A.Oficina_Ventas, A.Grupo_Vendedores, A.Territorio, A.Agrupacion_Distribuidora, A.Agencia_Distribuidora, A.Zona_Clientes, A.Grupo_Condiciones,
+	   A.Negocio, SUM(A.Plan_Ton) Plan_Ton,
 	  SUM(A.real_ton) real_ton, SUM(A.Plan_Dol) Plan_Dol, SUM(A.real_Dolares) real_Dolares,
 	  A.Plataforma Plataforma
 INTO VENTAS_CONSOLIDADO
 FROM VENTAS_TABLERO A
 GROUP BY A.MES, A.Dia,
 	   A.CodCategoria, A.Categoria, A.CodFamilia, A.Familia, A.CodMarca, A.Marca,
-	    A.Grupo_Condiciones, A.CodOficina, A.NomOficina, A.CodTerritorio, A.NomTerritorio, A.CodZona, A.NomZona,
-	   A.DEX, A.Negocio,
+	   A.ZonaV2, A.CodOficina, A.NomOficina, A.CodTerritorio, A.NomTerritorio, A.CodZona, A.NomZona,
+	   A.Oficina_Ventas, A.Grupo_Vendedores, A.Territorio, A.Agrupacion_Distribuidora, A.Agencia_Distribuidora, A.Zona_Clientes, A.Grupo_Condiciones,
+	   A.Negocio,
 	   A.Plataforma;
 
 
@@ -574,11 +566,9 @@ CONCAT(A.CodCategoria,' ', A.Categoria) "Categoria",
 A.Negocio Negocio,
 CONCAT(A.CodFamilia,' ',A.Familia) Familia,
 CONCAT(A.CodMarca,' ',A.Marca) Marca,
-A.Grupo_Condiciones "Grupo_Condiciones",
-CONCAT(A.CodOficina,' ',A.NomOficina) "Oficina_Ventas",
-CONCAT(A.CodTerritorio,' ',A.NomTerritorio) "Grupo_Vendedores",
-CONCAT(A.CodZona,' ',A.NomZona) "Zona_Clientes",
-A.DEX "DEX",
+
+A.Oficina_Ventas, A.Grupo_Vendedores, A.Territorio, A.Agrupacion_Distribuidora, A.Agencia_Distribuidora, A.Zona_Clientes, A.Grupo_Condiciones,
+
 A.Plan_Ton plan_ton,
 A.real_ton real_ton,
 A.Plan_Dol plan_dol,
