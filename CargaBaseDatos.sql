@@ -3,7 +3,7 @@ USE CmiSellOutEcuador;
 DECLARE @dia DATE;
 DECLARE @d1 AS VARCHAR(20);
 
-SELECT @dia= DATEADD(DAY,-8,SYSDATETIME());
+SELECT @dia= DATEADD(DAY,-9,SYSDATETIME());
 -- poner el último día de ventas
 SELECT @d1= TRY_CONVERT(VARCHAR(20), TRY_CONVERT(DATE, @dia,103),103);
 
@@ -384,23 +384,26 @@ FROM PLAN_LA_FABRIL
 
 IF OBJECT_ID(N'tempdb..#VENTAS_Y_NOTAS_CREDITO') IS NOT NULL DROP TABLE #VENTAS_Y_NOTAS_CREDITO;
 --Creo tabla temporal para unir las ventas, las notas de crédito y el plan con los campos que se requiere
-SELECT A.FFactura Fecha, A.Agencia Agencia, A.NSupervisor Vendedor_Distribuidora, TVendedor Tipo_tienda_Distribuidora, A.CodArticulo CodLaFabril, A.CodAlicorp CodAlicorp, 0 Plan_Ton, A.Kilos VentaKil, 0 Plan_Dol, A.Importe VentaDolares, A.GrupoProducto TipoProducto
+SELECT A.FFactura Fecha, A.Agencia Agencia, A.NSupervisor Vendedor_Distribuidora, TVendedor Tipo_tienda_Distribuidora, A.CodArticulo CodLaFabril, A.CodAlicorp CodAlicorp,
+	   A.FacUnitario, A.TUnidades, 0 Plan_Ton, A.Kilos VentaKil, 0 Plan_Dol, A.Importe VentaDolares, A.GrupoProducto TipoProducto
 INTO #VENTAS_Y_NOTAS_CREDITO 
 FROM BASE_INICIAL_VENTAS A;  
 --SELECT * FROM #VENTAS_Y_NOTAS_CREDITO  WHERE Plan_Ton =0 AND VentaKil = 0 AND Plan_Dol = 0 AND VentaDolares = 0
 
 INSERT INTO #VENTAS_Y_NOTAS_CREDITO 
-SELECT A.FNC Fecha, A.Agencia Agencia, 'SIN ASIGNAR - NC' Vendedor_Distribuidora,'SIN ASIGNAR - NC' Tipo_tienda_Distribuidora, A.CodArticulo CodLaFabril, A.CodAlicorp CodAlicorp, 0 Plan_Ton, 0 VentaKil, 0 Plan_Dol,  A.Importe VentaDolares, 'MARCAS TERCEROS' TipoProducto
+SELECT A.FNC Fecha, A.Agencia Agencia, 'SIN ASIGNAR - NC' Vendedor_Distribuidora,'SIN ASIGNAR - NC' Tipo_tienda_Distribuidora, A.CodArticulo CodLaFabril, A.CodAlicorp CodAlicorp,
+		0 FacUnitario, 0 TUnidades, 0 Plan_Ton, 0 VentaKil, 0 Plan_Dol,  A.Importe VentaDolares, 'MARCAS TERCEROS' TipoProducto
 FROM NOTAS_CREDITO  A;
 
 ALTER TABLE #VENTAS_Y_NOTAS_CREDITO ALTER COLUMN Plan_Ton FLOAT;
 ALTER TABLE #VENTAS_Y_NOTAS_CREDITO ALTER COLUMN Plan_Dol FLOAT;
 
  INSERT INTO #VENTAS_Y_NOTAS_CREDITO
- SELECT @dia Fecha, AG.Agencia Agencia, 'SIN ASIGNAR - LF_PLAN ' Vendedor_Distribuidora, 'SIN ASIGNAR - LF_PLAN' Tipo_tienda_Distribuidora, 'NC' CodLaFabril, P.CodAlicorp CodAlicorp, P.Kilos Plan_Ton, 0 VentaKil, P.Importe Plan_Dol , 0 VentaDolares, 'MARCAS TERCEROS' TipoProducto
+ SELECT @dia Fecha, AG.Agencia Agencia, 'SIN ASIGNAR - LF_PLAN ' Vendedor_Distribuidora, 'SIN ASIGNAR - LF_PLAN' Tipo_tienda_Distribuidora, 'NC' CodLaFabril, P.CodAlicorp CodAlicorp,
+		0 FacUnitario, 0 TUnidades, P.Kilos Plan_Ton, 0 VentaKil, P.Importe Plan_Dol , 0 VentaDolares, 'MARCAS TERCEROS' TipoProducto
  FROM #PLAN P
 	LEFT JOIN MAESTRO_AGENCIAS AG ON P.CodOficina = AG.CodOficina
---SELECT * FROM #VENTAS_Y_NOTAS_CREDITO WHERE Vendedor_Distribuidora IS NULL
+--SELECT * FROM #VENTAS_Y_NOTAS_CREDITO WHERE FacUnitario IS NULL
 --Le asigno una fecha al plan, puede ser cualquiere dentro del rango de días de venta transcurridos
 --El campo CodLaFabril a este punto ya no es necesario por eso le asignamos un valor NC
 
@@ -420,7 +423,8 @@ WHERE Agencia = 'PTA'
 
 IF OBJECT_ID(N'tempdb..#VENTAS_Y_NOTAS') IS NOT NULL DROP TABLE #VENTAS_Y_NOTAS;
 --Creo tabla temporal para darle formato varchar a la fecha
-SELECT CONVERT(VARCHAR(20), V.Fecha,103) Fecha, V.Agencia, V.Vendedor_Distribuidora, V.Tipo_tienda_Distribuidora, V.CodLaFabril, V.CodAlicorp, V.Plan_Ton, V.Ventakil, V.Plan_Dol, V.VentaDolares, V.TipoProducto
+SELECT CONVERT(VARCHAR(20), V.Fecha,103) Fecha, V.Agencia, V.Vendedor_Distribuidora, V.Tipo_tienda_Distribuidora, V.CodLaFabril, V.CodAlicorp,
+	   V.FacUnitario, V.TUnidades,V.Plan_Ton, V.Ventakil, V.Plan_Dol, V.VentaDolares, V.TipoProducto
 INTO #VENTAS_Y_NOTAS
 FROM #VENTAS_Y_NOTAS_CREDITO V
 --SELECT SUM (Plan_Ton)FROM #VENTAS_Y_NOTAS
@@ -450,7 +454,7 @@ SELECT F.DES_MES Mes, A.Fecha Dia,
 	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
 	   AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
 	  A.Vendedor_Distribuidora, A.Tipo_tienda_Distribuidora,
-	  IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto) Negocio, SUM(ISNULL(A.Plan_Ton,0)) Plan_Ton,
+	  IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto) Negocio, A.FacUnitario, SUM(ISNULL(A.TUnidades,0)) TUnidades, SUM(ISNULL(A.Plan_Ton,0)) Plan_Ton,
 	  SUM(ISNULL(A.VentaKil,0)/1000) real_ton, SUM(ISNULL(A.Plan_Dol,0)/1000) Plan_Dol, SUM(ISNULL(A.VentaDolares,0)/1000) real_Dolares,
 	  M.Plataforma Plataforma
 INTO VENTAS_TABLERO
@@ -463,7 +467,7 @@ GROUP BY F.DES_MES, A.Fecha,
 	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
 	   AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
 	   A.Vendedor_Distribuidora, Tipo_tienda_Distribuidora,
-	   IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto),
+	   IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto),A.FacUnitario,
 	   M.Plataforma;
 
 
@@ -573,22 +577,23 @@ SET NomOficina = CASE NomOficina
 --Creo tabla temporal para homologar los campos y darle formato a la fecha, tambien calculo las toneladas
 IF OBJECT_ID(N'tempdb..#PANALES') IS NOT NULL DROP TABLE #PANALES;
 
-SELECT CONVERT(VARCHAR(20), A.Fecha,103) Fecha, A.Agencia Agencia, V.Nombre Vendedor_Distribuidora, A.TipoNegocio Tipo_tienda_Distribuidora, A.CodAlicorp CodAlicorp, 0  Plan_Ton, (M.PesoTon)*(A.Cantidad) VentaTon, 0 Plan_Dol, A.Importe VentaDolares,
+SELECT CONVERT(VARCHAR(20), A.Fecha,103) Fecha, A.Agencia Agencia, V.Nombre Vendedor_Distribuidora, A.TipoNegocio Tipo_tienda_Distribuidora, A.CodAlicorp CodAlicorp,
+	   M.FacUnitario FacUnitario, A.Cantidad TUnidades, 0  Plan_Ton, (M.PesoTon)*(A.Cantidad) VentaTon, 0 Plan_Dol, A.Importe VentaDolares,
 	   'Consumo Masivo' Negocio
 INTO #PANALES
 FROM BASE_MOBILVENDOR_AUTOMATICA A
 	LEFT JOIN VENDEDORES_PANALES V ON A.Usuario = V.Codigo
 	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp;
---SELECT * FROM #PANALES WHERE VentaTon=0 AND VentaDolares= 0 AND Plan_Dol = 0
+--SELECT * FROM #PANALES WHERE CodAlicorp = '8410177' VentaTon=0 AND VentaDolares= 0 AND Plan_Dol = 0
 
 ALTER TABLE #PANALES ALTER COLUMN Plan_Ton FLOAT;
 ALTER TABLE #PANALES ALTER COLUMN VentaTon FLOAT;
 ALTER TABLE #PANALES ALTER COLUMN Plan_Dol FLOAT;
 
 --Inserto información ficticia del año pasado para que no altere el reporte de excel esta informacion tiene ventas y plan 0
-INSERT INTO #PANALES VALUES (@d3,'156150076', 'NIRSA', '1 Tienda Bodega/Barrio','8410177',0,0,0,0,'Consumo Masivo');
-INSERT INTO #PANALES VALUES (@d3,'156131204', 'NICANOR FERNANDO BACILIO PARRAGA','1 Tienda Bodega/Barrio','8410177',0,0,0,0,'Consumo Masivo');
-INSERT INTO #PANALES VALUES (@d3,'156163360', 'JHONNY SIGUENCIA', '1 Tienda Bodega/Barrio','8410177',0,0,0,0,'Consumo Masivo');
+INSERT INTO #PANALES VALUES (@d3,'156150076', 'NIRSA', '1 Tienda Bodega/Barrio','8410177',20,0,0,0,0,0,'Consumo Masivo');
+INSERT INTO #PANALES VALUES (@d3,'156131204', 'NICANOR FERNANDO BACILIO PARRAGA','1 Tienda Bodega/Barrio','8410177',20,0,0,0,0,0,'Consumo Masivo');
+INSERT INTO #PANALES VALUES (@d3,'156163360', 'JHONNY SIGUENCIA', '1 Tienda Bodega/Barrio','8410177',20,0,0,0,0,0,'Consumo Masivo');
 
 --INSERT INTO #PANALES VALUES (@d3,'156150076','8410177',0,0,0,0.000001,'MARCAS TERCEROS');
 --INSERT INTO #PANALES VALUES (@d3,'156131204','8410177',0,0,0,0.000001,'MARCAS TERCEROS');
@@ -606,7 +611,7 @@ SELECT F.DES_MES Mes, A.Fecha Dia,
 	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
 	   AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
 	   A.Vendedor_Distribuidora, A.Tipo_tienda_Distribuidora,
-	   A.Negocio, SUM(ISNULL(A.Plan_Ton,0)) Plan_Ton,
+	   A.Negocio, A.FacUnitario, SUM(ISNULL(A.TUnidades,0)) TUnidades, SUM(ISNULL(A.Plan_Ton,0)) Plan_Ton,
 	  SUM(ISNULL(A.VentaTon,0)) real_ton, SUM(ISNULL(A.Plan_Dol,0)) Plan_Dol, SUM(ISNULL(A.VentaDolares,0)/1000) real_Dolares,
 	  M.Plataforma Plataforma
 FROM #PANALES A
@@ -618,7 +623,7 @@ GROUP BY F.DES_MES, A.Fecha,
 	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
 	   AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
 	   A.Vendedor_Distribuidora, A.Tipo_tienda_Distribuidora,
-	   A.Negocio, M.Plataforma;
+	   A.Negocio,A.FacUnitario, M.Plataforma;
 
 
 
@@ -638,7 +643,7 @@ SELECT F.DES_MES Mes, A.Fecha Dia,
 	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
 	   AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
 	   'SIN ASIGNAR - PA_PLAN ' Vendedor_Distribuidora, 'SIN ASIGNAR - PA_PLAN ' Tipo_tienda_Distribuidora,
-	   'Consumo Masivo' Negocio, SUM(ISNULL(A.Plan_Ton,0)) Plan_Ton,
+	   'Consumo Masivo' Negocio, 0 FacUnitario, 0 TUnidades, SUM(ISNULL(A.Plan_Ton,0)) Plan_Ton,
 	  SUM(ISNULL(A.Ventas_Ton,0)) real_ton, SUM(ISNULL(A.Plan_Dol,0)) Plan_Dol, SUM(ISNULL(A.Ventas_Reales,0)) real_Dolares,
 	  A.Plataforma Plataforma
 FROM PLAN_PANALES A
