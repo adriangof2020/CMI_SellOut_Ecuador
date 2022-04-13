@@ -3,7 +3,7 @@ USE CmiSellOutEcuador;
 DECLARE @dia DATE;
 DECLARE @d1 AS VARCHAR(20);
 
-SELECT @dia= DATEADD(DAY,-9,SYSDATETIME());
+SELECT @dia= DATEADD(DAY,-1,SYSDATETIME());
 -- poner el último día de ventas
 SELECT @d1= TRY_CONVERT(VARCHAR(20), TRY_CONVERT(DATE, @dia,103),103);
 
@@ -156,16 +156,17 @@ BULK INSERT PLAN_LA_FABRIL
 FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\PLAN_LA_FABRIL.csv'
 WITH (FIELDTERMINATOR=';', FIRSTROW=2, CODEPAGE='ACP');
 
-DELETE [PLAN_LA_FABRIL] WHERE Kilos = 0 AND Cajas = 0  AND Importe = 0;
+DELETE [PLAN_LA_FABRIL] WHERE Plan_Ton = 0 AND Importe = 0;
 
-UPDATE PLAN_LA_FABRIL SET OficinaVentas = TRIM(OficinaVentas);
+UPDATE PLAN_LA_FABRIL SET Agencia = TRIM(Agencia);
 UPDATE PLAN_LA_FABRIL SET CodAlicorp = TRIM(CodAlicorp);
 
-UPDATE PLAN_LA_FABRIL
-SET OficinaVentas = CASE OficinaVentas
-	WHEN 'EC - Machala' THEN '704 EC - Machala'
-	WHEN 'EC - Ibarra' THEN '713 EC - Ibarra'
-	ELSE OficinaVentas END;
+--SELECT * FROM PLAN_LA_FABRIL  A LEFT JOIN [dbo].[TABLA_MATERIALES] B ON A.CodAlicorp = B.CodAlicorp WHERE A.CodAlicorp IS  NULL
+--UPDATE PLAN_LA_FABRIL
+--SET OficinaVentas = CASE OficinaVentas
+--	WHEN 'EC - Machala' THEN '704 EC - Machala'
+--	WHEN 'EC - Ibarra' THEN '713 EC - Ibarra'
+--	ELSE OficinaVentas END;
 --UPDATE PLAN_LA_FABRIL necesito el codigo cuando lo separo
 --SET OficinaVentas = CASE OficinaVentas
 
@@ -176,8 +177,12 @@ SET CodAlicorp = CASE CodAlicorp
 	WHEN '8309002' THEN '8309121'
 	WHEN '8309003' THEN '8309122'
 	WHEN '8309007' THEN '8309126'
+	WHEN '3300154' THEN '3300141'
+	WHEN '3300155' THEN '3300140'
 	WHEN '8309009' THEN '8309128' ELSE CodAlicorp END;
 --Cambiamos los codigos antiguos por los nuevos codigos afo
+
+SET LANGUAGE SPANISH
 
 TRUNCATE TABLE BASE_INICIAL_VENTAS;
 
@@ -185,18 +190,22 @@ BULK INSERT BASE_INICIAL_VENTAS
 FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\BDPRUEBAVENTAS.csv'
 WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
 
-INSERT INTO BASE_INICIAL_VENTAS
-SELECT *
-FROM LF_VENTAS_HISTORICO
-WHERE DATEPART(YEAR, FFactura)= 2021 AND DATEPART(MONTH, FFactura) = 03
+SET LANGUAGE US_ENGLISH
 
 INSERT INTO BASE_INICIAL_VENTAS
 SELECT *
 FROM LF_VENTAS_HISTORICO
-WHERE DATEPART(YEAR, FFactura)= 2022 AND DATEPART(MONTH, FFactura) = 02
+WHERE DATEPART(YEAR, FFactura)= 2021 AND DATEPART(MONTH, FFactura) = 04
+
+INSERT INTO BASE_INICIAL_VENTAS
+SELECT *
+FROM LF_VENTAS_HISTORICO
+WHERE DATEPART(YEAR, FFactura)= 2022 AND DATEPART(MONTH, FFactura) = 03
+
+
 
 --BULK INSERT [LF_VENTAS_HISTORICO]
---FROM 'C:\Proyectos\Ecuador\LA_FABRIL\LFVentasHistorico.csv'
+--FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\BDPRUEBAVENTAS.csv'
 --WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
 
 --DELETE FROM [LF_VENTAS_HISTORICO] WHERE Regional ='Regional'
@@ -293,9 +302,17 @@ SET CodAlicorp = CASE DesArticulo
 	ELSE CodAlicorp END;
 
 UPDATE BASE_INICIAL_VENTAS
+SET	DesArticulo = 'INSECTIC SAPOL MOSC/ZANC 360ML C*12'
+WHERE DesArticulo = 'INSECTIC SAPOL MOSC/ZANC 360ML';
+
+UPDATE BASE_INICIAL_VENTAS
 SET	CodArticulo = '8005796',
 	DesArticulo = 'ALACENA MAYONESA EXP 90CC 24DPK'
 WHERE CodArticulo = '8005634' AND DesArticulo = 'ALACENA MAYONESA 90CC 24DPK';	
+
+UPDATE BASE_INICIAL_VENTAS
+SET	CodAlicorp = '3300141'
+WHERE CodAlicorp = '3300154';
 
 UPDATE BASE_INICIAL_VENTAS
 SET CodAlicorp = CASE CodAlicorp
@@ -307,24 +324,30 @@ SET CodAlicorp = CASE CodAlicorp
 	WHEN '8309009' THEN '8309128' ELSE CodAlicorp END;
 --Cambiamos los codigos antiguos por los nuevos codigos afo
 
+SET LANGUAGE SPANISH
+
 TRUNCATE TABLE NOTAS_CREDITO;
 
 BULK INSERT NOTAS_CREDITO
 FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\BDPRUEBA.csv'
 WITH (FIELDTERMINATOR=';', FIRSTROW=2, CODEPAGE='ACP');
 
-INSERT INTO NOTAS_CREDITO
-SELECT *
-FROM LF_NC_HISTORICO
-WHERE DATEPART(YEAR, FNC)= 2021 AND DATEPART(MONTH, FNC) = 03;
+SET LANGUAGE ENGLISH
 
 INSERT INTO NOTAS_CREDITO
 SELECT *
 FROM LF_NC_HISTORICO
-WHERE DATEPART(YEAR, FNC)= 2022 AND DATEPART(MONTH, FNC) = 02;
+WHERE DATEPART(YEAR, FNC)= 2021 AND DATEPART(MONTH, FNC) = 04;
+
+INSERT INTO NOTAS_CREDITO
+SELECT *
+FROM LF_NC_HISTORICO
+WHERE DATEPART(YEAR, FNC)= 2022 AND DATEPART(MONTH, FNC) = 03;
+
+
 
 --BULK INSERT LF_NC_HISTORICO
---FROM 'C:\Proyectos\Ecuador\LA_FABRIL\LFNotasCreditoHistorico.csv'
+--FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\BDPRUEBA.csv'
 --WITH (FIELDTERMINATOR=';', FIRSTROW=2, CODEPAGE='ACP');
 
 --SET LANGUAGE spanish
@@ -342,6 +365,14 @@ UPDATE NOTAS_CREDITO
 SET	CodArticulo = '8005796',
 	DesArticulo = 'ALACENA MAYONESA EXP 90CC 24DPK'
 WHERE CodArticulo = '8005634' AND DesArticulo = 'ALACENA MAYONESA 90CC 24DPK';
+
+UPDATE NOTAS_CREDITO
+SET	DesArticulo = 'INSECTIC SAPOL MOSC/ZANC 360ML C*12'
+WHERE DesArticulo = 'INSECTIC SAPOL MOSC/ZANC 360ML';
+
+UPDATE NOTAS_CREDITO
+SET	DesArticulo = 'INSECTIC SAPOL PULG/GARR 360ML C*12'
+WHERE DesArticulo = 'INSECTIC SAPOL PULG/GARR 360ML';
 
 DELETE FROM NOTAS_CREDITO WHERE Importe = 0;
 
@@ -374,11 +405,11 @@ UPDATE MAESTRO_AGENCIAS SET Agencia = TRIM(Agencia);
 UPDATE MAESTRO_AGENCIAS SET NomOficina = TRIM(NomOficina);
 UPDATE MAESTRO_AGENCIAS SET CodOficina = TRIM(CodOficina);
 
-IF OBJECT_ID(N'tempdb..#PLAN') IS NOT NULL DROP TABLE #PLAN;
+--IF OBJECT_ID(N'tempdb..#PLAN') IS NOT NULL DROP TABLE #PLAN;
 
-SELECT LEFT(OficinaVentas,3) CodOficina, RIGHT(OficinaVentas, LEN(OficinaVentas)-4) NomOficina , CodAlicorp, Kilos, Importe
-INTO #PLAN
-FROM PLAN_LA_FABRIL
+--SELECT LEFT(OficinaVentas,3) CodOficina, RIGHT(OficinaVentas, LEN(OficinaVentas)-4) NomOficina , CodAlicorp, Kilos, Importe
+--INTO #PLAN
+--FROM PLAN_LA_FABRIL
 --Creo tabla temporal para homologar campos con la tablas NOTAS_CREDITO y BASE_INICIAL_VENTAS
 --SELECT * FROM #PLAN  A LEFT JOIN [dbo].[TABLA_MATERIALES] B ON A.CodAlicorp = B.CodAlicorp WHERE A.CodAlicorp IS  NULL
 
@@ -388,7 +419,7 @@ SELECT A.FFactura Fecha, A.Agencia Agencia, A.NSupervisor Vendedor_Distribuidora
 	   A.FacUnitario, A.TUnidades, 0 Plan_Ton, A.Kilos VentaKil, 0 Plan_Dol, A.Importe VentaDolares, A.GrupoProducto TipoProducto
 INTO #VENTAS_Y_NOTAS_CREDITO 
 FROM BASE_INICIAL_VENTAS A;  
---SELECT * FROM #VENTAS_Y_NOTAS_CREDITO  WHERE Plan_Ton =0 AND VentaKil = 0 AND Plan_Dol = 0 AND VentaDolares = 0
+--SELECT * FROM #VENTAS_Y_NOTAS_CREDITO  WHERE  Plan_Ton =0 AND VentaKil = 0 AND Plan_Dol = 0 AND VentaDolares = 0
 
 INSERT INTO #VENTAS_Y_NOTAS_CREDITO 
 SELECT A.FNC Fecha, A.Agencia Agencia, 'SIN ASIGNAR - NC' Vendedor_Distribuidora,'SIN ASIGNAR - NC' Tipo_tienda_Distribuidora, A.CodArticulo CodLaFabril, A.CodAlicorp CodAlicorp,
@@ -399,10 +430,10 @@ ALTER TABLE #VENTAS_Y_NOTAS_CREDITO ALTER COLUMN Plan_Ton FLOAT;
 ALTER TABLE #VENTAS_Y_NOTAS_CREDITO ALTER COLUMN Plan_Dol FLOAT;
 
  INSERT INTO #VENTAS_Y_NOTAS_CREDITO
- SELECT @dia Fecha, AG.Agencia Agencia, 'SIN ASIGNAR - LF_PLAN ' Vendedor_Distribuidora, 'SIN ASIGNAR - LF_PLAN' Tipo_tienda_Distribuidora, 'NC' CodLaFabril, P.CodAlicorp CodAlicorp,
-		0 FacUnitario, 0 TUnidades, P.Kilos Plan_Ton, 0 VentaKil, P.Importe Plan_Dol , 0 VentaDolares, 'MARCAS TERCEROS' TipoProducto
- FROM #PLAN P
-	LEFT JOIN MAESTRO_AGENCIAS AG ON P.CodOficina = AG.CodOficina
+ SELECT @dia Fecha, P.Agencia, 'SIN ASIGNAR - LF_PLAN ' Vendedor_Distribuidora, 'SIN ASIGNAR - LF_PLAN' Tipo_tienda_Distribuidora, 'NC' CodLaFabril, P.CodAlicorp CodAlicorp,
+		0 FacUnitario, 0 TUnidades, P.Plan_Ton, 0 VentaKil, P.Importe Plan_Dol , 0 VentaDolares, 'MARCAS TERCEROS' TipoProducto
+ FROM PLAN_LA_FABRIL P
+	--LEFT JOIN MAESTRO_AGENCIAS AG ON P.CodOficina = AG.CodOficina
 --SELECT * FROM #VENTAS_Y_NOTAS_CREDITO WHERE FacUnitario IS NULL
 --Le asigno una fecha al plan, puede ser cualquiere dentro del rango de días de venta transcurridos
 --El campo CodLaFabril a este punto ya no es necesario por eso le asignamos un valor NC
@@ -412,13 +443,18 @@ UPDATE #VENTAS_Y_NOTAS_CREDITO
 SET Agencia = 'AGG'
 WHERE Agencia = 'DCG'
 
-UPDATE #VENTAS_Y_NOTAS_CREDITO 
+UPDATE #VENTAS_Y_NOTAS_CREDITO
 SET Agencia = 'AGM'
 WHERE Agencia = 'DCM'
 
 UPDATE #VENTAS_Y_NOTAS_CREDITO
 SET Agencia = 'AGM'
 WHERE Agencia = 'PTA'
+
+UPDATE #VENTAS_Y_NOTAS_CREDITO
+SET Agencia = 'AGA'
+WHERE Agencia = 'AMA'
+--AMA ES UNA AGENCIA DE AGA
 
 
 IF OBJECT_ID(N'tempdb..#VENTAS_Y_NOTAS') IS NOT NULL DROP TABLE #VENTAS_Y_NOTAS;
@@ -431,7 +467,7 @@ FROM #VENTAS_Y_NOTAS_CREDITO V
 --SELECT SUM (VentaKil)FROM #VENTAS_Y_NOTAS
 --SELECT SUM (Plan_Dol)FROM #VENTAS_Y_NOTAS
 --SELECT SUM (VentaDolares)FROM #VENTAS_Y_NOTAS
---SELECT * FROM #VENTAS_Y_NOTAS WHERE CodAlicorp = '';
+--SELECT * FROM #VENTAS_Y_NOTAS WHERE CodAlicorp is null;
 --SELECT * FROM #VENTAS_Y_NOTAS  WHERE  Plan_Ton =0 AND VentaKil = 0 AND Plan_Dol = 0 AND VentaDolares = 0 CodAlicorp IS NULL;
 
 UPDATE #VENTAS_Y_NOTAS 
@@ -441,21 +477,27 @@ WHERE Fecha LIKE '0_/%';
 UPDATE #VENTAS_Y_NOTAS
 SET Agencia = 'NC'
 WHERE Agencia = ''
+
+UPDATE #VENTAS_Y_NOTAS
+SET Agencia = 'NC'
+WHERE Agencia is null;
 --Debido a que en las notas de crédito algunos rows salen vacios la agencia
 
 ---------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------
+--Tener en cuenta que no hay un campo que separe las la información de las NC , de la información de las Ventas, lo que hay es el campo
+--que permite saber que rows de las NC en esta tabla no tiene agencia registrada.. si se deseara se puede incluir
 --Para el proyecto de tableros de Valery
 IF OBJECT_ID('VENTAS_TABLERO') IS NOT NULL DROP TABLE VENTAS_TABLERO;
 --Creo tabla donde consolido la información de la tabla temporal #VENTAS_Y_NOTAS agregando los campos que necesito
 --En esta tabla se va a insertar la información de todas las distribuidoras
 SELECT F.DES_MES Mes, A.Fecha Dia,
-	   M.CodCategoria CodCategoria, M.Categoria Categoria, M.CodFamilia CodFamilia, M.Familia Familia, M.CodAlicorp CodAlicorp, M.Material Material,  M.CodMarca CodMarca, M.Marca Marca,
+	   M.CodCategoria CodCategoria, M.Categoria Categoria, M.CodFamilia CodFamilia, M.Familia Familia, A.CodAlicorp CodAlicorp, M.Material Material,  M.CodMarca CodMarca, M.Marca Marca,
 	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
 	   AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
 	  A.Vendedor_Distribuidora, A.Tipo_tienda_Distribuidora,
 	  IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto) Negocio, A.FacUnitario, SUM(ISNULL(A.TUnidades,0)) TUnidades, SUM(ISNULL(A.Plan_Ton,0)) Plan_Ton,
-	  SUM(ISNULL(A.VentaKil,0)/1000) real_ton, SUM(ISNULL(A.Plan_Dol,0)/1000) Plan_Dol, SUM(ISNULL(A.VentaDolares,0)/1000) real_Dolares,
+	  SUM(ISNULL(A.VentaKil,0)/1000) real_ton, SUM(ISNULL(A.Plan_Dol,0)) Plan_Dol, SUM(ISNULL(A.VentaDolares,0)/1000) real_Dolares,
 	  M.Plataforma Plataforma
 INTO VENTAS_TABLERO
 FROM #VENTAS_Y_NOTAS A
@@ -463,7 +505,7 @@ FROM #VENTAS_Y_NOTAS A
 	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp
 	LEFT JOIN MAESTRO_AGENCIAS AG ON A.Agencia = AG.Agencia
 GROUP BY F.DES_MES, A.Fecha,
-	   M.CodCategoria, M.Categoria, M.CodFamilia, M.Familia, M.CodAlicorp, M.Material , M.CodMarca, M.Marca,
+	   M.CodCategoria, M.Categoria, M.CodFamilia, M.Familia, A.CodAlicorp, M.Material , M.CodMarca, M.Marca,
 	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
 	   AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
 	   A.Vendedor_Distribuidora, Tipo_tienda_Distribuidora,
@@ -490,16 +532,18 @@ UPDATE VENDEDORES_PANALES SET Codigo = TRIM(Codigo);
 TRUNCATE TABLE BASE_MOBILVENDOR_AUTOMATICA;
 
 BULK INSERT BASE_MOBILVENDOR_AUTOMATICA
-FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\Panales_MAR.txt'
+FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\Panales_ABR.txt'
 WITH (FIELDTERMINATOR='|',FIRSTROW=2,CODEPAGE='ACP');
 
 INSERT INTO BASE_MOBILVENDOR_AUTOMATICA
 SELECT *
 FROM BASE_PANALES_HISTORICA
-WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 02;
+WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 03;
+
+
 
 --BULK INSERT [BASE_PANALES_HISTORICA]
---FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\Panales_ENE.txt'
+--FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\Panales_MAR.txt'
 --WITH (FIELDTERMINATOR='|',FIRSTROW=2,CODEPAGE='ACP')
 
 
@@ -581,6 +625,7 @@ SELECT CONVERT(VARCHAR(20), A.Fecha,103) Fecha, A.Agencia Agencia, V.Nombre Vend
 	   M.FacUnitario FacUnitario, A.Cantidad TUnidades, 0  Plan_Ton, (M.PesoTon)*(A.Cantidad) VentaTon, 0 Plan_Dol, A.Importe VentaDolares,
 	   'Consumo Masivo' Negocio
 INTO #PANALES
+select *
 FROM BASE_MOBILVENDOR_AUTOMATICA A
 	LEFT JOIN VENDEDORES_PANALES V ON A.Usuario = V.Codigo
 	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp;
