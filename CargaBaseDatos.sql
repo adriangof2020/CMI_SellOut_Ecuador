@@ -115,6 +115,7 @@ PRINT @ds10;
 print @ds11;
 print @ds12;
 
+--Este maestro solo tiene codigos alicorp y sus quiebres
 TRUNCATE TABLE MAESTRO_ALICORP;
 --La llave es el CodAlicorp
 BULK INSERT MAESTRO_ALICORP
@@ -131,6 +132,7 @@ UPDATE TABLA_MATERIALES SET CodMarca = TRIM(CodMarca);
 UPDATE TABLA_MATERIALES SET Marca = TRIM(Marca);
 UPDATE TABLA_MATERIALES SET Plataforma = TRIM(Plataforma);
 
+--Este maestro se usa para unir el CodLaFabril con los CodAlicorp
 TRUNCATE TABLE TABLA_MATERIALES;
 --En esta base la llave es CodLaFabril&Descripcion de la Fabril
 -- se usa para poner los codigos alicorp a las notas de credito
@@ -192,6 +194,7 @@ WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
 
 SET LANGUAGE US_ENGLISH
 
+--Colocar los meses que deseamos comparar con el mes actual
 INSERT INTO BASE_INICIAL_VENTAS
 SELECT *
 FROM LF_VENTAS_HISTORICO
@@ -334,6 +337,7 @@ WITH (FIELDTERMINATOR=';', FIRSTROW=2, CODEPAGE='ACP');
 
 SET LANGUAGE ENGLISH
 
+--Colocar los meses que deseamos comparar con el mes actual
 INSERT INTO NOTAS_CREDITO
 SELECT *
 FROM LF_NC_HISTORICO
@@ -394,6 +398,7 @@ SET CodAlicorp = CASE DesArticulo
 	WHEN 'NUTREG BOLSA SURTIDA 200G 20BO'	THEN	'4335049'
 	WHEN 'NUTREG BOLSA SURTIDA 400G 12BO'	THEN	'4335048'
 	ELSE CodAlicorp END;
+
 
 TRUNCATE TABLE MAESTRO_AGENCIAS;
  
@@ -529,12 +534,14 @@ WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
 
 UPDATE VENDEDORES_PANALES SET Codigo = TRIM(Codigo);
 
+--Esta es la base de ventas de Panales
 TRUNCATE TABLE BASE_MOBILVENDOR_AUTOMATICA;
 
 BULK INSERT BASE_MOBILVENDOR_AUTOMATICA
 FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\Panales_ABR.txt'
 WITH (FIELDTERMINATOR='|',FIRSTROW=2,CODEPAGE='ACP');
 
+--Colocar los meses que deseamos comparar con el mes actual
 INSERT INTO BASE_MOBILVENDOR_AUTOMATICA
 SELECT *
 FROM BASE_PANALES_HISTORICA
@@ -703,8 +710,6 @@ GROUP BY F.DES_MES, A.Fecha,
 --- Pueden haber rows con valor 0 en plan y venta a vez debido en la fabril hay muchas ventas negativas, las nc negativas y debido al plan
 --que puede darse el caso de que hay codigos sin plan
 -- en Panales exectuando los 3 rows ficticios porque puede darse el caso de que hay codigos sin plan.
-
-
 
 
 IF OBJECT_ID('VENTAS_CONSOLIDADO') IS NOT NULL DROP TABLE VENTAS_CONSOLIDADO;
