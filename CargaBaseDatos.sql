@@ -587,6 +587,7 @@ WITH (FIELDTERMINATOR=';', FIRSTROW=2, CODEPAGE='ACP');
 
 DELETE PLAN_PANALES WHERE Plan_Dol = 0 AND Plan_Ton = 0;
 DELETE FROM PLAN_PANALES WHERE Plan_Dol IS NULL AND Plan_Ton IS NULL;
+DELETE FROM PLAN_PANALES WHERE Plan_Dol = '' AND Plan_Ton = '';
 
 UPDATE A SET CodCategoria = TRIM(CodCategoria) FROM PLAN_PANALES A;
 UPDATE A SET Categoria = TRIM(Categoria) FROM PLAN_PANALES A;
@@ -632,7 +633,6 @@ SELECT CONVERT(VARCHAR(20), A.Fecha,103) Fecha, A.Agencia Agencia, V.Nombre Vend
 	   M.FacUnitario FacUnitario, A.Cantidad TUnidades, 0  Plan_Ton, (M.PesoTon)*(A.Cantidad) VentaTon, 0 Plan_Dol, A.Importe VentaDolares,
 	   'Consumo Masivo' Negocio
 INTO #PANALES
-select *
 FROM BASE_MOBILVENDOR_AUTOMATICA A
 	LEFT JOIN VENDEDORES_PANALES V ON A.Usuario = V.Codigo
 	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp;
@@ -712,6 +712,193 @@ GROUP BY F.DES_MES, A.Fecha,
 -- en Panales exectuando los 3 rows ficticios porque puede darse el caso de que hay codigos sin plan.
 
 
+
+
+--------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------------
+--Hularruss
+SET LANGUAGE SPANISH;
+
+TRUNCATE TABLE VENTAS_HULARUSS;
+
+BULK INSERT VENTAS_HULARUSS
+FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\VentasHularuss.csv'
+WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
+
+SET LANGUAGE US_ENGLISH;
+
+DELETE FROM VENTAS_HULARUSS WHERE Importe = 0;
+DELETE FROM VENTAS_HULARUSS WHERE Importe IS NULL;
+--DELETE FROM VENTAS_HULARUSS WHERE Importe < 0; 
+--preguntar esto de negativos si se van a borrar
+--Esos importes menores a 0 son los regalos
+
+UPDATE A SET CodAlicorp = TRIM(CodAlicorp) FROM VENTAS_HULARUSS A;
+UPDATE A SET Agencia = TRIM(Agencia) FROM VENTAS_HULARUSS A;
+
+
+--UPDATE A SET PesoKG = TRIM(PesoKG) FROM BASE_MOBILVENDOR_AUTOMATICA A;
+--UPDATE A SET PesoTon = TRIM(PesoTon) FROM BASE_MOBILVENDOR_AUTOMATICA A;
+
+UPDATE VENTAS_HULARUSS
+SET CodAlicorp = CASE CodAlicorp
+	WHEN '8309000' THEN '8309119'
+	WHEN '8309001' THEN '8309120'
+	WHEN '8309002' THEN '8309121'
+	WHEN '8309003' THEN '8309122'
+	WHEN '8309007' THEN '8309126'
+	WHEN '8309009' THEN '8309128' 
+	WHEN '293369' THEN '29369' ELSE CodAlicorp END;
+-- 293369 este error solo sale en la data de ventas de Panales
+
+
+--Inserto plan Hularuss
+TRUNCATE TABLE PLAN_HULARUSS;
+
+BULK INSERT PLAN_HULARUSS
+FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\PLANES_HULARUSS.csv'
+WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
+
+DELETE PLAN_HULARUSS WHERE Plan_Dol = 0 AND Plan_Ton = 0;
+DELETE FROM PLAN_HULARUSS WHERE Plan_Dol IS NULL AND Plan_Ton IS NULL;
+DELETE FROM PLAN_HULARUSS WHERE Plan_Dol = '' AND Plan_Ton = '';
+
+UPDATE A SET CodCategoria = TRIM(CodCategoria) FROM PLAN_HULARUSS A;
+UPDATE A SET Categoria = TRIM(Categoria) FROM PLAN_HULARUSS A;
+UPDATE A SET CodMarca = TRIM(CodMarca) FROM PLAN_HULARUSS A;
+UPDATE A SET Marca = TRIM(Marca) FROM PLAN_HULARUSS A;
+UPDATE A SET CodFamilia = TRIM(CodFamilia) FROM PLAN_HULARUSS A;
+UPDATE A SET Familia = TRIM(Familia) FROM PLAN_HULARUSS A;
+UPDATE A SET CodAlicorp = TRIM(CodAlicorp) FROM PLAN_HULARUSS A;
+UPDATE A SET Des_Material = TRIM(Des_Material) FROM PLAN_HULARUSS A;
+UPDATE A SET NomOficina = TRIM(NomOficina) FROM PLAN_HULARUSS A;
+UPDATE A SET Plataforma = TRIM(Plataforma) FROM PLAN_HULARUSS A;
+UPDATE A SET Cliente = TRIM(Cliente) FROM PLAN_HULARUSS A;
+
+UPDATE PLAN_HULARUSS
+SET CodMarca = RIGHT(CodMarca,1)
+WHERE CodMarca LIKE '00%';
+
+UPDATE PLAN_HULARUSS
+SET CodMarca = RIGHT(CodMarca,2)
+WHERE CodMarca LIKE '0%';
+-- Debido a que cuando subo la información del csv se agrega un cero a la izquierda
+	 
+
+UPDATE PLAN_HULARUSS
+SET CodAlicorp = CASE CodAlicorp
+	WHEN '8309000' THEN '8309119'
+	WHEN '8309001' THEN '8309120'
+	WHEN '8309002' THEN '8309121'
+	WHEN '8309003' THEN '8309122'
+	WHEN '8309007' THEN '8309126'
+	WHEN '8309009' THEN '8309128'
+	WHEN '293369' THEN '29369' ELSE CodAlicorp END;
+
+
+--Creo tabla temporal para homologar los campos y darle formato a la fecha, tambien calculo las toneladas
+IF OBJECT_ID(N'tempdb..#HULARUSS') IS NOT NULL DROP TABLE #HULARUSS;
+
+SELECT CONVERT(VARCHAR(20), A.Fecha,103) Fecha, A.Agencia Agencia, 'H-SIN ASIGNAR' Vendedor_Distribuidora, 'H-SIN ASIGNAR' Tipo_tienda_Distribuidora, A.CodAlicorp CodAlicorp,
+	   M.FacUnitario FacUnitario, A.Cantidad TUnidades, 0  Plan_Ton, VentaKilos VentaKil, 0 Plan_Dol, A.Importe VentaDolares,
+	   'Consumo Masivo' Negocio
+INTO #HULARUSS
+FROM VENTAS_HULARUSS A
+	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp;
+--SELECT * FROM #HULARUSS WHERE VentaKil=0 AND VentaDolares= 0 AND Plan_Dol = 0 AND Plan_Ton = 0
+--Solo deben salir 28 rows por los datos ficticios simpre y cuando lo corra desde la línea donde se agregan
+
+ALTER TABLE #HULARUSS ALTER COLUMN Plan_Ton FLOAT;
+ALTER TABLE #HULARUSS ALTER COLUMN Plan_Dol FLOAT;
+
+--Inserto información ficticia del año pasado y del mes pasado para que no altere el reporte de excel esta informacion tiene ventas y plan 0
+INSERT INTO #HULARUSS VALUES (@d2,'MCH', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
+INSERT INTO #HULARUSS VALUES (@d2,'GYE', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
+INSERT INTO #HULARUSS VALUES (@d2,'CUE', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
+INSERT INTO #HULARUSS VALUES (@d2,'AMB', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
+INSERT INTO #HULARUSS VALUES (@d2,'MNB', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
+INSERT INTO #HULARUSS VALUES (@d2,'STO', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
+INSERT INTO #HULARUSS VALUES (@d2,'ESM', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
+INSERT INTO #HULARUSS VALUES (@d2,'QVD', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
+INSERT INTO #HULARUSS VALUES (@d2,'STE', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
+INSERT INTO #HULARUSS VALUES (@d2,'MLG', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
+INSERT INTO #HULARUSS VALUES (@d2,'UIO', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
+INSERT INTO #HULARUSS VALUES (@d2,'LOJ', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
+INSERT INTO #HULARUSS VALUES (@d2,'IBR', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
+INSERT INTO #HULARUSS VALUES (@d2,'XXX', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
+
+INSERT INTO #HULARUSS VALUES (@d3,'MCH', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
+INSERT INTO #HULARUSS VALUES (@d3,'GYE', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
+INSERT INTO #HULARUSS VALUES (@d3,'CUE', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
+INSERT INTO #HULARUSS VALUES (@d3,'AMB', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
+INSERT INTO #HULARUSS VALUES (@d3,'MNB', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
+INSERT INTO #HULARUSS VALUES (@d3,'STO', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
+INSERT INTO #HULARUSS VALUES (@d3,'ESM', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
+INSERT INTO #HULARUSS VALUES (@d3,'QVD', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
+INSERT INTO #HULARUSS VALUES (@d3,'STE', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
+INSERT INTO #HULARUSS VALUES (@d3,'MLG', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
+INSERT INTO #HULARUSS VALUES (@d3,'UIO', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
+INSERT INTO #HULARUSS VALUES (@d3,'LOJ', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
+INSERT INTO #HULARUSS VALUES (@d3,'IBR', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
+INSERT INTO #HULARUSS VALUES (@d3,'XXX', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
+
+--INSERT INTO #PANALES VALUES (@d3,'156150076','8410177',0,0,0,0.000001,'MARCAS TERCEROS');
+--INSERT INTO #PANALES VALUES (@d3,'156131204','8410177',0,0,0,0.000001,'MARCAS TERCEROS');
+--INSERT INTO #PANALES VALUES (@d3,'156163360','8410177',0,0,0,0.000001,'MARCAS TERCEROS');
+UPDATE #HULARUSS 
+SET Fecha = RIGHT(Fecha,9)
+WHERE Fecha LIKE '0_/%'
+
+-- Para el proyecto de tablero de Valery
+
+INSERT INTO VENTAS_TABLERO
+SELECT F.DES_MES Mes, A.Fecha Dia,
+	   M.CodCategoria CodCategoria, M.Categoria Categoria, M.CodFamilia CodFamilia, M.Familia Familia, A.CodAlicorp CodAlicorp, M.Material Material, M.CodMarca CodMarca, M.Marca Marca,
+	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
+	   AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
+	   A.Vendedor_Distribuidora, A.Tipo_tienda_Distribuidora,
+	   A.Negocio, A.FacUnitario, SUM(ISNULL(A.TUnidades,0)) TUnidades, SUM(ISNULL(A.Plan_Ton,0)) Plan_Ton,
+	  SUM(ISNULL(A.VentaKil,0)/1000) real_ton, SUM(ISNULL(A.Plan_Dol,0)) Plan_Dol, SUM(ISNULL(A.VentaDolares,0)/1000) real_Dolares,
+	  M.Plataforma Plataforma
+FROM #HULARUSS A
+	LEFT JOIN BD_FECHAS F ON  A.Fecha= F.DIA
+	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp
+	LEFT JOIN MAESTRO_AGENCIAS AG ON A.Agencia = AG.Agencia
+GROUP BY F.DES_MES, A.Fecha,
+	   M.CodCategoria, M.Categoria, M.CodFamilia, M.Familia, A.CodAlicorp, M.Material, M.CodMarca, M.Marca,
+	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
+	   AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
+	   A.Vendedor_Distribuidora, A.Tipo_tienda_Distribuidora,
+	   A.Negocio,A.FacUnitario, M.Plataforma;
+
+
+--Inserto el Plan de Hularuss
+
+------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------
+--Para el proyecto tablero de Valery
+
+INSERT INTO VENTAS_TABLERO
+SELECT F.DES_MES Mes, A.Fecha Dia,
+	   A.CodCategoria CodCategoria, A.Categoria Categoria, A.CodFamilia CodFamilia, A.Familia Familia, A.CodAlicorp CodAlicorp, A.Des_Material Material, A.CodMarca CodMarca, A.Marca Marca,
+	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
+	   AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
+	   'SIN ASIGNAR - H_PLAN ' Vendedor_Distribuidora, 'SIN ASIGNAR - H_PLAN ' Tipo_tienda_Distribuidora,
+	   'Consumo Masivo' Negocio, 0 FacUnitario, 0 TUnidades, SUM(ISNULL(A.Plan_Ton,0)) Plan_Ton,
+	  SUM(ISNULL(A.Ventas_Ton,0)) real_ton, SUM(ISNULL(A.Plan_Dol,0)) Plan_Dol, SUM(ISNULL(A.Ventas_Reales,0)) real_Dolares,
+	  A.Plataforma Plataforma
+FROM PLAN_HULARUSS A
+	LEFT JOIN BD_FECHAS F ON  A.Fecha= F.DIA
+	LEFT JOIN MAESTRO_AGENCIAS AG ON A.Cliente = AG.NomOficina
+GROUP BY F.DES_MES, A.Fecha,
+	   A.CodCategoria, A.Categoria, A.CodFamilia, A.Familia, A.CodAlicorp, A.Des_Material, A.CodMarca, A.Marca,
+	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
+	   AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
+	   A.Plataforma;
+
+-----------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------
+
 IF OBJECT_ID('VENTAS_CONSOLIDADO') IS NOT NULL DROP TABLE VENTAS_CONSOLIDADO;
 --Creo tabla donde consolido la información de la tabla tablero 
 --En esta tabla se va a insertar la información de todas las distribuidoras
@@ -731,8 +918,8 @@ GROUP BY A.MES, A.Dia,
 	   A.Negocio,
 	   A.Plataforma;
 
-
-
+------------------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------------
 
 
 IF OBJECT_ID('DBO.TMP_SELL_OUT_21') IS NOT NULL DROP TABLE DBO.TMP_SELL_OUT_21;
