@@ -733,11 +733,7 @@ WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
 
 SET LANGUAGE US_ENGLISH;
 
---DELETE FROM VENTAS_HULARUSS WHERE Importe = 0; ESPERAR A VER QUE DICE DIEGO TBN SOBRE las ton en cero
-DELETE FROM VENTAS_HULARUSS WHERE Importe IS NULL;
---DELETE FROM VENTAS_HULARUSS WHERE Importe < 0; 
---preguntar esto de negativos si se van a borrar
---Esos importes menores a 0 son los regalos
+
 
 UPDATE A SET CodAlicorp = TRIM(CodAlicorp) FROM VENTAS_HULARUSS A;
 UPDATE A SET Agencia = TRIM(Agencia) FROM VENTAS_HULARUSS A;
@@ -748,6 +744,12 @@ UPDATE A SET Importe = REPLACE(Importe,',','') FROM VENTAS_HULARUSS A;
 
 ALTER TABLE VENTAS_HULARUSS ALTER COLUMN Importe FLOAT;
 
+--DELETE FROM VENTAS_HULARUSS WHERE Importe = 0; ESPERAR A VER QUE DICE DIEGO TBN SOBRE las ton en cero
+DELETE FROM VENTAS_HULARUSS WHERE Importe IS NULL;
+DELETE FROM VENTAS_HULARUSS WHERE Importe <=0; 
+
+--preguntar esto de negativos si se van a borrar
+--Esos importes menores a 0 son los regalos
 
 --UPDATE A SET PesoKG = TRIM(PesoKG) FROM BASE_MOBILVENDOR_AUTOMATICA A;
 --UPDATE A SET PesoTon = TRIM(PesoTon) FROM BASE_MOBILVENDOR_AUTOMATICA A;
@@ -762,6 +764,11 @@ SET CodAlicorp = CASE CodAlicorp
 	WHEN '8309009' THEN '8309128' 
 	WHEN '293369' THEN '29369' ELSE CodAlicorp END;
 -- 293369 este error solo sale en la data de ventas de Panales
+
+
+UPDATE A SET A.Ventakilos = (A.Cantidad * M.PesoKG) FROM VENTAS_HULARUSS A 
+	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp
+	WHERE A.Ventakilos = 0
 
 
 --Inserto plan Hularuss
