@@ -740,12 +740,13 @@ UPDATE A SET Agencia = TRIM(Agencia) FROM VENTAS_HULARUSS A;
 
 UPDATE A SET Importe = REPLACE(Importe,'$','') FROM VENTAS_HULARUSS A;
 UPDATE A SET Importe = REPLACE(Importe,',','') FROM VENTAS_HULARUSS A;
+-- Si en en algun momento en algun campo numero no se puede cargar la data repetir el caso de importe
 
 ALTER TABLE VENTAS_HULARUSS ALTER COLUMN Importe FLOAT;
 
---DELETE FROM VENTAS_HULARUSS WHERE Importe = 0; ESPERAR A VER QUE DICE DIEGO TBN SOBRE las ton en cero
+--DELETE FROM VENTAS_HULARUSS WHERE Importe = 0; Esperar a ver que dice sobre las importes negativos
 DELETE FROM VENTAS_HULARUSS WHERE Importe IS NULL;
-DELETE FROM VENTAS_HULARUSS WHERE Importe <=0; 
+DELETE FROM VENTAS_HULARUSS WHERE Importe =0; 
 
 --preguntar esto de negativos si se van a borrar
 --Esos importes menores a 0 son los regalos
