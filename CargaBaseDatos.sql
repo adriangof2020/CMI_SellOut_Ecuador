@@ -532,7 +532,7 @@ SELECT F.DES_MES Mes, A.Fecha Dia,
 	   M.CodCategoria CodCategoria, M.Categoria Categoria, M.CodFamilia CodFamilia, M.Familia Familia, A.CodAlicorp CodAlicorp, M.Material Material,  M.CodMarca CodMarca, M.Marca Marca,
 	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
 	   AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
-	  A.Vendedor_Distribuidora, A.Tipo_tienda_Distribuidora, CodClienteSellOut, ClienteSellOut,
+	  A.Vendedor_Distribuidora, A.Tipo_tienda_Distribuidora, A.CodClienteSellOut, A.ClienteSellOut,
 	  IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto) Negocio, A.FacUnitario, SUM(ISNULL(A.TUnidades,0)) TUnidades, SUM(ISNULL(A.Plan_Ton,0)) Plan_Ton,
 	  SUM(ISNULL(A.VentaKil,0)/1000) real_ton, SUM(ISNULL(A.Plan_Dol,0)) Plan_Dol, SUM(ISNULL(A.VentaDolares,0)/1000) real_Dolares,
 	  M.Plataforma Plataforma
@@ -545,7 +545,7 @@ GROUP BY F.DES_MES, A.Fecha,
 	   M.CodCategoria, M.Categoria, M.CodFamilia, M.Familia, A.CodAlicorp, M.Material , M.CodMarca, M.Marca,
 	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
 	   AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
-	   A.Vendedor_Distribuidora, Tipo_tienda_Distribuidora, CodClienteSellOut, ClienteSellOut,
+	   A.Vendedor_Distribuidora, Tipo_tienda_Distribuidora, A.CodClienteSellOut, A.ClienteSellOut,
 	   IIF(A.TipoProducto='MARCAS TERCEROS','Consumo Masivo',A.TipoProducto),A.FacUnitario,
 	   M.Plataforma;
 
@@ -1018,18 +1018,82 @@ GROUP BY F.DES_MES, A.Fecha,
 
 -----------------------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------------
+--PYDACO
+--SET LANGUAGE SPANISH;
 
-SET LANGUAGE SPANISH;
+--BULK INSERT PYDACO_HISTORICO
+--FROM 'C:\Proyectos\Ecuador\PYDACO\HISTORIA_2022.csv'
+--WITH (FIELDTERMINATOR = ';', FIRSTROW = 2, CODEPAGE = 'ACP') USAR CADA VEZ QUE SE TENGA LA INFO DEL MES CERRADO
+
+TRUNCATE TABLE VENTAS_PYDACO_SELL_OUT;
+
+INSERT INTO VENTAS_PYDACO_SELL_OUT
+SELECT *
+FROM PYDACO_HISTORICO
+WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 03;
+
+INSERT INTO VENTAS_PYDACO_SELL_OUT
+SELECT *
+FROM PYDACO_HISTORICO
+WHERE DATEPART(YEAR,Fecha) = 2021 AND DATEPART(MONTH,Fecha) = 04;
+
+
+UPDATE A SET Agencia = TRIM(Agencia) FROM VENTAS_PYDACO_SELL_OUT A;
+UPDATE A SET ClienteSellOut = TRIM(ClienteSellOut) FROM VENTAS_PYDACO_SELL_OUT A;
+UPDATE A SET Vendedor_Distribuidora = TRIM(Vendedor_Distribuidora) FROM VENTAS_PYDACO_SELL_OUT A;
+UPDATE A SET CodPydaco = TRIM(CodPydaco) FROM VENTAS_PYDACO_SELL_OUT A;
+UPDATE A SET CodClienteSellOut = TRIM(CodClienteSellOut) FROM VENTAS_PYDACO_SELL_OUT A;
+
+--Creo tabla temporal para homologar los campos y darle formato a la fecha, tambien calculo las toneladas , VentaKilos real_ton
+IF OBJECT_ID(N'tempdb..#PYDACO') IS NOT NULL DROP TABLE #PYDACO; 
+
+SELECT CONVERT(VARCHAR(20), A.Fecha,103) Fecha, A.Agencia Agencia, A.CodClienteSellOut, A.ClienteSellOut,  A.Vendedor_Distribuidora, 'H-SIN ASIGNAR' Tipo_tienda_Distribuidora, M.CodAlicorp CodAlicorp,
+	   A.TUnidades, 0  Plan_Ton, 0 Plan_Dol, A.Importe real_Dolares,
+	   'Consumo Masivo' Negocio
+INTO #PYDACO
+FROM VENTAS_PYDACO_SELL_OUT A
+	LEFT JOIN TABLA_MATERIALES_PYDACO M ON A.CodPydaco = M.CodPydaco;
+
+--SELECT * FROM  #PYDACO WHERE CodAlicorp IS NULL
+
+UPDATE #PYDACO 
+SET Fecha = RIGHT(Fecha,9)
+WHERE Fecha LIKE '0_/%'
+
+UPDATE #PYDACO
+SET CodAlicorp = CASE CodAlicorp
+	WHEN '8309000' THEN '8309119'
+	WHEN '8309001' THEN '8309120'
+	WHEN '8309002' THEN '8309121'
+	WHEN '8309003' THEN '8309122'
+	WHEN '8309007' THEN '8309126'
+	WHEN '8309009' THEN '8309128'
+	WHEN '293369' THEN '29369' ELSE CodAlicorp END;
+
+
+
 
 TRUNCATE TABLE VENTAS_PYDACO;
+
+--ALTER TABLE VENTAS_PYDACO ALTER COLUMN Fecha VARCHAR(100);
 
 BULK INSERT VENTAS_PYDACO
 FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\VentasPydaco.csv'
 WITH (FIELDTERMINATOR = ';' , FIRSTROW= 2, CODEPAGE = 'ACP')
 
-SET LANGUAGE US_ENGLISH;
+UPDATE A SET Fecha = REPLACE(Fecha, '.', '/') FROM VENTAS_PYDACO A;
 
---VER TEMA VENDEDORES, DISTRIBUIDORES , CLIENTES DE CLIENTES
+UPDATE VENTAS_PYDACO 
+SET Fecha = RIGHT(Fecha,9)
+WHERE Fecha LIKE '0_/%'
+
+
+
+--ALTER TABLE VENTAS_PYDACO ALTER COLUMN Fecha DATE NOT NULL;
+
+--SET LANGUAGE US_ENGLISH;
+
+--VER TEMA VENDEDORES, DISTRIBUIDORES , CLIENTES DE CLIENTES, ver el tema de unidades x2, ver lo de agencias 
 
 --DELETE FROM VENTAS_PYDACO WHERE Ventas_Plan_TON = 0 AND Ventas_Reales_TON = 0 AND Ventas_Plan_USD = 0 AND Ventas_Reales_USD = 0;
 --esperar hasta poner el historico
@@ -1060,8 +1124,34 @@ SET CodAlicorp = CASE CodAlicorp
 	WHEN '293369' THEN '29369' ELSE CodAlicorp END;
 
 -- Para el proyecto de tablero de Valery
+-----------------------------------------------------------------
+-----Inserto la data  que se paso de las tabla ventas sellout  a la tabla temporal a esta tabla de ventas tablero
 
-	INSERT INTO VENTAS_TABLERO
+INSERT INTO VENTAS_TABLERO
+SELECT F.DES_MES Mes, A.Fecha Dia,
+	   M.CodCategoria CodCategoria, M.Categoria Categoria, M.CodFamilia CodFamilia, M.Familia Familia, A.CodAlicorp CodAlicorp, M.Material Material, M.CodMarca CodMarca, M.Marca Marca,
+	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
+	   AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
+	   A.Vendedor_Distribuidora, 'SIN ASIGNAR - PYCO' Tipo_tienda_Distribuidora, A.CodClienteSellOut, A.ClienteSellOut,
+	   'Consumo Masivo' Negocio, M.FacUnitario, SUM(ISNULL(A.TUnidades,0)) TUnidades, SUM(ISNULL(A.Plan_Ton,0)) Plan_Ton,
+	  SUM(ISNULL((A.TUnidades*M.PesoTon),0)) real_ton, SUM(ISNULL(A.Plan_Dol,0)) Plan_Dol, SUM(ISNULL(A.real_Dolares/1000,0)) real_Dolares,
+	  M.Plataforma Plataforma
+FROM #PYDACO A
+	LEFT JOIN BD_FECHAS F ON  A.Fecha= F.DIA
+	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp
+	LEFT JOIN MAESTRO_AGENCIAS AG ON A.Agencia = AG.Agencia
+GROUP BY F.DES_MES, A.Fecha,
+	   M.CodCategoria, M.Categoria, M.CodFamilia, M.Familia, A.CodAlicorp, M.Material, M.CodMarca, M.Marca,
+	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
+	   AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
+	   A.Vendedor_Distribuidora,  A.CodClienteSellOut, A.ClienteSellOut,
+	   M.FacUnitario, M.Plataforma;
+
+
+---------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------
+
+INSERT INTO VENTAS_TABLERO
 SELECT F.DES_MES Mes, A.Fecha Dia,
 	   M.CodCategoria CodCategoria, M.Categoria Categoria, M.CodFamilia CodFamilia, M.Familia Familia, A.CodAlicorp CodAlicorp, M.Material Material, M.CodMarca CodMarca, M.Marca Marca,
 	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
