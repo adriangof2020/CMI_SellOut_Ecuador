@@ -3,7 +3,7 @@ USE CmiSellOutEcuador;
 DECLARE @dia DATE;
 DECLARE @d1 AS VARCHAR(20);
 
-SELECT @dia= DATEADD(DAY,-5,SYSDATETIME());
+SELECT @dia= DATEADD(DAY,-6,SYSDATETIME());
 -- poner el último día de ventas
 SELECT @d1= TRY_CONVERT(VARCHAR(20), TRY_CONVERT(DATE, @dia,103),103);
 
@@ -105,7 +105,7 @@ GROUP BY A.Fecha, A.Agencia, A.CodFamilia, A.Familia
 
 IF OBJECT_ID(N'tempdb..#CONSOLIDADO1') IS NOT NULL DROP TABLE #CONSOLIDADO1; 
 
-SELECT DAY(A.Fecha) Dia, A.Agencia, A.CodFamilia, A.Familia,
+SELECT DAY(A.Fecha) Dia, A.CodFamilia, A.Familia,
 	   SUM(A.Plan_Ton) Plan_Ton, SUM(A.Plan_Dol) Plan_Dol , SUM(A.real_Dolares) real_Dolares, SUM(A.real_ton) real_ton
 INTO #CONSOLIDADO1
 FROM #CONSOLIDADO0_2 A
@@ -113,7 +113,7 @@ WHERE  TRY_CONVERT(VARCHAR,YEAR(Fecha))+TRY_CONVERT(VARCHAR,MONTH(Fecha))
 	   IN (TRY_CONVERT(VARCHAR,YEAR(@MA))+TRY_CONVERT(VARCHAR,MONTH(@MA)),
 		   TRY_CONVERT(VARCHAR,YEAR(@MA_1))+TRY_CONVERT(VARCHAR,MONTH(@MA_1)),
 		   TRY_CONVERT(VARCHAR,YEAR(@MA_2))+TRY_CONVERT(VARCHAR,MONTH(@MA_2)))
-GROUP BY DAY(A.Fecha), A.Agencia, A.CodFamilia, A.Familia;
+GROUP BY DAY(A.Fecha), A.CodFamilia, A.Familia;
 --SELECT sum(real_ton) FROM #CONSOLIDADO0_1
 --SELECT SUM(real_ton) FROM #CONSOLIDADO0_2  
 --SELECT SUM(real_ton) FROM #CONSOLIDADO1
@@ -127,7 +127,7 @@ GROUP BY DAY(A.Fecha), A.Agencia, A.CodFamilia, A.Familia;
 
 IF OBJECT_ID(N'tempdb..#CONSOLIDADO2') IS NOT NULL  DROP TABLE #CONSOLIDADO2;
 
-SELECT A.DIA, A.Agencia, A.CodFamilia, A.Familia, A.real_Dolares Subtotal, A.real_ton Subtotal_Ton
+SELECT A.DIA, A.CodFamilia, A.Familia, A.real_Dolares Subtotal, A.real_ton Subtotal_Ton
 INTO #CONSOLIDADO2 
 --SELECT * from #CONSOLIDADO2 order by 1 asc, 3 asc , 2 asc 
 --SELECT *
@@ -138,7 +138,7 @@ FROM #CONSOLIDADO1 A
 
 IF OBJECT_ID(N'tempdb..#CONSOLIDADO3') IS NOT NULL  DROP TABLE #CONSOLIDADO3;
 
-SELECT A.DIA, A.Agencia, A.CodFamilia, B.CodFamilia CodFamilia2, B.Familia, B.Agencia Agencia2, SUM(B.real_Dolares) Tot_Acum, SUM(B.real_ton) Tot_Acum_Ton
+SELECT A.DIA, A.CodFamilia, B.CodFamilia CodFamilia2, B.Familia, SUM(B.real_Dolares) Tot_Acum, SUM(B.real_ton) Tot_Acum_Ton
 INTO #CONSOLIDADO3 
 --SELECT *
 FROM #CONSOLIDADO1 A
@@ -146,7 +146,7 @@ FROM #CONSOLIDADO1 A
 ON A.DIA>=B.DIA  
 --where A.codfamilia = '1003012081' AND B.codfamilia = '1003012081' AND A.Agencia = 'ESMERALDAS' ORDER BY 1 ASC,3 ASC ,9 ASC,11 ASC
 --ORDER BY 1 ASC,3 ASC ,9 ASC,11 ASC  SELECT (0.00272 + 0.00069 +0.00278 + 0.00197)
-GROUP BY A.DIA,A.Agencia, A.CodFamilia, B.CodFamilia, B.Familia,  B.Agencia
+GROUP BY A.DIA, A.CodFamilia, B.CodFamilia, B.Familia
 --SELECT * from #CONSOLIDADO2 where codfamilia = '1003012081'AND Agencia = 'ESMERALDAS' order by 1 asc, 3 asc , 2 asc 
 --SELECT * FROM #CONSOLIDADO3 where codfamilia = '1003012081'  and codfamilia2 = '1003012081' AND Agencia = 'ESMERALDAS' ORDER BY 1 ASC,3 ASC, 2 ASC 36.23656  249.32736
 --ORDER BY 1 ASC,2 ASC
@@ -159,10 +159,10 @@ GROUP BY A.DIA,A.Agencia, A.CodFamilia, B.CodFamilia, B.Familia,  B.Agencia
 
 IF OBJECT_ID(N'tempdb..#CONSOLIDADO4') IS NOT NULL  DROP TABLE #CONSOLIDADO4;
 
-SELECT A.DIA, A.Agencia, A.CodFamilia, A.Subtotal, A.Subtotal_Ton, B.Tot_Acum, B.Tot_Acum_Ton
+SELECT A.DIA, A.CodFamilia, A.Subtotal, A.Subtotal_Ton, B.Tot_Acum, B.Tot_Acum_Ton
 INTO #CONSOLIDADO4
 FROM #CONSOLIDADO2 A
-	LEFT JOIN #CONSOLIDADO3 B ON A.DIA= B.DIA AND  A.CodFamilia = B.CodFamilia AND A.CodFamilia = B.CodFamilia2 AND A.Agencia = B.Agencia AND A.Agencia = B.Agencia2
+	LEFT JOIN #CONSOLIDADO3 B ON A.DIA= B.DIA AND  A.CodFamilia = B.CodFamilia AND A.CodFamilia = B.CodFamilia2
 
 --SELECT * FROM #CONSOLIDADO4 WHERE CodFamilia ='1003012081' AND Agencia = 'ESMERALDAS'
 IF OBJECT_ID(N'tempdb..#PORCIONES') IS NOT NULL DROP TABLE #PORCIONES; 
@@ -1741,7 +1741,7 @@ GROUP BY Fecha,CodFamilia, Familia
 
 --ESPACIO PARA UPDATE DE LOGICA
 
-UPDATE A SET 
+UPDATE A SET	
 
 
 
