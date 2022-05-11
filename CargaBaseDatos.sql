@@ -31,6 +31,8 @@ SELECT @d3 = TRY_CONVERT(VARCHAR(10), TRY_CONVERT(DATE,DATEADD(YEAR,-1,@dia),103
 PRINT 'd2  '+ @d2;
 PRINT 'd3  '+@d3;
 
+
+
 DECLARE @M1 AS VARCHAR(20); 
 DECLARE @M2 AS VARCHAR(20);
 DECLARE @M3 AS VARCHAR(20);
@@ -64,6 +66,10 @@ PRINT @MA;
 PRINT @MA_1;
 PRINT @MA_2;
 PRINT @MA_3;
+
+
+
+
 --SELECT DAY(CONVERT(date,DIA,103)) DIA FROM [BD_FECHAS] WHERE PER = @M1
 --SELECT CONVERT(date,DIA,103) DIA FROM [BD_FECHAS] WHERE TRY_CONVERT(DATE, DIA, 103) = > @dia
 
@@ -1885,7 +1891,7 @@ INTO #CONSOLIDADO4_M1
 FROM #CONSOLIDADO2_M1 A
 	LEFT JOIN #CONSOLIDADO3_M1 B ON A.DIA= B.DIA AND  A.CodFamilia = B.CodFamilia AND A.CodFamilia = B.CodFamilia2
 
---SELECT * FROM #CONSOLIDADO2 WHERE CodFamilia ='1003012081'
+--SELECT * FROM #CONSOLIDADO4_M1 WHERE CodFamilia ='1003012081'
 IF OBJECT_ID(N'tempdb..#PORCIONES_M1') IS NOT NULL DROP TABLE #PORCIONES_M1; 
 
 SELECT A.DIA, A.CodFamilia, A.Subtotal, A.Subtotal_Ton, B.Dia DIA2, B.CodFamilia CodFamilia2, B.Tot_Acum, B.Tot_Acum_Ton, A.Subtotal/B.Tot_Acum Porcion, A.Subtotal_Ton/B.Tot_Acum_Ton Porcion_Ton
@@ -1894,7 +1900,7 @@ FROM #CONSOLIDADO2_M1 A
 LEFT JOIN #CONSOLIDADO4_M1 B
 ON A.DIA<=B.DIA 
 --ORDER BY 1 ASC
-WHERE B.DIA= DAY(@dia)-- asignar el dia de corte(con esto se tendra la proy por dia)  167576.81
+WHERE B.DIA= DAY(TRY_CONVERT(DATE, @d2, 103))-- asignar el dia de corte(con esto se tendra la proy por dia)  167576.81
 AND A.CodFamilia = B.CodFamilia
 ORDER BY 1 ASC, 2 ASC
 --SELECT * FROM #PORCIONES_M1
@@ -2042,7 +2048,7 @@ SELECT A.DIA, B.Agencia, B.CodCategoria, B.Categoria, B.CodMarca, B.Marca, B.Cod
 --A.Fecha, A.Agencia, A.CodCategoria, A.Categoria, A.CodMarca, A.Marca, A.CodFamilia, A.Familia, 
 --	   SUM(A.Plan_Ton) Plan_Ton, SUM(A.real_ton) real_ton, SUM(A.Plan_Dol) Plan_Dol, SUM(A.real_Dolares) real_Dolares, A.Plataforma
 INTO #PYDACO_SELL_IN_MA
-FROM (SELECT CONVERT(date,DIA,103) DIA FROM [BD_FECHAS] WHERE PER = @M1 AND TRY_CONVERT(DATE, DIA, 103) < = @dia) A
+FROM (SELECT CONVERT(date,DIA,103) DIA FROM [BD_FECHAS] WHERE PER = @M2 AND TRY_CONVERT(DATE, DIA, 103) < = TRY_CONVERT(DATE, @d2, 103)) A
 CROSS JOIN (SELECT DISTINCT Agencia, CodCategoria, Categoria, CodMarca, Marca, CodFamilia, Familia, Plataforma FROM VENTAS_PYDACO WHERE MONTH(Fecha) = MONTH(DATEADD(MONTH, -1, @dia))) B
 LEFT JOIN (SELECT Fecha, Agencia, CodCategoria, Categoria, CodMarca, Marca, CodFamilia, Familia, Plataforma,
 				  ISNULL(SUM(Plan_Ton),0) Plan_Ton, ISNULL(SUM(real_ton), 0) real_ton, ISNULL(SUM(Plan_Dol), 0) Plan_Dol, ISNULL(SUM(real_Dolares), 0) real_Dolares
@@ -2050,8 +2056,20 @@ LEFT JOIN (SELECT Fecha, Agencia, CodCategoria, Categoria, CodMarca, Marca, CodF
 			ON B.CodFamilia = C.CodFamilia AND A.DIA = C.Fecha AND B.Agencia = C.Agencia
 			ORDER BY A.DIA , B.CodFamilia, B.Agencia;
 
+--SELECT * FROM  #PYDACO_SELL_IN_MA
 
+IF OBJECT_ID(N'tempdb..#PYDACO_SELL_IN_1_MA') IS NOT NULL DROP TABLE #PYDACO_SELL_IN_1_MA; 
 
+SELECT CONVERT(VARCHAR(20), A.DIA, 103) DIA, A.Agencia, A.CodCategoria, A.Categoria, A.CodMarca, A.Marca, A.CodFamilia, A.Familia,
+		A.Plan_Ton, A.Plan_Dol, A.real_ton, A.real_Dolares ,  A.Plataforma, A.Total_Ton, A.Total_Dolares, B.Porcion_Ton
+INTO #PYDACO_SELL_IN_1_MA
+FROM (SELECT DIA, Agencia, CodCategoria, Categoria, CodMarca, Marca, CodFamilia, Familia,
+	Plan_Ton, Plan_Dol, real_ton, real_Dolares ,  Plataforma ,SUM(real_ton) OVER (PARTITION BY CodFamilia, Agencia ) AS Total_Ton , SUM(real_Dolares) OVER (PARTITION BY CodFamilia, Agencia  ) AS Total_Dolares
+	FROM #PYDACO_SELL_IN_MA) A
+	LEFT JOIN 
+	#PORCIONES_M1 B ON DAY(A.DIA) = B.DIA AND A.CodFamilia = B.CodFamilia
+
+	--select * from #PYDACO_SELL_IN_1_MA
 
 --UPDATE A SET	
 --SELECT * FROM #PYDACO_SELL_IN_1
@@ -2061,8 +2079,14 @@ LEFT JOIN (SELECT Fecha, Agencia, CodCategoria, Categoria, CodMarca, Marca, CodF
 ALTER TABLE VENTAS_PYDACO ALTER COLUMN Fecha VARCHAR (100) NOT NULL;
 
 ALTER TABLE #PYDACO_SELL_IN_1 ALTER COLUMN DIA VARCHAR (100) NOT NULL;
+ALTER TABLE #PYDACO_SELL_IN_1_MA ALTER COLUMN DIA VARCHAR (100) NOT NULL;
+
 
 UPDATE #PYDACO_SELL_IN_1 
+SET DIA = RIGHT(DIA,9)
+WHERE DIA LIKE '0_/%'
+
+UPDATE #PYDACO_SELL_IN_1_MA 
 SET DIA = RIGHT(DIA,9)
 WHERE DIA LIKE '0_/%'
 
@@ -2164,7 +2188,7 @@ FROM #PYDACO_SELL_IN_1 A
 
 LEFT JOIN BD_FECHAS F ON  A.DIA= F.DIA
 	
-	LEFT JOIN MAESTRO_AGENCIAS AG ON A.Agencia = AG.Agencia
+LEFT JOIN MAESTRO_AGENCIAS AG ON A.Agencia = AG.Agencia
 
 --GROUP BY A.MES, A.Dia,
 --	   A.CodCategoria, A.Categoria, A.CodFamilia, A.Familia, A.CodMarca, A.Marca,
@@ -2172,6 +2196,26 @@ LEFT JOIN BD_FECHAS F ON  A.DIA= F.DIA
 --	   A.Oficina_Ventas, A.Grupo_Vendedores, A.Territorio, A.Agrupacion_Distribuidora, A.Agencia_Distribuidora, A.Zona_Clientes, A.Grupo_Condiciones,
 --	   A.Negocio,
 --	   A.Plataforma;
+
+
+
+
+INSERT INTO VENTAS_CONSOLIDADO
+SELECT F.DES_MES Mes, A.Dia,
+	   A.CodCategoria, A.Categoria, A.CodFamilia, A.Familia, A.CodMarca, A.Marca,
+	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
+	   AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
+	   'Consumo Masivo' Negocio, A.Plan_Ton,
+	  CASE WHEN A.Porcion_Ton IS NOT NULL THEN A.Total_Ton * A.Porcion_Ton ELSE 0 END real_ton,
+	  A.Plan_Dol, CASE WHEN A.Porcion_Ton IS NOT NULL THEN A.Total_Dolares * A.Porcion_Ton ELSE 0 END real_Dolares,
+--usamos solo la proporcion de toneladas
+	  A.Plataforma Plataforma
+--SELECT *
+FROM #PYDACO_SELL_IN_1_MA A
+--WHERE Agencia=  '1000025065'  AND CodFamilia = '1003012081'
+LEFT JOIN BD_FECHAS F ON  A.DIA= F.DIA	
+LEFT JOIN MAESTRO_AGENCIAS AG ON A.Agencia = AG.Agencia
+
 
 ------------------------------------------------------------------------------------------------------------------------------------------
 -----------------------------------------------------------------------------------------------------------------------------------------
