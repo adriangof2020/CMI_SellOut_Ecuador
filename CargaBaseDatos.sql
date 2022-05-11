@@ -206,10 +206,11 @@ FROM LF_VENTAS_HISTORICO
 WHERE DATEPART(YEAR, FFactura)= 2022 AND DATEPART(MONTH, FFactura) = 03
 
 
-
+--cargar la info del mes cerrado
 --BULK INSERT [LF_VENTAS_HISTORICO]
 --FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\BDPRUEBAVENTAS.csv'
 --WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
+
 
 --DELETE FROM [LF_VENTAS_HISTORICO] WHERE Regional ='Regional'
 
@@ -350,6 +351,7 @@ WHERE DATEPART(YEAR, FNC)= 2022 AND DATEPART(MONTH, FNC) = 03;
 
 DELETE FROM NOTAS_CREDITO WHERE Importe = 0;
 
+--ejecutar cada cambio de mes para poner la info del mes cerrado
 --BULK INSERT LF_NC_HISTORICO
 --FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\BDPRUEBA.csv'
 --WITH (FIELDTERMINATOR=';', FIRSTROW=2, CODEPAGE='ACP');
@@ -562,6 +564,7 @@ FROM BASE_PANALES_HISTORICA
 WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 03;
 
 
+--cargar la info del mes cerrado
 
 --BULK INSERT [BASE_PANALES_HISTORICA]
 --FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\Panales_MAR.txt'
