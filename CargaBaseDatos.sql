@@ -3,12 +3,14 @@ USE CmiSellOutEcuador;
 DECLARE @dia DATE;
 DECLARE @d1 AS VARCHAR(20);
 
-SELECT @dia= DATEADD(DAY,-10,SYSDATETIME());
+SELECT @dia= DATEADD(DAY,-11,SYSDATETIME());
 -- poner el último día de ventas
 SELECT @d1= TRY_CONVERT(VARCHAR(20), TRY_CONVERT(DATE, @dia,103),103);
 
 PRINT @dia;
 PRINT 'd1 '+ @d1;
+
+
 
 
 
@@ -1558,12 +1560,12 @@ TRUNCATE TABLE VENTAS_PYDACO_SELL_OUT;
 INSERT INTO VENTAS_PYDACO_SELL_OUT
 SELECT *
 FROM PYDACO_HISTORICO
---WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 03;
+WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 03;
 
---INSERT INTO VENTAS_PYDACO_SELL_OUT
---SELECT *
---FROM PYDACO_HISTORICO
---WHERE DATEPART(YEAR,Fecha) = 2021 AND DATEPART(MONTH,Fecha) = 04;
+INSERT INTO VENTAS_PYDACO_SELL_OUT
+SELECT *
+FROM PYDACO_HISTORICO
+WHERE DATEPART(YEAR,Fecha) = 2021 AND DATEPART(MONTH,Fecha) = 04;
 
 
 UPDATE A SET Agencia = TRIM(Agencia) FROM VENTAS_PYDACO_SELL_OUT A;
@@ -2004,10 +2006,10 @@ SELECT A.DIA, B.Agencia, B.CodCategoria, B.Categoria, B.CodMarca, B.Marca, B.Cod
 --	   SUM(A.Plan_Ton) Plan_Ton, SUM(A.real_ton) real_ton, SUM(A.Plan_Dol) Plan_Dol, SUM(A.real_Dolares) real_Dolares, A.Plataforma
 INTO #PYDACO_SELL_IN
 FROM (SELECT CONVERT(date,DIA,103) DIA FROM [BD_FECHAS] WHERE PER = @M1 AND TRY_CONVERT(DATE, DIA, 103) < = @dia) A
-CROSS JOIN (SELECT DISTINCT Agencia, CodCategoria, Categoria, CodMarca, Marca, CodFamilia, Familia, Plataforma FROM VENTAS_PYDACO) B
+CROSS JOIN (SELECT DISTINCT Agencia, CodCategoria, Categoria, CodMarca, Marca, CodFamilia, Familia, Plataforma FROM VENTAS_PYDACO WHERE MONTH(Fecha) = MONTH (@dia)) B
 LEFT JOIN (SELECT Fecha, Agencia, CodCategoria, Categoria, CodMarca, Marca, CodFamilia, Familia, Plataforma,
 				  ISNULL(SUM(Plan_Ton),0) Plan_Ton, ISNULL(SUM(real_ton), 0) real_ton, ISNULL(SUM(Plan_Dol), 0) Plan_Dol, ISNULL(SUM(real_Dolares), 0) real_Dolares
-			FROM VENTAS_PYDACO GROUP BY Fecha, Agencia, CodCategoria, Categoria, CodMarca, Marca, CodFamilia, Familia, Plataforma) C
+			FROM VENTAS_PYDACO  WHERE MONTH(Fecha) = MONTH (@dia) GROUP BY Fecha, Agencia, CodCategoria, Categoria, CodMarca, Marca, CodFamilia, Familia, Plataforma) C
 			ON B.CodFamilia = C.CodFamilia AND A.DIA = C.Fecha AND B.Agencia = C.Agencia
 			ORDER BY A.DIA , B.CodFamilia, B.Agencia;
 
@@ -2028,7 +2030,28 @@ FROM (SELECT DIA, Agencia, CodCategoria, Categoria, CodMarca, Marca, CodFamilia,
 
 
 
-----ESPACIO PARA UPDATE DE LOGICA
+----ESPACIO PARA Mes anterior
+
+IF OBJECT_ID(N'tempdb..#PYDACO_SELL_IN_MA') IS NOT NULL DROP TABLE #PYDACO_SELL_IN_MA;
+
+SELECT A.DIA, B.Agencia, B.CodCategoria, B.Categoria, B.CodMarca, B.Marca, B.CodFamilia, B.Familia,
+
+		ISNULL(C.Plan_Ton, 0) Plan_Ton, ISNULL(C.real_ton, 0) real_ton, ISNULL(C.Plan_Dol, 0) Plan_Dol, ISNULL(C.real_Dolares, 0) real_Dolares,
+		B.Plataforma
+		
+--A.Fecha, A.Agencia, A.CodCategoria, A.Categoria, A.CodMarca, A.Marca, A.CodFamilia, A.Familia, 
+--	   SUM(A.Plan_Ton) Plan_Ton, SUM(A.real_ton) real_ton, SUM(A.Plan_Dol) Plan_Dol, SUM(A.real_Dolares) real_Dolares, A.Plataforma
+INTO #PYDACO_SELL_IN_MA
+FROM (SELECT CONVERT(date,DIA,103) DIA FROM [BD_FECHAS] WHERE PER = @M1 AND TRY_CONVERT(DATE, DIA, 103) < = @dia) A
+CROSS JOIN (SELECT DISTINCT Agencia, CodCategoria, Categoria, CodMarca, Marca, CodFamilia, Familia, Plataforma FROM VENTAS_PYDACO WHERE MONTH(Fecha) = MONTH(DATEADD(MONTH, -1, @dia))) B
+LEFT JOIN (SELECT Fecha, Agencia, CodCategoria, Categoria, CodMarca, Marca, CodFamilia, Familia, Plataforma,
+				  ISNULL(SUM(Plan_Ton),0) Plan_Ton, ISNULL(SUM(real_ton), 0) real_ton, ISNULL(SUM(Plan_Dol), 0) Plan_Dol, ISNULL(SUM(real_Dolares), 0) real_Dolares
+			FROM VENTAS_PYDACO  WHERE MONTH(Fecha) = MONTH(DATEADD(MONTH, -1, @dia)) GROUP BY Fecha, Agencia, CodCategoria, Categoria, CodMarca, Marca, CodFamilia, Familia, Plataforma) C
+			ON B.CodFamilia = C.CodFamilia AND A.DIA = C.Fecha AND B.Agencia = C.Agencia
+			ORDER BY A.DIA , B.CodFamilia, B.Agencia;
+
+
+
 
 --UPDATE A SET	
 --SELECT * FROM #PYDACO_SELL_IN_1
@@ -2126,22 +2149,29 @@ GROUP BY A.MES, A.Dia,
 
 
 INSERT INTO VENTAS_CONSOLIDADO
-SELECT A.Mes, A.Dia,
+SELECT F.DES_MES Mes, A.Dia,
 	   A.CodCategoria, A.Categoria, A.CodFamilia, A.Familia, A.CodMarca, A.Marca,
-	   A.ZonaV2, A.CodOficina, A.NomOficina, A.CodTerritorio, A.NomTerritorio, A.CodZona, A.NomZona,
-	   A.Oficina_Ventas, A.Grupo_Vendedores, A.Territorio, A.Agrupacion_Distribuidora, A.Agencia_Distribuidora, A.Zona_Clientes, A.Grupo_Condiciones,
-	   A.Negocio, SUM(A.Plan_Ton) Plan_Ton,
-	  SUM(A.real_ton) real_ton, SUM(A.Plan_Dol) Plan_Dol, SUM(A.real_Dolares) real_Dolares,
+	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
+	   AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
+	   'Consumo Masivo' Negocio, A.Plan_Ton,
+	  CASE WHEN A.Porcion_Ton IS NOT NULL THEN A.Total_Ton * A.Porcion_Ton ELSE 0 END real_ton,
+	  A.Plan_Dol, CASE WHEN A.Porcion_Ton IS NOT NULL THEN A.Total_Dolares * A.Porcion_Ton ELSE 0 END real_Dolares,
+--usamos solo la proporcion de toneladas
 	  A.Plataforma Plataforma
+--SELECT *
+FROM #PYDACO_SELL_IN_1 A
+--WHERE Agencia=  '1000025065'  AND CodFamilia = '1003012081'
 
-FROM #PYDACO_SELL_IN_1
+LEFT JOIN BD_FECHAS F ON  A.DIA= F.DIA
+	
+	LEFT JOIN MAESTRO_AGENCIAS AG ON A.Agencia = AG.Agencia
 
-GROUP BY A.MES, A.Dia,
-	   A.CodCategoria, A.Categoria, A.CodFamilia, A.Familia, A.CodMarca, A.Marca,
-	   A.ZonaV2, A.CodOficina, A.NomOficina, A.CodTerritorio, A.NomTerritorio, A.CodZona, A.NomZona,
-	   A.Oficina_Ventas, A.Grupo_Vendedores, A.Territorio, A.Agrupacion_Distribuidora, A.Agencia_Distribuidora, A.Zona_Clientes, A.Grupo_Condiciones,
-	   A.Negocio,
-	   A.Plataforma;
+--GROUP BY A.MES, A.Dia,
+--	   A.CodCategoria, A.Categoria, A.CodFamilia, A.Familia, A.CodMarca, A.Marca,
+--	   A.ZonaV2, A.CodOficina, A.NomOficina, A.CodTerritorio, A.NomTerritorio, A.CodZona, A.NomZona,
+--	   A.Oficina_Ventas, A.Grupo_Vendedores, A.Territorio, A.Agrupacion_Distribuidora, A.Agencia_Distribuidora, A.Zona_Clientes, A.Grupo_Condiciones,
+--	   A.Negocio,
+--	   A.Plataforma;
 
 ------------------------------------------------------------------------------------------------------------------------------------------
 -----------------------------------------------------------------------------------------------------------------------------------------
