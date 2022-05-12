@@ -3,7 +3,7 @@ USE CmiSellOutEcuador;
 DECLARE @dia DATE;
 DECLARE @d1 AS VARCHAR(20);
 
-SELECT @dia= DATEADD(DAY,-11,SYSDATETIME());
+SELECT @dia= DATEADD(DAY,-1,SYSDATETIME());
 -- poner el último día de ventas
 SELECT @d1= TRY_CONVERT(VARCHAR(20), TRY_CONVERT(DATE, @dia,103),103);
 
@@ -66,507 +66,6 @@ PRINT @MA;
 PRINT @MA_1;
 PRINT @MA_2;
 PRINT @MA_3;
-
-
-
-
---SELECT DAY(CONVERT(date,DIA,103)) DIA FROM [BD_FECHAS] WHERE PER = @M1
---SELECT CONVERT(date,DIA,103) DIA FROM [BD_FECHAS] WHERE TRY_CONVERT(DATE, DIA, 103) = > @dia
-
---IF OBJECT_ID(N'tempdb..#PYDACO_SELL_IN') IS NOT NULL DROP TABLE #PYDACO_SELL_IN;
-
---SELECT A.DIA, B.Agencia, B.CodCategoria, B.Categoria, B.CodMarca, B.Marca, B.CodFamilia, B.Familia,
-
---		ISNULL(C.Plan_Ton, 0) Plan_Ton, ISNULL(C.real_ton, 0) real_ton, ISNULL(C.Plan_Dol, 0) Plan_Dol, ISNULL(C.real_Dolares, 0) real_Dolares,
---		B.Plataforma
-		
-----A.Fecha, A.Agencia, A.CodCategoria, A.Categoria, A.CodMarca, A.Marca, A.CodFamilia, A.Familia, 
-----	   SUM(A.Plan_Ton) Plan_Ton, SUM(A.real_ton) real_ton, SUM(A.Plan_Dol) Plan_Dol, SUM(A.real_Dolares) real_Dolares, A.Plataforma
---INTO #PYDACO_SELL_IN
---FROM (SELECT CONVERT(date,DIA,103) DIA FROM [BD_FECHAS] WHERE PER = @M1 AND TRY_CONVERT(DATE, DIA, 103) < = @dia) A
---CROSS JOIN (SELECT DISTINCT Agencia, CodCategoria, Categoria, CodMarca, Marca, CodFamilia, Familia, Plataforma FROM VENTAS_PYDACO) B
---LEFT JOIN (SELECT Fecha, Agencia, CodCategoria, Categoria, CodMarca, Marca, CodFamilia, Familia, Plataforma,
---				  ISNULL(SUM(Plan_Ton),0) Plan_Ton, ISNULL(SUM(real_ton), 0) real_ton, ISNULL(SUM(Plan_Dol), 0) Plan_Dol, ISNULL(SUM(real_Dolares), 0) real_Dolares
---			FROM VENTAS_PYDACO GROUP BY Fecha, Agencia, CodCategoria, Categoria, CodMarca, Marca, CodFamilia, Familia, Plataforma) C
---			ON B.CodFamilia = C.CodFamilia AND A.DIA = C.Fecha AND B.Agencia = C.Agencia
---			ORDER BY A.DIA , B.CodFamilia, B.Agencia;
-
-
---IF OBJECT_ID(N'tempdb..#PYDACO_SELL_IN_1') IS NOT NULL DROP TABLE #PYDACO_SELL_IN_1; 
-
---SELECT A.*, B.Porcion_Ton
---INTO #PYDACO_SELL_IN_1
---FROM (SELECT DIA, Agencia, CodCategoria, Categoria, CodMarca, Marca, CodFamilia, Familia,
---	Plan_Ton, Plan_Dol, real_ton, real_Dolares ,  Plataforma ,SUM(real_ton) OVER (PARTITION BY CodFamilia, Agencia ) AS TOTAL , SUM(real_Dolares) OVER (PARTITION BY CodFamilia, Agencia  ) AS TOTAL2
---	FROM #PYDACO_SELL_IN) A
---	LEFT JOIN 
---	#PORCIONES B ON DAY(A.DIA) = B.DIA AND A.CodFamilia = B.CodFamilia
-
-----SELECT * FROM #PYDACO_SELL_IN_1
-
-
-
-
-
-----SELECT * FROM #PYDACO_SELL_IN order by 1 asc , 7 asc , 2 asc where dia = '2022-04-05'
-
-----VENTAS_PYDACO A
-----WHERE MONTH(Fecha) = MONTH(@dia)
-----GROUP BY A.Fecha, A.Agencia, A.CodCategoria, A.Categoria, A.CodMarca, A.Marca, A.CodFamilia, A.Familia, A.Plataforma
-----SELECT *  FROM #PYDACO_SELL_IN
-
-
-
-
-----SELECT A.Dia, B.Familia, ISNULL(C.VentaTonSO,0) VentaTonSO
-----INTO #CONSOLIDADO1
-----FROM (SELECT DISTINCT DAY(Fecha) Dia 
-----FROM BaseinicialSellOut) A 
-----CROSS JOIN 
-----	(SELECT DISTINCT Familia 
-----		FROM BaselnicialSellOut) B 
-----			LEFT JOIN (SELECT DAY(Fecha) Dia, Familia, SUM(VentaTonSO) VentaTonSO 
-----			FROM BaselnicialSellOut
-----			GROUP BY DAY(Fecha), Familia) C ON B.Familia = C.Familia AND A.Dia =C.Dia
-----		ORDER BY A Dia, B.Familia
-
-
-
-
-
---IF OBJECT_ID(N'tempdb..#CONSOLIDADO0') IS NOT NULL drop table #CONSOLIDADO0
-
---SELECT *
-----SELECT DAY(Fecha) Dia, SUM(Importe) SUBTOTAL_NETO
---INTO #CONSOLIDADO0
---FROM PYDACO_HISTORICO
---WHERE TRY_CONVERT(VARCHAR,YEAR(Fecha))+TRY_CONVERT(VARCHAR,MONTH(Fecha))
---	IN (TRY_CONVERT(VARCHAR,YEAR(@MA))+TRY_CONVERT(VARCHAR,MONTH(@MA)),
---		TRY_CONVERT(VARCHAR,YEAR(@MA_1))+TRY_CONVERT(VARCHAR,MONTH(@MA_1)),
---		TRY_CONVERT(VARCHAR,YEAR(@MA_2))+TRY_CONVERT(VARCHAR,MONTH(@MA_2)),
---		TRY_CONVERT(VARCHAR,YEAR(@MA_3))+TRY_CONVERT(VARCHAR,MONTH(@MA_3)))
-----SELECT * FROM #CONSOLIDADO0 where month (fecha) = 12 ORDER BY FECHA
-
---UPDATE A SET Agencia = TRIM(Agencia) FROM #CONSOLIDADO0 A;
---UPDATE A SET ClienteSellOut = TRIM(ClienteSellOut) FROM #CONSOLIDADO0 A;
---UPDATE A SET Vendedor_Distribuidora = TRIM(Vendedor_Distribuidora) FROM #CONSOLIDADO0 A;
---UPDATE A SET CodPydaco = TRIM(CodPydaco) FROM #CONSOLIDADO0 A;
---UPDATE A SET CodClienteSellOut = TRIM(CodClienteSellOut) FROM #CONSOLIDADO0 A;
-		
-----GROUP BY DAY(Fecha)
-----SELECT TRY_CONVERT(VARCHAR,YEAR(@MA))+TRY_CONVERT(VARCHAR,MONTH(@MA))
-
---IF OBJECT_ID(N'tempdb..#CONSOLIDADO0_1') IS NOT NULL DROP TABLE #CONSOLIDADO0_1; 
-
---SELECT A.Fecha Fecha, A.Agencia Agencia, A.CodClienteSellOut, A.ClienteSellOut,  A.Vendedor_Distribuidora, 'H-SIN ASIGNAR' Tipo_tienda_Distribuidora,
---	   MP.CodAlicorp, M.CodFamilia, M.Familia,
---	   A.TUnidades, 0  Plan_Ton, 0 Plan_Dol, A.Importe/1000 real_Dolares, A.TUnidades*M.PesoTon real_ton,
---	   'Consumo Masivo' Negocio
---INTO #CONSOLIDADO0_1
---FROM #CONSOLIDADO0 A
---	LEFT JOIN TABLA_MATERIALES_PYDACO MP ON A.CodPydaco = MP.CodPydaco
---	LEFT JOIN MAESTRO_ALICORP M ON MP.CodAlicorp = M.CodAlicorp;
-----SELECT *  FROM #CONSOLIDADO0_1 where CodAlicorp = '9060817'
-
-
---IF OBJECT_ID(N'tempdb..#CONSOLIDADO0_2') IS NOT NULL DROP TABLE #CONSOLIDADO0_2; 
-
---SELECT A.Fecha, A.Agencia, A.CodFamilia, A.Familia,
---	   SUM(A.Plan_Ton) Plan_Ton, SUM(A.Plan_Dol) Plan_Dol , SUM(A.real_Dolares) real_Dolares, SUM(A.real_ton) real_ton
---INTO #CONSOLIDADO0_2
---FROM #CONSOLIDADO0_1 A
---GROUP BY A.Fecha, A.Agencia, A.CodFamilia, A.Familia
-
-
-
-			   
-----SELECT TRY_CONVERT(VARCHAR,YEAR(Fecha))+TRY_CONVERT(VARCHAR,MONTH(Fecha)) FROM #CONSOLIDADO0_2
-----SELECT * FROM #CONSOLIDADO0_2  where day (fecha) = 30  AND CodFamilia = '1003012081'  GROUP BY CodFamilia
-
-----SELECT *  FROM #CONSOLIDADO0_2 where month (fecha ) =12 and day (fecha) = 29
-
-
-
-----SELECT *from  #CONSOLIDADO0_2 WHERE CodFamilia ='1003012099' AND DATEPART(DAY,Fecha)=01   0.02004   0.0209   1.19466  1.32778  1003012099
-------------------------------------------------------
-----Corte para agrupar los 3 meses que mecesito anteriores al  MES ACTUAL
-----SELECT A.Dia, B.Familia, ISNULL(C.VentaTonSO,0) VentaTonSO
-----INTO #CONSOLIDADO1
-----FROM (SELECT DISTINCT DAY(Fecha) Dia 
-----FROM BaseinicialSellOut) A 
-----CROSS JOIN 
-----	(SELECT DISTINCT Familia 
-----		FROM BaselnicialSellOut) B 
-----			LEFT JOIN (SELECT DAY(Fecha) Dia, Familia, SUM(VentaTonSO) VentaTonSO 
-----			FROM BaselnicialSellOut
-----			GROUP BY DAY(Fecha), Familia) C ON B.Familia = C.Familia AND A.Dia =C.Dia
-----		ORDER BY A Dia, B.Familia
-
-
-----SELECT DATEPART(DAY, DIA) FROM (SELECT CONVERT(date,DIA,103) DIA FROM [BD_FECHAS] WHERE PER = @M1 ) A
-----LAS TABLAS CREADAS CON SELECT DEBEN TENER NOMBRES PARA USARLAS
-
-
---IF OBJECT_ID(N'tempdb..#CONSOLIDADO1') IS NOT NULL DROP TABLE #CONSOLIDADO1; 
-
---SELECT A.DIA Dia, B.CodFamilia, B.Familia,
---	   ISNULL(C.Plan_Ton, 0) Plan_Ton, ISNULL(C.Plan_Dol, 0) Plan_Dol , ISNULL(C.real_Dolares, 0) real_Dolares, ISNULL(C.real_ton, 0) real_ton
---INTO #CONSOLIDADO1
---FROM (SELECT DAY(CONVERT(date,DIA,103)) DIA FROM [BD_FECHAS] WHERE PER = @M1 ) A
---	CROSS JOIN (SELECT DISTINCT CodFamilia, Familia FROM #CONSOLIDADO0_2 
---				WHERE  TRY_CONVERT(VARCHAR,YEAR(Fecha))+TRY_CONVERT(VARCHAR,MONTH(Fecha))
---	                   IN (TRY_CONVERT(VARCHAR,YEAR(@MA))+TRY_CONVERT(VARCHAR,MONTH(@MA)),
---		                   TRY_CONVERT(VARCHAR,YEAR(@MA_1))+TRY_CONVERT(VARCHAR,MONTH(@MA_1)),
---		                   TRY_CONVERT(VARCHAR,YEAR(@MA_2))+TRY_CONVERT(VARCHAR,MONTH(@MA_2)))) B
---	LEFT JOIN (SELECT DAY(Fecha) Dia, CodFamilia, Familia,
---					  SUM(Plan_Ton) Plan_Ton, SUM(Plan_Dol) Plan_Dol , SUM(real_Dolares) real_Dolares, SUM(real_ton) real_ton
---			   FROM #CONSOLIDADO0_2
---			   WHERE  TRY_CONVERT(VARCHAR,YEAR(Fecha))+TRY_CONVERT(VARCHAR,MONTH(Fecha))
---					  IN (TRY_CONVERT(VARCHAR,YEAR(@MA))+TRY_CONVERT(VARCHAR,MONTH(@MA)),
---						  TRY_CONVERT(VARCHAR,YEAR(@MA_1))+TRY_CONVERT(VARCHAR,MONTH(@MA_1)),
---						  TRY_CONVERT(VARCHAR,YEAR(@MA_2))+TRY_CONVERT(VARCHAR,MONTH(@MA_2)))
---			   GROUP BY DAY(Fecha), CodFamilia, Familia) C
---	ON B.CodFamilia = C.CodFamilia AND A.DIA =C.Dia;
-
-
-
-----SELECT * FROM   #CONSOLIDADO1 WHERE REAL_DOLARES <0
-
-----IF OBJECT_ID(N'tempdb..#CONSOLIDADO1') IS NOT NULL DROP TABLE #CONSOLIDADO1; 
-
-----SELECT DAY(A.Fecha) Dia, A.CodFamilia, A.Familia,
-----	   SUM(A.Plan_Ton) Plan_Ton, SUM(A.Plan_Dol) Plan_Dol , SUM(A.real_Dolares) real_Dolares, SUM(A.real_ton) real_ton
-----INTO #CONSOLIDADO1
-----FROM #CONSOLIDADO0_2 A
-----WHERE  TRY_CONVERT(VARCHAR,YEAR(Fecha))+TRY_CONVERT(VARCHAR,MONTH(Fecha))
-----	   IN (TRY_CONVERT(VARCHAR,YEAR(@MA))+TRY_CONVERT(VARCHAR,MONTH(@MA)),
-----		   TRY_CONVERT(VARCHAR,YEAR(@MA_1))+TRY_CONVERT(VARCHAR,MONTH(@MA_1)),
-----		   TRY_CONVERT(VARCHAR,YEAR(@MA_2))+TRY_CONVERT(VARCHAR,MONTH(@MA_2)))
-----GROUP BY DAY(A.Fecha), A.CodFamilia, A.Familia;
-----SELECT sum(real_ton) FROM #CONSOLIDADO0_1
-----SELECT SUM(real_ton) FROM #CONSOLIDADO0_2  
-----SELECT SUM(real_ton) FROM #CONSOLIDADO1
-----SELECT * FROM #CONSOLIDADO1 ORDER BY 1 ASC , 2 ASC WHERE CodFamilia is null  5016096878  1003012081
----- VERIFICAR SI EXISTIERA ALGUN DIA EN QUE ESA FAMILIA NO TUVIERA DATOS 
-
-----SELECT sum(real_Dolares) FROM #CONSOLIDADO1 
-------where CodFamilia = '1003012081'
-----SELECT SUM(Subtotal) FROM #CONSOLIDADO2
-------where CodFamilia = '1003012081'
-
---IF OBJECT_ID(N'tempdb..#CONSOLIDADO2') IS NOT NULL  DROP TABLE #CONSOLIDADO2;
-
---SELECT A.DIA, A.CodFamilia, A.Familia, A.real_Dolares Subtotal, A.real_ton Subtotal_Ton
---INTO #CONSOLIDADO2 
-----SELECT * from #CONSOLIDADO2 order by 1 asc, 2 asc , 2 asc 
-----SELECT *
---FROM #CONSOLIDADO1 A
-
-----ORDER BY 1 ASC,8 ASC
-----GROUP BY A.DIA, A.CodFamilia, A.Familia 
-
---IF OBJECT_ID(N'tempdb..#CONSOLIDADO3') IS NOT NULL  DROP TABLE #CONSOLIDADO3;
-
---SELECT A.DIA, A.CodFamilia, B.CodFamilia CodFamilia2, B.Familia, SUM(B.real_Dolares) Tot_Acum, SUM(B.real_ton) Tot_Acum_Ton
---INTO #CONSOLIDADO3 
-----SELECT *
---FROM #CONSOLIDADO1 A
---	LEFT JOIN #CONSOLIDADO1 B
---ON A.DIA>=B.DIA  
-----where A.codfamilia = '1003012081' AND B.codfamilia = '1003012081' AND A.Agencia = 'ESMERALDAS' ORDER BY 1 ASC,3 ASC ,9 ASC,11 ASC
-----ORDER BY 1 ASC,3 ASC ,9 ASC,11 ASC  SELECT (0.00272 + 0.00069 +0.00278 + 0.00197)
---GROUP BY A.DIA, A.CodFamilia, B.CodFamilia, B.Familia
-----SELECT * from #CONSOLIDADO2
-----where codfamilia = '1003012081'AND Agencia = 'ESMERALDAS' order by 1 asc, 3 asc , 2 asc 
-----SELECT * FROM #CONSOLIDADO3 where codfamilia = '1003012081'  and codfamilia2 = '1003012081' AND Agencia = 'ESMERALDAS' ORDER BY 1 ASC,3 ASC, 2 ASC 36.23656  249.32736
-----ORDER BY 1 ASC,2 ASC
-----SELECT * FROM #CONSOLIDADO2  where codfamilia = '5016105811' ORDER BY 1 ASC,2 ASC   396.26518
----- 1 Dia Rellenas  1.32778
-----2 Dia Rellenas  14.12782 SELECT (1.32778 + 14.12782) 15.4556
----- 3 Dia Rellenas 30.25043 SELECT (1.32778 + 14.12782+ 30.25043) 45.70603
-----SELECT 0.10289 +0.73249+0.75286 PLUSBRLLE 1
-----SELECT 0.00293+0.29795+0.10317 PLUSBRLLE 1
-
---IF OBJECT_ID(N'tempdb..#CONSOLIDADO4') IS NOT NULL  DROP TABLE #CONSOLIDADO4;
-
---SELECT A.DIA, A.CodFamilia, A.Subtotal, A.Subtotal_Ton, B.Tot_Acum, B.Tot_Acum_Ton
---INTO #CONSOLIDADO4
-----select *
---FROM #CONSOLIDADO2 A
---	LEFT JOIN #CONSOLIDADO3 B ON A.DIA= B.DIA AND  A.CodFamilia = B.CodFamilia AND A.CodFamilia = B.CodFamilia2
-
-----SELECT * FROM #CONSOLIDADO4 WHERE CodFamilia ='1003012081' AND Agencia = 'ESMERALDAS'
---IF OBJECT_ID(N'tempdb..#PORCIONES') IS NOT NULL DROP TABLE #PORCIONES; 
-
---SELECT A.DIA, A.CodFamilia, A.Subtotal, A.Subtotal_Ton, B.Dia DIA2, B.CodFamilia CodFamilia2, B.Tot_Acum, B.Tot_Acum_Ton, A.Subtotal/B.Tot_Acum Porcion, A.Subtotal_Ton/B.Tot_Acum_Ton Porcion_Ton
---INTO #PORCIONES
---FROM #CONSOLIDADO2 A
---LEFT JOIN #CONSOLIDADO4 B
---ON A.DIA<=B.DIA 
-----ORDER BY 1 ASC
---WHERE B.DIA= DAY(@dia)-- asignar el dia de corte(con esto se tendra la proy por dia)  167576.81
---AND A.CodFamilia = B.CodFamilia
---ORDER BY 1 ASC, 2 ASC
-----SELECT distinct codfamilia FROM #PORCIONES
-----SELECT * FROM #PORCIONES_M1
-----SELECT distinct codfamilia FROM #CONSOLIDADO2
-----WHERE CodFamilia = '1003012081'
-------IF OBJECT_ID(N'tempdb..#CONSOLIDADO1') IS NOT NULL drop table #CONSOLIDADO1  5016105811  
-
-
-----SELECT DAY(Fecha) Fecha, sum(Importe) SUBTOTAL_NETO
-----INTO #CONSOLIDADO1
-----FROM PYDACO_HISTORICO
-----WHERE TRY_CONVERT(VARCHAR,YEAR(Fecha))+TRY_CONVERT(VARCHAR,MONTH(Fecha))
-----	IN (TRY_CONVERT(VARCHAR,YEAR(@MA))+TRY_CONVERT(VARCHAR,MONTH(@MA)),
-----		TRY_CONVERT(VARCHAR,YEAR(@MA_1))+TRY_CONVERT(VARCHAR,MONTH(@MA_1)),
-----		TRY_CONVERT(VARCHAR,YEAR(@MA_2))+TRY_CONVERT(VARCHAR,MONTH(@MA_2)),
-----		TRY_CONVERT(VARCHAR,YEAR(@MA_3))+TRY_CONVERT(VARCHAR,MONTH(@MA_3)))
-----GROUP BY DAY(Fecha);
-
-----SELECT * FROM #CONSOLIDADO1 
-------------------------------------------------------
-----Corte para agrupar los 3 meses que mecesito apartir  del MES-1
-
---IF OBJECT_ID(N'tempdb..#CONSOLIDADO1_M1') IS NOT NULL DROP TABLE #CONSOLIDADO1_M1; 
-
---SELECT A.DIA Dia, B.CodFamilia, B.Familia,
---	   ISNULL(C.Plan_Ton, 0) Plan_Ton, ISNULL(C.Plan_Dol, 0) Plan_Dol , ISNULL(C.real_Dolares, 0) real_Dolares, ISNULL(C.real_ton, 0) real_ton
---INTO #CONSOLIDADO1_M1
---FROM (SELECT DAY(CONVERT(date,DIA,103)) DIA FROM [BD_FECHAS] WHERE PER = @M2 ) A
---	CROSS JOIN (SELECT DISTINCT CodFamilia, Familia FROM #CONSOLIDADO0_2 
---				WHERE  TRY_CONVERT(VARCHAR,YEAR(Fecha))+TRY_CONVERT(VARCHAR,MONTH(Fecha))
---	                   IN (TRY_CONVERT(VARCHAR,YEAR(@MA_1))+TRY_CONVERT(VARCHAR,MONTH(@MA_1)),
---		                   TRY_CONVERT(VARCHAR,YEAR(@MA_2))+TRY_CONVERT(VARCHAR,MONTH(@MA_2)),
---		                   TRY_CONVERT(VARCHAR,YEAR(@MA_3))+TRY_CONVERT(VARCHAR,MONTH(@MA_3)))) B
---	LEFT JOIN (SELECT DAY(Fecha) Dia, CodFamilia, Familia,
---					  SUM(Plan_Ton) Plan_Ton, SUM(Plan_Dol) Plan_Dol , SUM(real_Dolares) real_Dolares, SUM(real_ton) real_ton
---			   FROM #CONSOLIDADO0_2
---			   WHERE  TRY_CONVERT(VARCHAR,YEAR(Fecha))+TRY_CONVERT(VARCHAR,MONTH(Fecha))
---					  IN (TRY_CONVERT(VARCHAR,YEAR(@MA_1))+TRY_CONVERT(VARCHAR,MONTH(@MA_1)),
---						  TRY_CONVERT(VARCHAR,YEAR(@MA_2))+TRY_CONVERT(VARCHAR,MONTH(@MA_2)),
---						  TRY_CONVERT(VARCHAR,YEAR(@MA_3))+TRY_CONVERT(VARCHAR,MONTH(@MA_3)))
---			   GROUP BY DAY(Fecha), CodFamilia, Familia) C
---	ON B.CodFamilia = C.CodFamilia AND A.DIA =C.Dia;
-
-----SELECT * FROM #CONSOLIDADO1_M1 WHERE DIA IN (29 ,30)
-
-
-
-----SELECT DAY(A.Fecha) Dia, A.CodFamilia, A.Familia,
-----	   SUM(A.Plan_Ton) Plan_Ton, SUM(A.Plan_Dol) Plan_Dol , SUM(A.real_Dolares) real_Dolares, SUM(A.real_ton) real_ton
-----INTO #CONSOLIDADO1_M1
-----FROM #CONSOLIDADO0_2 A
-----WHERE  TRY_CONVERT(VARCHAR,YEAR(Fecha))+TRY_CONVERT(VARCHAR,MONTH(Fecha))
-----	   IN (TRY_CONVERT(VARCHAR,YEAR(@MA_1))+TRY_CONVERT(VARCHAR,MONTH(@MA_1)),
-----		  TRY_CONVERT(VARCHAR,YEAR(@MA_2))+TRY_CONVERT(VARCHAR,MONTH(@MA_2)),
-----		  TRY_CONVERT(VARCHAR,YEAR(@MA_3))+TRY_CONVERT(VARCHAR,MONTH(@MA_3)))
-----GROUP BY DAY(A.Fecha), A.CodFamilia, A.Familia;
-----SELECT sum(real_ton) FROM #CONSOLIDADO0_1
-----SELECT SUM(real_ton) FROM #CONSOLIDADO0_2  
-----SELECT SUM(real_ton) FROM #CONSOLIDADO1
-----SELECT * FROM #CONSOLIDADO1 ORDER BY 1 ASC , 2 ASC WHERE CodFamilia is null  5016096878  1003012081
----- VERIFICAR SI EXISTIERA ALGUN DIA EN QUE ESA FAMILIA NO TUVIERA DATOS 
-
-----SELECT sum(real_Dolares) FROM #CONSOLIDADO1 
-------where CodFamilia = '1003012081'
-----SELECT SUM(Subtotal) FROM #CONSOLIDADO2
-------where CodFamilia = '1003012081'
-
---IF OBJECT_ID(N'tempdb..#CONSOLIDADO2_M1') IS NOT NULL  DROP TABLE #CONSOLIDADO2_M1;
-
---SELECT A.DIA, A.CodFamilia, A.Familia, A.real_Dolares Subtotal, A.real_ton Subtotal_Ton
---INTO #CONSOLIDADO2_M1 
-----SELECT DISTINCT CODFAMILIA from #CONSOLIDADO2_M1   WHERE DIA = 30
-----1003012081
-----1003012099
-----1003012100
-----5015109571
-----5016096878
-----5016105811
-----SELECT *
---FROM #CONSOLIDADO1_M1 A
-
-----ORDER BY 1 ASC,8 ASC
-----GROUP BY A.DIA, A.CodFamilia, A.Familia
-
---IF OBJECT_ID(N'tempdb..#CONSOLIDADO3_M1') IS NOT NULL  DROP TABLE #CONSOLIDADO3_M1;
-
---SELECT A.DIA, A.CodFamilia, B.CodFamilia CodFamilia2, B.Familia, SUM(B.real_Dolares) Tot_Acum, SUM(B.real_ton) Tot_Acum_Ton
---INTO #CONSOLIDADO3_M1 
-----SELECT *
---FROM #CONSOLIDADO1_M1 A
---	LEFT JOIN #CONSOLIDADO1_M1 B
---ON A.DIA>=B.DIA  
-----ORDER BY 1 ASC,8 ASC
---GROUP BY A.DIA, A.CodFamilia, B.CodFamilia, B.Familia
-----SELECT * FROM #CONSOLIDADO3 WHERE CodFamilia ='5016096878' AND CodFamilia2= '5016096878' ORDER BY 1 ASC,2 ASC, 3 ASC 36.23656  249.32736
-----ORDER BY 1 ASC,2 ASC
-----SELECT * FROM #CONSOLIDADO2  where codfamilia = '5016105811' ORDER BY 1 ASC,2 ASC   396.26518
----- 1 Dia Rellenas  1.32778
-----2 Dia Rellenas  14.12782 SELECT (1.32778 + 14.12782) 15.4556
----- 3 Dia Rellenas 30.25043 SELECT (1.32778 + 14.12782+ 30.25043) 45.70603
-----SELECT 0.10289 +0.73249+0.75286 PLUSBRLLE 1
-----SELECT 0.00293+0.29795+0.10317 PLUSBRLLE 1
-
---IF OBJECT_ID(N'tempdb..#CONSOLIDADO4_M1') IS NOT NULL  DROP TABLE #CONSOLIDADO4_M1;
-
---SELECT A.DIA, A.CodFamilia, A.Subtotal, A.Subtotal_Ton, B.Tot_Acum, B.Tot_Acum_Ton
---INTO #CONSOLIDADO4_M1
---FROM #CONSOLIDADO2_M1 A
---	LEFT JOIN #CONSOLIDADO3_M1 B ON A.DIA= B.DIA AND  A.CodFamilia = B.CodFamilia AND A.CodFamilia = B.CodFamilia2
-
-----SELECT * FROM #CONSOLIDADO2 WHERE CodFamilia ='1003012081'
---IF OBJECT_ID(N'tempdb..#PORCIONES_M1') IS NOT NULL DROP TABLE #PORCIONES_M1; 
-
---SELECT A.DIA, A.CodFamilia, A.Subtotal, A.Subtotal_Ton, B.Dia DIA2, B.CodFamilia CodFamilia2, B.Tot_Acum, B.Tot_Acum_Ton, A.Subtotal/B.Tot_Acum Porcion, A.Subtotal_Ton/B.Tot_Acum_Ton Porcion_Ton
---INTO #PORCIONES_M1
---FROM #CONSOLIDADO2_M1 A
---LEFT JOIN #CONSOLIDADO4_M1 B
---ON A.DIA<=B.DIA 
-----ORDER BY 1 ASC
---WHERE B.DIA= DAY(@dia)-- asignar el dia de corte(con esto se tendra la proy por dia)  167576.81
---AND A.CodFamilia = B.CodFamilia
---ORDER BY 1 ASC, 2 ASC
-----SELECT * FROM #PORCIONES_M1
-----SELECT * FROM #PORCIONES
-
-
-
-
-
-
-
-
-
---IF OBJECT_ID(N'tempdb..#CONSOLIDADO0') IS NOT NULL drop table #CONSOLIDADO0
-
---SELECT *
-----SELECT DAY(Fecha) Dia, SUM(Importe) SUBTOTAL_NETO
---INTO #CONSOLIDADO0
---FROM PYDACO_HISTORICO
---WHERE TRY_CONVERT(VARCHAR,YEAR(Fecha))+TRY_CONVERT(VARCHAR,MONTH(Fecha))
---	IN (TRY_CONVERT(VARCHAR,YEAR(@MA))+TRY_CONVERT(VARCHAR,MONTH(@MA)),
---		TRY_CONVERT(VARCHAR,YEAR(@MA_1))+TRY_CONVERT(VARCHAR,MONTH(@MA_1)),
---		TRY_CONVERT(VARCHAR,YEAR(@MA_2))+TRY_CONVERT(VARCHAR,MONTH(@MA_2)),
---		TRY_CONVERT(VARCHAR,YEAR(@MA_3))+TRY_CONVERT(VARCHAR,MONTH(@MA_3)))
-----SELECT * FROM #CONSOLIDADO0
-
---UPDATE A SET Agencia = TRIM(Agencia) FROM #CONSOLIDADO0 A;
---UPDATE A SET ClienteSellOut = TRIM(ClienteSellOut) FROM #CONSOLIDADO0 A;
---UPDATE A SET Vendedor_Distribuidora = TRIM(Vendedor_Distribuidora) FROM #CONSOLIDADO0 A;
---UPDATE A SET CodPydaco = TRIM(CodPydaco) FROM #CONSOLIDADO0 A;
---UPDATE A SET CodClienteSellOut = TRIM(CodClienteSellOut) FROM #CONSOLIDADO0 A;
-		
-----GROUP BY DAY(Fecha)
-----SELECT TRY_CONVERT(VARCHAR,YEAR(@MA))+TRY_CONVERT(VARCHAR,MONTH(@MA))
-
---IF OBJECT_ID(N'tempdb..#CONSOLIDADO0_1') IS NOT NULL DROP TABLE #CONSOLIDADO0_1; 
-
---SELECT A.Fecha Fecha, A.Agencia Agencia, A.CodClienteSellOut, A.ClienteSellOut,  A.Vendedor_Distribuidora, 'H-SIN ASIGNAR' Tipo_tienda_Distribuidora,
---	   MP.CodAlicorp, M.CodFamilia, M.Familia,
---	   A.TUnidades, 0  Plan_Ton, 0 Plan_Dol, A.Importe/1000 real_Dolares, A.TUnidades*M.PesoTon real_ton,
---	   'Consumo Masivo' Negocio
---INTO #CONSOLIDADO0_1
---FROM #CONSOLIDADO0 A
---	LEFT JOIN TABLA_MATERIALES_PYDACO MP ON A.CodPydaco = MP.CodPydaco
---	LEFT JOIN MAESTRO_ALICORP M ON MP.CodAlicorp = M.CodAlicorp;
-----SELECT sum(Real_dolares) FROM #CONSOLIDADO0_1
-
-
---IF OBJECT_ID(N'tempdb..#CONSOLIDADO0_2') IS NOT NULL DROP TABLE #CONSOLIDADO0_2; 
-
---SELECT A.Fecha, A.CodFamilia, A.Familia,
---	   SUM(A.Plan_Ton) Plan_Ton, SUM(A.Plan_Dol) Plan_Dol , SUM(A.real_Dolares) real_Dolares, SUM(A.real_ton) real_ton
---INTO #CONSOLIDADO0_2
---FROM #CONSOLIDADO0_1 A
---GROUP BY A.Fecha, A.CodFamilia, A.Familia
-
---IF OBJECT_ID(N'tempdb..#CONSOLIDADO1') IS NOT NULL DROP TABLE #CONSOLIDADO1; 
-
---SELECT DAY(A.Fecha) Dia, A.CodFamilia, A.Familia,
---	   SUM(A.Plan_Ton) Plan_Ton, SUM(A.Plan_Dol) Plan_Dol , SUM(A.real_Dolares) real_Dolares, SUM(A.real_ton) real_ton
---INTO #CONSOLIDADO1
---FROM #CONSOLIDADO0_2 A
---GROUP BY DAY(A.Fecha), A.CodFamilia, A.Familia
-----SELECT sum(real_ton) FROM #CONSOLIDADO0_1
-----SELECT SUM(real_ton) FROM #CONSOLIDADO0_2  
-----SELECT SUM(real_ton) FROM #CONSOLIDADO1
-----SELECT * FROM #CONSOLIDADO1 ORDER BY 1 ASC , 2 ASC WHERE CodFamilia is null  5016096878  1003012081
----- VERIFICAR SI EXISTIERA ALGUN DIA EN QUE ESA FAMILIA NO TUVIERA DATOS 
-
-----SELECT sum(real_Dolares) FROM #CONSOLIDADO1 
-------where CodFamilia = '1003012081'
-----SELECT SUM(Subtotal) FROM #CONSOLIDADO2
-------where CodFamilia = '1003012081'
-
---IF OBJECT_ID(N'tempdb..#CONSOLIDADO2') IS NOT NULL  DROP TABLE #CONSOLIDADO2;
-
---SELECT A.DIA, A.CodFamilia, A.Familia, A.real_Dolares Subtotal, A.real_ton Subtotal_Ton
---INTO #CONSOLIDADO2 
-----SELECT * from #CONSOLIDADO1
-----SELECT *
---FROM #CONSOLIDADO1 A
-
-----ORDER BY 1 ASC,8 ASC
-----GROUP BY A.DIA, A.CodFamilia, A.Familia
-
---IF OBJECT_ID(N'tempdb..#CONSOLIDADO3') IS NOT NULL  DROP TABLE #CONSOLIDADO3;
-
---SELECT A.DIA, A.CodFamilia, B.CodFamilia CodFamilia2, B.Familia, SUM(B.real_Dolares) Tot_Acum, SUM(B.real_ton) Tot_Acum_Ton
---INTO #CONSOLIDADO3 
-----SELECT *
---FROM #CONSOLIDADO1 A
---	LEFT JOIN #CONSOLIDADO1 B
---ON A.DIA>=B.DIA  
-----ORDER BY 1 ASC,8 ASC
---GROUP BY A.DIA, A.CodFamilia, B.CodFamilia, B.Familia
-----SELECT * FROM #CONSOLIDADO3 WHERE CodFamilia ='5016096878' AND CodFamilia2= '5016096878' ORDER BY 1 ASC,2 ASC, 3 ASC 36.23656  249.32736
-----ORDER BY 1 ASC,2 ASC
-----SELECT * FROM #CONSOLIDADO2  where codfamilia = '5016105811' ORDER BY 1 ASC,2 ASC   396.26518
----- 1 Dia Rellenas  1.32778
-----2 Dia Rellenas  14.12782 SELECT (1.32778 + 14.12782) 15.4556
----- 3 Dia Rellenas 30.25043 SELECT (1.32778 + 14.12782+ 30.25043) 45.70603
-----SELECT 0.10289 +0.73249+0.75286 PLUSBRLLE 1
-----SELECT 0.00293+0.29795+0.10317 PLUSBRLLE 1
-
---IF OBJECT_ID(N'tempdb..#CONSOLIDADO4') IS NOT NULL  DROP TABLE #CONSOLIDADO4;
-
---SELECT A.DIA, A.CodFamilia, A.Subtotal, A.Subtotal_Ton, B.Tot_Acum, B.Tot_Acum_Ton
---INTO #CONSOLIDADO4
---FROM #CONSOLIDADO2 A
---	LEFT JOIN #CONSOLIDADO3 B ON A.DIA= B.DIA AND  A.CodFamilia = B.CodFamilia AND A.CodFamilia = B.CodFamilia2
-
-----SELECT * FROM #CONSOLIDADO2 WHERE CodFamilia ='1003012081'
---IF OBJECT_ID(N'tempdb..#PORCIONES') IS NOT NULL DROP TABLE #PORCIONES; 
-
---SELECT A.DIA, A.CodFamilia, A.Subtotal, A.Subtotal_Ton, B.Dia DIA2, B.CodFamilia CodFamilia2, B.Tot_Acum, B.Tot_Acum_Ton, A.Subtotal/B.Tot_Acum Porcion, A.Subtotal_Ton/B.Tot_Acum_Ton Porcion_Ton
---INTO #PORCIONES
---FROM #CONSOLIDADO2 A
---LEFT JOIN #CONSOLIDADO4 B
---ON A.DIA<=B.DIA 
-----ORDER BY 1 ASC
---WHERE B.DIA= DAY(@dia)-- asignar el dia de corte(con esto se tendra la proy por dia)  167576.81
---AND A.CodFamilia = B.CodFamilia
---ORDER BY 1 ASC, 2 ASC
-----SELECT * FROM #PORCIONES WHERE CodFamilia = '1003012081'
-
-
-----IF OBJECT_ID(N'tempdb..#CONSOLIDADO1') IS NOT NULL drop table #CONSOLIDADO1  5016105811
-
-
---SELECT DAY(Fecha) Fecha, sum(Importe) SUBTOTAL_NETO
---INTO #CONSOLIDADO1
---FROM PYDACO_HISTORICO
---WHERE TRY_CONVERT(VARCHAR,YEAR(Fecha))+TRY_CONVERT(VARCHAR,MONTH(Fecha))
---	IN (TRY_CONVERT(VARCHAR,YEAR(@MA))+TRY_CONVERT(VARCHAR,MONTH(@MA)),
---		TRY_CONVERT(VARCHAR,YEAR(@MA_1))+TRY_CONVERT(VARCHAR,MONTH(@MA_1)),
---		TRY_CONVERT(VARCHAR,YEAR(@MA_2))+TRY_CONVERT(VARCHAR,MONTH(@MA_2)),
---		TRY_CONVERT(VARCHAR,YEAR(@MA_3))+TRY_CONVERT(VARCHAR,MONTH(@MA_3)))
---GROUP BY DAY(Fecha);
-
---SELECT * FROM #CONSOLIDADO1 
-
 
 
 DECLARE @dm1 AS INTEGER; 
@@ -690,7 +189,7 @@ UPDATE TABLA_MATERIALES SET Plataforma = TRIM(Plataforma);
 TRUNCATE TABLE PLAN_LA_FABRIL;
 
 BULK INSERT PLAN_LA_FABRIL
-FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\PLAN_LA_FABRIL.csv'
+FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\PLAN_LA_FABRIL_MAY.csv'
 WITH (FIELDTERMINATOR=';', FIRSTROW=2, CODEPAGE='ACP');
 
 DELETE [PLAN_LA_FABRIL] WHERE Plan_Ton = 0 AND Importe = 0;
@@ -721,10 +220,10 @@ SET CodAlicorp = CASE CodAlicorp
 
 SET LANGUAGE SPANISH
 
-DELETE FROM LF_VENTAS_HISTORICO WHERE LEFT(FFactura,7) = '2022-04';
+DELETE FROM LF_VENTAS_HISTORICO WHERE LEFT(FFactura,7) = '2022-05';
 
 BULK INSERT LF_VENTAS_HISTORICO
-FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\BDPRUEBAVENTAS.csv'
+FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\BDPRUEBAVENTAS_MAY.csv'
 WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
 
 SET LANGUAGE US_ENGLISH
@@ -735,17 +234,17 @@ TRUNCATE TABLE BASE_INICIAL_VENTAS;
 INSERT INTO BASE_INICIAL_VENTAS
 SELECT *
 FROM LF_VENTAS_HISTORICO
+WHERE DATEPART(YEAR, FFactura)= 2022 AND DATEPART(MONTH, FFactura) = 05
+
+INSERT INTO BASE_INICIAL_VENTAS
+SELECT *
+FROM LF_VENTAS_HISTORICO
+WHERE DATEPART(YEAR, FFactura)= 2021 AND DATEPART(MONTH, FFactura) = 05
+
+INSERT INTO BASE_INICIAL_VENTAS
+SELECT *
+FROM LF_VENTAS_HISTORICO
 WHERE DATEPART(YEAR, FFactura)= 2022 AND DATEPART(MONTH, FFactura) = 04
-
-INSERT INTO BASE_INICIAL_VENTAS
-SELECT *
-FROM LF_VENTAS_HISTORICO
-WHERE DATEPART(YEAR, FFactura)= 2021 AND DATEPART(MONTH, FFactura) = 04
-
-INSERT INTO BASE_INICIAL_VENTAS
-SELECT *
-FROM LF_VENTAS_HISTORICO
-WHERE DATEPART(YEAR, FFactura)= 2022 AND DATEPART(MONTH, FFactura) = 03
 
 
 
@@ -873,10 +372,10 @@ SET CodAlicorp = CASE CodAlicorp
 
 SET LANGUAGE SPANISH
 
-DELETE FROM LF_NC_HISTORICO WHERE LEFT(FNC,7) = '2022-04';
+DELETE FROM LF_NC_HISTORICO WHERE LEFT(FNC,7) = '2022-05';
 
 BULK INSERT LF_NC_HISTORICO
-FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\BDPRUEBA.csv'
+FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\BDPRUEBA_MAY.csv'
 WITH (FIELDTERMINATOR=';', FIRSTROW=2, CODEPAGE='ACP');
 
 SET LANGUAGE ENGLISH
@@ -887,18 +386,18 @@ TRUNCATE TABLE NOTAS_CREDITO;
 INSERT INTO NOTAS_CREDITO
 SELECT *
 FROM LF_NC_HISTORICO
+WHERE DATEPART(YEAR, FNC)= 2022 AND DATEPART(MONTH, FNC) = 05;
+
+
+INSERT INTO NOTAS_CREDITO
+SELECT *
+FROM LF_NC_HISTORICO
+WHERE DATEPART(YEAR, FNC)= 2021 AND DATEPART(MONTH, FNC) = 05;
+
+INSERT INTO NOTAS_CREDITO
+SELECT *
+FROM LF_NC_HISTORICO
 WHERE DATEPART(YEAR, FNC)= 2022 AND DATEPART(MONTH, FNC) = 04;
-
-
-INSERT INTO NOTAS_CREDITO
-SELECT *
-FROM LF_NC_HISTORICO
-WHERE DATEPART(YEAR, FNC)= 2021 AND DATEPART(MONTH, FNC) = 04;
-
-INSERT INTO NOTAS_CREDITO
-SELECT *
-FROM LF_NC_HISTORICO
-WHERE DATEPART(YEAR, FNC)= 2022 AND DATEPART(MONTH, FNC) = 03;
 
 DELETE FROM NOTAS_CREDITO WHERE Importe = 0;
 
@@ -1006,7 +505,7 @@ ALTER TABLE #VENTAS_Y_NOTAS_CREDITO ALTER COLUMN Plan_Dol FLOAT;
 		0 FacUnitario, 0 TUnidades, P.Plan_Ton, 0 VentaKil, P.Importe Plan_Dol , 0 VentaDolares, 'MARCAS TERCEROS' TipoProducto
  FROM PLAN_LA_FABRIL P
 	--LEFT JOIN MAESTRO_AGENCIAS AG ON P.CodOficina = AG.CodOficina
---SELECT * FROM #VENTAS_Y_NOTAS_CREDITO WHERE FacUnitario IS NULL
+--SELECT * FROM #VENTAS_Y_NOTAS_CREDITO WHERE codalicorp IS NULL
 --Le asigno una fecha al plan, puede ser cualquiere dentro del rango de días de venta transcurridos
 --El campo CodLaFabril a este punto ya no es necesario por eso le asignamos un valor NC
 
@@ -1103,10 +602,10 @@ UPDATE VENDEDORES_PANALES SET Codigo = TRIM(Codigo);
 
 --Esta es la base de ventas de Panales
 
-DELETE FROM BASE_PANALES_HISTORICA WHERE LEFT(Fecha,7) = '2022-04';
+DELETE FROM BASE_PANALES_HISTORICA WHERE LEFT(Fecha,7) = '2022-05';
 
 BULK INSERT BASE_PANALES_HISTORICA
-FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\Panales_ABR.txt'
+FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\Panales_MAY.txt'
 WITH (FIELDTERMINATOR='|',FIRSTROW=2,CODEPAGE='ACP');
 
 --Colocar los meses que deseamos comparar con el mes actual
@@ -1115,12 +614,12 @@ TRUNCATE TABLE BASE_MOBILVENDOR_AUTOMATICA;
 INSERT INTO BASE_MOBILVENDOR_AUTOMATICA
 SELECT *
 FROM BASE_PANALES_HISTORICA
-WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 04;
+WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 05;
 
 INSERT INTO BASE_MOBILVENDOR_AUTOMATICA
 SELECT *
 FROM BASE_PANALES_HISTORICA
-WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 03;
+WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 04;
 
 ------------------USAR CUANDO LLEGUE EL 2023------------------------------------------------------
 --INSERT INTO BASE_MOBILVENDOR_AUTOMATICA
@@ -1147,7 +646,8 @@ UPDATE A SET TipoNegocio = TRIM(TipoNegocio) FROM BASE_MOBILVENDOR_AUTOMATICA A;
 UPDATE A SET [Codigo 2 Cliente] = TRIM([Codigo 2 Cliente]) FROM BASE_MOBILVENDOR_AUTOMATICA A;
 UPDATE A SET [Nombre Cliente] = TRIM([Nombre Cliente]) FROM BASE_MOBILVENDOR_AUTOMATICA A;
 
-
+DELETE FROM BASE_MOBILVENDOR_AUTOMATICA WHERE Agencia IS NULL; 
+--PREGUNTAR HASTA CUANDO ES ESTE UPDATE
 
 --UPDATE A SET PesoKG = TRIM(PesoKG) FROM BASE_MOBILVENDOR_AUTOMATICA A;
 --UPDATE A SET PesoTon = TRIM(PesoTon) FROM BASE_MOBILVENDOR_AUTOMATICA A;
@@ -1164,12 +664,14 @@ SET CodAlicorp = CASE CodAlicorp
 -- 293369 este error solo sale en la data de ventas de Panales
 
 DELETE FROM BASE_MOBILVENDOR_AUTOMATICA WHERE Agencia = '100125698'
---PREGUNTAR A DIEGO HASTA CUANDO SERA HARA ESTE DELETE
+DELETE FROM BASE_MOBILVENDOR_AUTOMATICA WHERE Agencia  NOT IN ('156150253', '156163360', '156131204', '156150076')
+--('156150253', '156163360', '156131204', '156150076')
+--PREGUNTAR A DIEGO HASTA CUANDO SERA HARA ESTOS DELETES
 
 TRUNCATE TABLE PLAN_PANALES;
 
 BULK INSERT PLAN_PANALES
-FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\PLAN_PANALES.csv'
+FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\PLAN_PANALES_MAY.csv'
 WITH (FIELDTERMINATOR=';', FIRSTROW=2, CODEPAGE='ACP');
 
 DELETE PLAN_PANALES WHERE Plan_Dol = 0 AND Plan_Ton = 0;
@@ -1211,7 +713,9 @@ UPDATE PLAN_PANALES
 SET NomOficina = CASE NomOficina
 	WHEN 'JINES CAJAS CESAR XAVIER' THEN 'JINES CAJAS XAVIER CESAR'
 	WHEN 'ZAMORA BRIONES MARIA MAGDALENA' THEN 'MOREJON QUISPE LUIS ALFREDO'
-	WHEN 'ESPINOZA ZEAS MANUEL JOHN' THEN 'ESPINOZA ZEAS MANUEL JHON' ELSE NomOficina END
+	WHEN 'ESPINOZA ZEAS MANUEL JOHN' THEN 'ESPINOZA ZEAS MANUEL JHON'
+	WHEN 'GUADALUPE CASTILLO ERNESTO VICENTE' THEN 'GUADALUPE CASTILLO ERNESTO VICEN 2'
+	ELSE NomOficina END
 
 --Creo tabla temporal para homologar los campos y darle formato a la fecha, tambien calculo las toneladas
 IF OBJECT_ID(N'tempdb..#PANALES') IS NOT NULL DROP TABLE #PANALES;
@@ -1226,7 +730,9 @@ INTO #PANALES
 FROM BASE_MOBILVENDOR_AUTOMATICA A
 	LEFT JOIN VENDEDORES_PANALES V ON A.Usuario = V.Codigo
 	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp;
---SELECT * FROM #PANALES WHERE CodAlicorp = '8410177' VentaTon=0 AND VentaDolares= 0 AND Plan_Dol = 0
+--SELECT distinct agencia FROM #PANALES WHERE FacUnitario is null and agencia in ('156150253', '156163360', '156131204', '156150076') = '8410177' VentaTon=0 AND VentaDolares= 0 AND Plan_Dol = 0
+
+
 
 ALTER TABLE #PANALES ALTER COLUMN Plan_Ton FLOAT;
 ALTER TABLE #PANALES ALTER COLUMN VentaTon FLOAT;
@@ -1311,13 +817,13 @@ GROUP BY F.DES_MES, A.Fecha,
 
 SET LANGUAGE SPANISH;
 
-DELETE FROM HULARUSS_HISTORICO WHERE LEFT(Fecha,7) = '2022-04';
+DELETE FROM HULARUSS_HISTORICO WHERE LEFT(Fecha,7) = '2022-05';
 
 
 ALTER TABLE HULARUSS_HISTORICO ALTER COLUMN Importe VARCHAR(100);
 
 BULK INSERT HULARUSS_HISTORICO
-FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\VentasHularuss.csv'
+FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\VentasHularuss_MAY.csv'
 WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
 
 SET LANGUAGE US_ENGLISH;
@@ -1332,12 +838,12 @@ TRUNCATE TABLE VENTAS_HULARUSS;
 INSERT INTO VENTAS_HULARUSS
 SELECT *
 FROM HULARUSS_HISTORICO
---WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 04;
+WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 05;
 
---INSERT INTO VENTAS_HULARUSS
---SELECT *
---FROM HULARUSS_HISTORICO
---WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 03;
+INSERT INTO VENTAS_HULARUSS
+SELECT *
+FROM HULARUSS_HISTORICO
+WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 04;
 
 ------------------USAR CUANDO LLEGUE EL 2023------------------------------------------------------
 --INSERT INTO VENTAS_HULARUSS
@@ -1412,7 +918,7 @@ UPDATE A SET A.Ventakilos = (A.Cantidad * M.PesoKG) FROM VENTAS_HULARUSS A
 TRUNCATE TABLE PLAN_HULARUSS;
 
 BULK INSERT PLAN_HULARUSS
-FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\PLANES_HULARUSS.csv'
+FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\PLANES_HULARUSS_MAY.csv'
 WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
 
 DELETE PLAN_HULARUSS WHERE Plan_Dol = 0 AND Plan_Ton = 0;
@@ -1450,7 +956,10 @@ SET CodAlicorp = CASE CodAlicorp
 	WHEN '8309007' THEN '8309126'
 	WHEN '8309009' THEN '8309128'
 	WHEN '293369' THEN '29369' ELSE CodAlicorp END;
-
+--nuevo
+UPDATE PLAN_HULARUSS
+SET Cliente = '1000029726'
+WHERE Cliente = '1000029761';
 
 --Creo tabla temporal para homologar los campos y darle formato a la fecha, tambien calculo las toneladas
 IF OBJECT_ID(N'tempdb..#HULARUSS') IS NOT NULL DROP TABLE #HULARUSS;
@@ -1461,7 +970,7 @@ SELECT CONVERT(VARCHAR(20), A.Fecha,103) Fecha, A.Agencia Agencia, 'H-SIN ASIGNA
 INTO #HULARUSS
 FROM VENTAS_HULARUSS A
 	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp;
---SELECT * FROM #HULARUSS WHERE VentaKil=0 AND VentaDolares= 0 AND Plan_Dol = 0 AND Plan_Ton = 0
+--SELECT * FROM #HULARUSS WHERE  FacUnitario is null VentaKil=0 AND VentaDolares= 0 AND Plan_Dol = 0 AND Plan_Ton = 0
 --Solo deben salir 28 rows por los datos ficticios simpre y cuando lo corra desde la línea donde se agregan
 
 ALTER TABLE #HULARUSS ALTER COLUMN Plan_Ton FLOAT;
