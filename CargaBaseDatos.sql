@@ -729,6 +729,63 @@ SET NomOficina = CASE NomOficina
 	WHEN 'ZAMORA BRIONES MARIA MAGDALENA' THEN 'MOREJON QUISPE LUIS ALFREDO'
 	WHEN 'ESPINOZA ZEAS MANUEL JOHN' THEN 'ESPINOZA ZEAS MANUEL JHON'
 	WHEN 'GUADALUPE CASTILLO ERNESTO VICENTE' THEN 'GUADALUPE CASTILLO ERNESTO VICEN 2'
+	WHEN 'COPARESA S.A.' THEN 'COPARESA'
+	WHEN 'TAGLE GUERRERO ARISTIDES NORMANDO' THEN 'ARISTIDES NORMANDO TAGLE GUERRERO'
+	ELSE NomOficina END
+
+
+
+-----------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------
+
+
+TRUNCATE TABLE PLAN_2MAYA;
+
+BULK INSERT PLAN_2MAYA
+FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\PLAN_2MAYA_MAY.csv'
+WITH (FIELDTERMINATOR=';', FIRSTROW=2, CODEPAGE='ACP');
+
+DELETE PLAN_2MAYA WHERE Plan_Dol = 0 AND Plan_Ton = 0;
+DELETE FROM PLAN_2MAYA WHERE Plan_Dol IS NULL AND Plan_Ton IS NULL;
+DELETE FROM PLAN_2MAYA WHERE Plan_Dol = '' AND Plan_Ton = '';
+
+DELETE FROM PLAN_2MAYA WHERE NomOficina NOT IN ('NEOPOR S.A.') 
+--PREGUNTAR HASTA CUANDO SERA ESTO
+
+UPDATE A SET CodCategoria = TRIM(CodCategoria) FROM PLAN_2MAYA A;
+UPDATE A SET Categoria = TRIM(Categoria) FROM PLAN_2MAYA A;
+UPDATE A SET CodMarca = TRIM(CodMarca) FROM PLAN_2MAYA A;
+UPDATE A SET Marca = TRIM(Marca) FROM PLAN_2MAYA A;
+UPDATE A SET CodFamilia = TRIM(CodFamilia) FROM PLAN_2MAYA A;
+UPDATE A SET Familia = TRIM(Familia) FROM PLAN_2MAYA A;
+UPDATE A SET CodAlicorp = TRIM(CodAlicorp) FROM PLAN_2MAYA A;
+UPDATE A SET Des_Material = TRIM(Des_Material) FROM PLAN_2MAYA A;
+UPDATE A SET NomOficina = TRIM(NomOficina) FROM PLAN_2MAYA A;
+UPDATE A SET Plataforma = TRIM(Plataforma) FROM PLAN_2MAYA A;
+
+UPDATE PLAN_2MAYA
+SET CodMarca = RIGHT(CodMarca,1)
+WHERE CodMarca LIKE '00%';
+
+UPDATE PLAN_2MAYA
+SET CodMarca = RIGHT(CodMarca,2)
+WHERE CodMarca LIKE '0%';
+-- Debido a que cuando subo la informaci�n del csv se agrega un cero a la izquierda
+	 
+
+UPDATE PLAN_2MAYA
+SET CodAlicorp = CASE CodAlicorp
+	WHEN '8309000' THEN '8309119'
+	WHEN '8309001' THEN '8309120'
+	WHEN '8309002' THEN '8309121'
+	WHEN '8309003' THEN '8309122'
+	WHEN '8309007' THEN '8309126'
+	WHEN '8309009' THEN '8309128'
+	WHEN '293369' THEN '29369' ELSE CodAlicorp END;
+
+UPDATE PLAN_2MAYA
+SET NomOficina = CASE NomOficina
+	WHEN 'NEOPOR S.A.' THEN 'DISTRIBUIDORA DE CONSUMO MASIVO NEOPOR S.A'
 	ELSE NomOficina END
 
 --Creo tabla temporal para homologar los campos y darle formato a la fecha, tambien calculo las toneladas
@@ -761,10 +818,12 @@ INSERT INTO #PANALES VALUES (@d3,'156163360', '1300061', 'NANCY HINOJOSA','JHONN
 INSERT INTO #PANALES VALUES (@d3,'156150253', '821834', 'CHIRIGUAYA ZUÑIGA KARLA ESTEFANIA','NULL', 'MAYORISTA AUTOSERVICIO','8410177',20,0,0,0,0,0,'Consumo Masivo');
 INSERT INTO #PANALES VALUES (@d3,'156148774', '2850471', 'ISABEL MARTINEZ','NULL', 'TIENDA DE BARRIO','8410177',20,0,0,0,0,0,'Consumo Masivo');
 INSERT INTO #PANALES VALUES (@d3,'156117292', '606775', 'Maria Alexandra Alvarez Chisaquinga','NULL', 'PUESTO AL PASO','8410177',20,0,0,0,0,0,'Consumo Masivo');
+INSERT INTO #PANALES VALUES (@d3,'100125698', '606775', 'Maria Alexandra Alvarez Chisaquinga','NULL', 'PUESTO AL PASO','8410177',20,0,0,0,0,0,'Consumo Masivo');
 --Estos 3 no tienen ventas el mes pasado.. una vez que tengan eliminar 
 INSERT INTO #PANALES VALUES (@d2,'156150253', '821834', 'CHIRIGUAYA ZUÑIGA KARLA ESTEFANIA','NULL', 'MAYORISTA AUTOSERVICIO','8410177',20,0,0,0,0,0,'Consumo Masivo');
 INSERT INTO #PANALES VALUES (@d2,'156148774', '2850471', 'ISABEL MARTINEZ','NULL', 'TIENDA DE BARRIO','8410177',20,0,0,0,0,0,'Consumo Masivo');
 INSERT INTO #PANALES VALUES (@d2,'156117292', '606775', 'Maria Alexandra Alvarez Chisaquinga','NULL', 'PUESTO AL PASO','8410177',20,0,0,0,0,0,'Consumo Masivo');
+INSERT INTO #PANALES VALUES (@d2,'100125698', '606775', 'Maria Alexandra Alvarez Chisaquinga','NULL', 'PUESTO AL PASO','8410177',20,0,0,0,0,0,'Consumo Masivo');
 --INSERT INTO #PANALES VALUES (@d3,'156150076','8410177',0,0,0,0.000001,'MARCAS TERCEROS');
 --INSERT INTO #PANALES VALUES (@d3,'156131204','8410177',0,0,0,0.000001,'MARCAS TERCEROS');
 --INSERT INTO #PANALES VALUES (@d3,'156163360','8410177',0,0,0,0.000001,'MARCAS TERCEROS');
@@ -829,8 +888,25 @@ GROUP BY F.DES_MES, A.Fecha,
 --que puede darse el caso de que hay codigos sin plan
 -- en Panales exectuando los 3 rows ficticios porque puede darse el caso de que hay codigos sin plan.
 
-
-
+----inserto el Plan de 2maya----------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+INSERT INTO VENTAS_TABLERO
+SELECT F.DES_MES Mes, A.Fecha Dia,
+	   A.CodCategoria CodCategoria, A.Categoria Categoria, A.CodFamilia CodFamilia, A.Familia Familia, A.CodAlicorp CodAlicorp, A.Des_Material Material, A.CodMarca CodMarca, A.Marca Marca,
+	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
+	   AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
+	   'SIN ASIGNAR - PA_PLAN ' Vendedor_Distribuidora, 'SIN ASIGNAR - PA_PLAN ' Tipo_tienda_Distribuidora, 'SIN ASIGNAR - PA_PLAN ' CodClienteSellOut, 'SIN ASIGNAR - PA_PLAN ' ClienteSellOut,
+	   'Consumo Masivo' Negocio, 0 FacUnitario, 0 TUnidades, SUM(ISNULL(A.Plan_Ton,0)) Plan_Ton,
+	  SUM(ISNULL(A.Ventas_Ton,0)) real_ton, SUM(ISNULL(A.Plan_Dol,0)) Plan_Dol, SUM(ISNULL(A.Ventas_Reales,0)) real_Dolares,
+	  A.Plataforma Plataforma
+FROM PLAN_2MAYA A  
+	LEFT JOIN BD_FECHAS F ON  A.Fecha= F.DIA
+	LEFT JOIN MAESTRO_AGENCIAS AG ON A.NomOficina = AG.NomOficina
+GROUP BY F.DES_MES, A.Fecha,
+	   A.CodCategoria, A.Categoria, A.CodFamilia, A.Familia, A.CodAlicorp, A.Des_Material, A.CodMarca, A.Marca,
+	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
+	   AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
+	   A.Plataforma;
 
 --------------------------------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------------------------------------------
