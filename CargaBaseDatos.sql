@@ -3,16 +3,25 @@ USE CmiSellOutEcuador;
 DECLARE @dia DATE;
 DECLARE @d1 AS VARCHAR(20);
 
-SELECT @dia= DATEADD(DAY,-16,SYSDATETIME());
+SELECT @dia= DATEADD(DAY,-1,SYSDATETIME());
 -- poner el último día de ventas
 SELECT @d1= TRY_CONVERT(VARCHAR(20), TRY_CONVERT(DATE, @dia,103),103);
 
 PRINT @dia;
 PRINT 'd1 '+ @d1;
 
+
+
+
+
+--SELECT TRY_CONVERT(VARCHAR,DATEADD(MONTH,-1,@dia),103)
+--UPDATE VENTAS_PYDACO SET Fecha = CASE WHEN Fecha > @dia THEN @dia ELSE Fecha END;
+
 DECLARE @f AS DATE;
 DECLARE @d2 AS VARCHAR(20);
 DECLARE @d3 AS VARCHAR(20); 
+
+--SELECT DATEADD(MONTH,-1,GETDATE()-64)
 
 SELECT @f= CASE WHEN TRY_CONVERT(VARCHAR(20), TRY_CONVERT(DATE, @dia,103),103)= TRY_CONVERT(VARCHAR(10),TRY_CONVERT(DATE,EOMONTH(@dia),103),103)
 THEN TRY_CONVERT(DATE,EOMONTH(DATEADD(MONTH,-1,(@dia))),103) ELSE TRY_CONVERT(DATE, DATEADD(MONTH,-1,TRY_CONVERT(DATE, @d1, 103)),103) END;
@@ -22,9 +31,14 @@ SELECT @d3 = TRY_CONVERT(VARCHAR(10), TRY_CONVERT(DATE,DATEADD(YEAR,-1,@dia),103
 PRINT 'd2  '+ @d2;
 PRINT 'd3  '+@d3;
 
+
+
 DECLARE @M1 AS VARCHAR(20); 
 DECLARE @M2 AS VARCHAR(20);
 DECLARE @M3 AS VARCHAR(20);
+--DATEADD CUANDO RETROCEDES POR MES, TE DEVUELVE EL DIA EXACTA DEL MES ANTERIOR SEA CUAL FUERE, A EXCEPCION SI ES FIN DE MES Y EL MES ANTERIOR
+--TIENE MENOS DIAS, TE DEVUELVE EL ULTIMO DIA DEL MES ANTERIOR
+
 
 SELECT @M1= PER FROM BD_FECHAS WHERE TRY_CONVERT(VARCHAR(10),TRY_CONVERT(DATE,DIA,103),103) = @d1;
 SELECT @M2= PER FROM BD_FECHAS WHERE TRY_CONVERT(VARCHAR(10),TRY_CONVERT(DATE,DIA,103),103)  = @d2;
@@ -34,6 +48,10 @@ PRINT @M1;
 PRINT @M2;
 PRINT @M3;
 
+
+
+
+ --Para Pydaco
 DECLARE @MA AS DATE;
 DECLARE @MA_1 AS DATE;
 DECLARE @MA_2 AS DATE;
@@ -48,6 +66,7 @@ PRINT @MA;
 PRINT @MA_1;
 PRINT @MA_2;
 PRINT @MA_3;
+
 
 DECLARE @dm1 AS INTEGER; 
 DECLARE @dm2 AS INTEGER;
@@ -117,12 +136,12 @@ WHERE TRY_CONVERT(DATETIME, dia,103) <= TRY_CONVERT(DATETIME,@d3,103) AND PER= @
 SELECT @ds12 = MAX(dia_SEM_util)   FROM BD_FECHAS
 WHERE TRY_CONVERT(DATETIME, dia,103) <= TRY_CONVERT(DATETIME,@d3,103) AND PER= @M3 AND SEM LIKE '%22 AL 31%';
 
-PRINT @ds1;
-PRINT @ds2;
-PRINT @ds3;
-PRINT @ds4;
-PRINT @ds5;
-PRINT @ds6;
+print @ds1;
+print @ds2;
+print @ds3;
+print @ds4;
+print @ds5;
+print @ds6;
 PRINT @ds7;
 PRINT @ds8;
 PRINT @ds9;
@@ -170,13 +189,22 @@ UPDATE TABLA_MATERIALES SET Plataforma = TRIM(Plataforma);
 TRUNCATE TABLE PLAN_LA_FABRIL;
 
 BULK INSERT PLAN_LA_FABRIL
-FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\PLAN_LA_FABRIL.csv'
+FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\PLAN_LA_FABRIL_MAY.csv'
 WITH (FIELDTERMINATOR=';', FIRSTROW=2, CODEPAGE='ACP');
 
 DELETE [PLAN_LA_FABRIL] WHERE Plan_Ton = 0 AND Importe = 0;
 
 UPDATE PLAN_LA_FABRIL SET Agencia = TRIM(Agencia);
 UPDATE PLAN_LA_FABRIL SET CodAlicorp = TRIM(CodAlicorp);
+
+--SELECT * FROM PLAN_LA_FABRIL  A LEFT JOIN [dbo].[TABLA_MATERIALES] B ON A.CodAlicorp = B.CodAlicorp WHERE A.CodAlicorp IS  NULL
+--UPDATE PLAN_LA_FABRIL
+--SET OficinaVentas = CASE OficinaVentas
+--	WHEN 'EC - Machala' THEN '704 EC - Machala'
+--	WHEN 'EC - Ibarra' THEN '713 EC - Ibarra'
+--	ELSE OficinaVentas END;
+--UPDATE PLAN_LA_FABRIL necesito el codigo cuando lo separo
+--SET OficinaVentas = CASE OficinaVentas
 
 UPDATE PLAN_LA_FABRIL
 SET CodAlicorp = CASE CodAlicorp
@@ -192,10 +220,10 @@ SET CodAlicorp = CASE CodAlicorp
 
 SET LANGUAGE SPANISH
 
-DELETE FROM LF_VENTAS_HISTORICO WHERE LEFT(FFactura,7) = '2022-04';
+DELETE FROM LF_VENTAS_HISTORICO WHERE LEFT(FFactura,7) = '2022-05';
 
 BULK INSERT LF_VENTAS_HISTORICO
-FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\BDPRUEBAVENTAS.csv'
+FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\BDPRUEBAVENTAS_MAY.csv'
 WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
 
 SET LANGUAGE US_ENGLISH
@@ -206,17 +234,17 @@ TRUNCATE TABLE BASE_INICIAL_VENTAS;
 INSERT INTO BASE_INICIAL_VENTAS
 SELECT *
 FROM LF_VENTAS_HISTORICO
+WHERE DATEPART(YEAR, FFactura)= 2022 AND DATEPART(MONTH, FFactura) = 05
+
+INSERT INTO BASE_INICIAL_VENTAS
+SELECT *
+FROM LF_VENTAS_HISTORICO
+WHERE DATEPART(YEAR, FFactura)= 2021 AND DATEPART(MONTH, FFactura) = 05
+
+INSERT INTO BASE_INICIAL_VENTAS
+SELECT *
+FROM LF_VENTAS_HISTORICO
 WHERE DATEPART(YEAR, FFactura)= 2022 AND DATEPART(MONTH, FFactura) = 04
-
-INSERT INTO BASE_INICIAL_VENTAS
-SELECT *
-FROM LF_VENTAS_HISTORICO
-WHERE DATEPART(YEAR, FFactura)= 2021 AND DATEPART(MONTH, FFactura) = 04
-
-INSERT INTO BASE_INICIAL_VENTAS
-SELECT *
-FROM LF_VENTAS_HISTORICO
-WHERE DATEPART(YEAR, FFactura)= 2022 AND DATEPART(MONTH, FFactura) = 03
 
 
 
@@ -344,10 +372,10 @@ SET CodAlicorp = CASE CodAlicorp
 
 SET LANGUAGE SPANISH
 
-DELETE FROM LF_NC_HISTORICO WHERE LEFT(FNC,7) = '2022-04';
+DELETE FROM LF_NC_HISTORICO WHERE LEFT(FNC,7) = '2022-05';
 
 BULK INSERT LF_NC_HISTORICO
-FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\BDPRUEBA.csv'
+FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\BDPRUEBA_MAY.csv'
 WITH (FIELDTERMINATOR=';', FIRSTROW=2, CODEPAGE='ACP');
 
 SET LANGUAGE ENGLISH
@@ -358,18 +386,18 @@ TRUNCATE TABLE NOTAS_CREDITO;
 INSERT INTO NOTAS_CREDITO
 SELECT *
 FROM LF_NC_HISTORICO
+WHERE DATEPART(YEAR, FNC)= 2022 AND DATEPART(MONTH, FNC) = 05;
+
+
+INSERT INTO NOTAS_CREDITO
+SELECT *
+FROM LF_NC_HISTORICO
+WHERE DATEPART(YEAR, FNC)= 2021 AND DATEPART(MONTH, FNC) = 05;
+
+INSERT INTO NOTAS_CREDITO
+SELECT *
+FROM LF_NC_HISTORICO
 WHERE DATEPART(YEAR, FNC)= 2022 AND DATEPART(MONTH, FNC) = 04;
-
-
-INSERT INTO NOTAS_CREDITO
-SELECT *
-FROM LF_NC_HISTORICO
-WHERE DATEPART(YEAR, FNC)= 2021 AND DATEPART(MONTH, FNC) = 04;
-
-INSERT INTO NOTAS_CREDITO
-SELECT *
-FROM LF_NC_HISTORICO
-WHERE DATEPART(YEAR, FNC)= 2022 AND DATEPART(MONTH, FNC) = 03;
 
 DELETE FROM NOTAS_CREDITO WHERE Importe = 0;
 
@@ -414,6 +442,7 @@ SET A.CodAlicorp = B.CodAlicorp
 FROM NOTAS_CREDITO A
 	LEFT JOIN TABLA_MATERIALES B ON A.CodArticulo = B.CodFabril AND A.DesArticulo = B.MaterialLaFabril;  
 --Asignamos código Alicorp a las notas de crédito
+--SELECT * FROM NOTAS_CREDITO WHERE CodAlicorp IS NULL;
 
 UPDATE NOTAS_CREDITO
 SET CodAlicorp = CASE CodArticulo
@@ -476,7 +505,7 @@ ALTER TABLE #VENTAS_Y_NOTAS_CREDITO ALTER COLUMN Plan_Dol FLOAT;
 		0 FacUnitario, 0 TUnidades, P.Plan_Ton, 0 VentaKil, P.Importe Plan_Dol , 0 VentaDolares, 'MARCAS TERCEROS' TipoProducto
  FROM PLAN_LA_FABRIL P
 	--LEFT JOIN MAESTRO_AGENCIAS AG ON P.CodOficina = AG.CodOficina
---SELECT * FROM #VENTAS_Y_NOTAS_CREDITO WHERE FacUnitario IS NULL
+--SELECT * FROM #VENTAS_Y_NOTAS_CREDITO WHERE codalicorp IS NULL
 --Le asigno una fecha al plan, puede ser cualquiere dentro del rango de días de venta transcurridos
 --El campo CodLaFabril a este punto ya no es necesario por eso le asignamos un valor NC
 
@@ -573,10 +602,10 @@ UPDATE VENDEDORES_PANALES SET Codigo = TRIM(Codigo);
 
 --Esta es la base de ventas de Panales
 
-DELETE FROM BASE_PANALES_HISTORICA WHERE LEFT(Fecha,7) = '2022-04';
+DELETE FROM BASE_PANALES_HISTORICA WHERE LEFT(Fecha,7) = '2022-05';
 
 BULK INSERT BASE_PANALES_HISTORICA
-FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\Panales_ABR.txt'
+FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\Panales_MAY.txt'
 WITH (FIELDTERMINATOR='|',FIRSTROW=2,CODEPAGE='ACP');
 
 --Colocar los meses que deseamos comparar con el mes actual
@@ -585,12 +614,12 @@ TRUNCATE TABLE BASE_MOBILVENDOR_AUTOMATICA;
 INSERT INTO BASE_MOBILVENDOR_AUTOMATICA
 SELECT *
 FROM BASE_PANALES_HISTORICA
-WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 04;
+WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 05;
 
 INSERT INTO BASE_MOBILVENDOR_AUTOMATICA
 SELECT *
 FROM BASE_PANALES_HISTORICA
-WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 03;
+WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 04;
 
 ------------------USAR CUANDO LLEGUE EL 2023------------------------------------------------------
 --INSERT INTO BASE_MOBILVENDOR_AUTOMATICA
@@ -617,7 +646,8 @@ UPDATE A SET TipoNegocio = TRIM(TipoNegocio) FROM BASE_MOBILVENDOR_AUTOMATICA A;
 UPDATE A SET [Codigo 2 Cliente] = TRIM([Codigo 2 Cliente]) FROM BASE_MOBILVENDOR_AUTOMATICA A;
 UPDATE A SET [Nombre Cliente] = TRIM([Nombre Cliente]) FROM BASE_MOBILVENDOR_AUTOMATICA A;
 
-
+DELETE FROM BASE_MOBILVENDOR_AUTOMATICA WHERE Agencia IS NULL; 
+--PREGUNTAR HASTA CUANDO ES ESTE UPDATE
 
 --UPDATE A SET PesoKG = TRIM(PesoKG) FROM BASE_MOBILVENDOR_AUTOMATICA A;
 --UPDATE A SET PesoTon = TRIM(PesoTon) FROM BASE_MOBILVENDOR_AUTOMATICA A;
@@ -633,13 +663,29 @@ SET CodAlicorp = CASE CodAlicorp
 	WHEN '293369' THEN '29369' ELSE CodAlicorp END;
 -- 293369 este error solo sale en la data de ventas de Panales
 
-DELETE FROM BASE_MOBILVENDOR_AUTOMATICA WHERE Agencia = '100125698'
---PREGUNTAR A DIEGO HASTA CUANDO SERA HARA ESTE DELETE
+--UPDATE DE DIEGO
+UPDATE BASE_MOBILVENDOR_AUTOMATICA SET CodAlicorp = '29113' WHERE CodAlicorp = 'AD0237';
+UPDATE BASE_MOBILVENDOR_AUTOMATICA SET CodAlicorp = '29135' WHERE CodAlicorp = 'AD0239';
+UPDATE BASE_MOBILVENDOR_AUTOMATICA SET CodAlicorp = '8410094' WHERE CodAlicorp = 'AD0236';
+UPDATE BASE_MOBILVENDOR_AUTOMATICA SET CodAlicorp = '8410093' WHERE CodAlicorp = 'AD0235';
+UPDATE BASE_MOBILVENDOR_AUTOMATICA SET CodAlicorp = '29121' WHERE CodAlicorp = 'AD0238';
+UPDATE BASE_MOBILVENDOR_AUTOMATICA SET CodAlicorp = '3300176' WHERE CodAlicorp = 'AD0245';
+UPDATE BASE_MOBILVENDOR_AUTOMATICA SET CodAlicorp = '4302037' WHERE CodAlicorp = 'AD0240';
+UPDATE BASE_MOBILVENDOR_AUTOMATICA SET CodAlicorp = '8325017' WHERE CodAlicorp = 'AD0222';
+UPDATE BASE_MOBILVENDOR_AUTOMATICA SET CodAlicorp = '8325021' WHERE CodAlicorp = 'AD0223';
+UPDATE BASE_MOBILVENDOR_AUTOMATICA SET CodAlicorp = '3300063' WHERE CodAlicorp = 'AD0244';
+
+
+
+--DELETE FROM BASE_MOBILVENDOR_AUTOMATICA WHERE Agencia = '100125698'
+--DELETE FROM BASE_MOBILVENDOR_AUTOMATICA WHERE Agencia  NOT IN ('156150253', '156163360', '156131204', '156150076', '156148774', '156117292')
+--('156150253', '156163360', '156131204', '156150076')
+--PREGUNTAR A DIEGO HASTA CUANDO SERA HARA ESTOS DELETES
 
 TRUNCATE TABLE PLAN_PANALES;
 
 BULK INSERT PLAN_PANALES
-FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\PLAN_PANALES.csv'
+FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\PLAN_PANALES_MAY.csv'
 WITH (FIELDTERMINATOR=';', FIRSTROW=2, CODEPAGE='ACP');
 
 DELETE PLAN_PANALES WHERE Plan_Dol = 0 AND Plan_Ton = 0;
@@ -681,7 +727,66 @@ UPDATE PLAN_PANALES
 SET NomOficina = CASE NomOficina
 	WHEN 'JINES CAJAS CESAR XAVIER' THEN 'JINES CAJAS XAVIER CESAR'
 	WHEN 'ZAMORA BRIONES MARIA MAGDALENA' THEN 'MOREJON QUISPE LUIS ALFREDO'
-	WHEN 'ESPINOZA ZEAS MANUEL JOHN' THEN 'ESPINOZA ZEAS MANUEL JHON' ELSE NomOficina END
+	WHEN 'ESPINOZA ZEAS MANUEL JOHN' THEN 'ESPINOZA ZEAS MANUEL JHON'
+	WHEN 'GUADALUPE CASTILLO ERNESTO VICENTE' THEN 'GUADALUPE CASTILLO ERNESTO VICEN 2'
+	WHEN 'COPARESA S.A.' THEN 'COPARESA'
+	WHEN 'TAGLE GUERRERO ARISTIDES NORMANDO' THEN 'ARISTIDES NORMANDO TAGLE GUERRERO'
+	ELSE NomOficina END
+
+
+
+-----------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------
+
+
+TRUNCATE TABLE PLAN_2MAYA;
+
+BULK INSERT PLAN_2MAYA
+FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\PLAN_2MAYA_MAY.csv'
+WITH (FIELDTERMINATOR=';', FIRSTROW=2, CODEPAGE='ACP');
+
+DELETE PLAN_2MAYA WHERE Plan_Dol = 0 AND Plan_Ton = 0;
+DELETE FROM PLAN_2MAYA WHERE Plan_Dol IS NULL AND Plan_Ton IS NULL;
+DELETE FROM PLAN_2MAYA WHERE Plan_Dol = '' AND Plan_Ton = '';
+
+DELETE FROM PLAN_2MAYA WHERE NomOficina NOT IN ('NEOPOR S.A.') 
+--PREGUNTAR HASTA CUANDO SERA ESTO
+
+UPDATE A SET CodCategoria = TRIM(CodCategoria) FROM PLAN_2MAYA A;
+UPDATE A SET Categoria = TRIM(Categoria) FROM PLAN_2MAYA A;
+UPDATE A SET CodMarca = TRIM(CodMarca) FROM PLAN_2MAYA A;
+UPDATE A SET Marca = TRIM(Marca) FROM PLAN_2MAYA A;
+UPDATE A SET CodFamilia = TRIM(CodFamilia) FROM PLAN_2MAYA A;
+UPDATE A SET Familia = TRIM(Familia) FROM PLAN_2MAYA A;
+UPDATE A SET CodAlicorp = TRIM(CodAlicorp) FROM PLAN_2MAYA A;
+UPDATE A SET Des_Material = TRIM(Des_Material) FROM PLAN_2MAYA A;
+UPDATE A SET NomOficina = TRIM(NomOficina) FROM PLAN_2MAYA A;
+UPDATE A SET Plataforma = TRIM(Plataforma) FROM PLAN_2MAYA A;
+
+UPDATE PLAN_2MAYA
+SET CodMarca = RIGHT(CodMarca,1)
+WHERE CodMarca LIKE '00%';
+
+UPDATE PLAN_2MAYA
+SET CodMarca = RIGHT(CodMarca,2)
+WHERE CodMarca LIKE '0%';
+-- Debido a que cuando subo la información del csv se agrega un cero a la izquierda
+	 
+
+UPDATE PLAN_2MAYA
+SET CodAlicorp = CASE CodAlicorp
+	WHEN '8309000' THEN '8309119'
+	WHEN '8309001' THEN '8309120'
+	WHEN '8309002' THEN '8309121'
+	WHEN '8309003' THEN '8309122'
+	WHEN '8309007' THEN '8309126'
+	WHEN '8309009' THEN '8309128'
+	WHEN '293369' THEN '29369' ELSE CodAlicorp END;
+
+UPDATE PLAN_2MAYA
+SET NomOficina = CASE NomOficina
+	WHEN 'NEOPOR S.A.' THEN 'DISTRIBUIDORA DE CONSUMO MASIVO NEOPOR S.A'
+	ELSE NomOficina END
 
 --Creo tabla temporal para homologar los campos y darle formato a la fecha, tambien calculo las toneladas
 IF OBJECT_ID(N'tempdb..#PANALES') IS NOT NULL DROP TABLE #PANALES;
@@ -696,16 +801,28 @@ INTO #PANALES
 FROM BASE_MOBILVENDOR_AUTOMATICA A
 	LEFT JOIN VENDEDORES_PANALES V ON A.Usuario = V.Codigo
 	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp;
---SELECT * FROM #PANALES WHERE CodAlicorp = '8410177' VentaTon=0 AND VentaDolares= 0 AND Plan_Dol = 0
+--SELECT * FROM #PANALES WHERE   FacUnitario is null and agencia in ('156150253', '156163360', '156131204', '156150076') = '8410177' VentaTon=0 AND VentaDolares= 0 AND Plan_Dol = 0
+DELETE FROM #PANALES WHERE CodAlicorp IN ('AD0220', 'AD0221', 'AD0224', 'AD0225', 'AD0226', 'AD0227', 'AD0228', 'AD0229', 'AD0230', 'AD0231', 'AD0232', 'AD0233', 'AD0234', 'AD0241', 'AD0242', 'AD0243', 'AD0246', 'AD0247',
+                                          'AD0248', 'Ali001', 'Ali002', 'Ali003', 'Ali005', 'Ali007', 'Ali008', 'Ali009', 'Ali011', 'Ali013', 'Ali015', 'Ali016', 'Ali017', 'Ali10', 'AD0219', 'AD0215', 'AD0218', 'Ali006')
+-- son codigos aun no identificados Diego ya los tiene mapeados
 
 ALTER TABLE #PANALES ALTER COLUMN Plan_Ton FLOAT;
 ALTER TABLE #PANALES ALTER COLUMN VentaTon FLOAT;
 ALTER TABLE #PANALES ALTER COLUMN Plan_Dol FLOAT;
-
+--
+--nuevo
 --Inserto información ficticia del año pasado para que no altere el reporte de excel esta informacion tiene ventas y plan 0
 INSERT INTO #PANALES VALUES (@d3,'156150076','1150603', 'TOSCANO CARRASCO AMPARO','NIRSA', '1 Tienda Bodega/Barrio','8410177',20,0,0,0,0,0,'Consumo Masivo');
 INSERT INTO #PANALES VALUES (@d3,'156131204','2758991', 'MONTESDEOCA LILIA CARMITA','NICANOR FERNANDO BACILIO PARRAGA','1 Tienda Bodega/Barrio','8410177',20,0,0,0,0,0,'Consumo Masivo');
 INSERT INTO #PANALES VALUES (@d3,'156163360', '1300061', 'NANCY HINOJOSA','JHONNY SIGUENCIA', '1 Tienda Bodega/Barrio','8410177',20,0,0,0,0,0,'Consumo Masivo');
+INSERT INTO #PANALES VALUES (@d3,'156150253', '821834', 'CHIRIGUAYA ZUÃ‘IGA KARLA ESTEFANIA','NULL', 'MAYORISTA AUTOSERVICIO','8410177',20,0,0,0,0,0,'Consumo Masivo');
+INSERT INTO #PANALES VALUES (@d3,'156148774', '2850471', 'ISABEL MARTINEZ','NULL', 'TIENDA DE BARRIO','8410177',20,0,0,0,0,0,'Consumo Masivo');
+INSERT INTO #PANALES VALUES (@d3,'156117292', '606775', 'Maria Alexandra Alvarez Chisaquinga','NULL', 'PUESTO AL PASO','8410177',20,0,0,0,0,0,'Consumo Masivo');
+INSERT INTO #PANALES VALUES (@d3,'100125698', '606775', 'Maria Alexandra Alvarez Chisaquinga','NULL', 'PUESTO AL PASO','8410177',20,0,0,0,0,0,'Consumo Masivo');
+--Estos 3 no tienen ventas el mes pasado.. una vez que tengan eliminar 
+INSERT INTO #PANALES VALUES (@d2,'156150253', '821834', 'CHIRIGUAYA ZUÃ‘IGA KARLA ESTEFANIA','NULL', 'MAYORISTA AUTOSERVICIO','8410177',20,0,0,0,0,0,'Consumo Masivo');
+INSERT INTO #PANALES VALUES (@d2,'156148774', '2850471', 'ISABEL MARTINEZ','NULL', 'TIENDA DE BARRIO','8410177',20,0,0,0,0,0,'Consumo Masivo');
+INSERT INTO #PANALES VALUES (@d2,'156117292', '606775', 'Maria Alexandra Alvarez Chisaquinga','NULL', 'PUESTO AL PASO','8410177',20,0,0,0,0,0,'Consumo Masivo');
 
 --INSERT INTO #PANALES VALUES (@d3,'156150076','8410177',0,0,0,0.000001,'MARCAS TERCEROS');
 --INSERT INTO #PANALES VALUES (@d3,'156131204','8410177',0,0,0,0.000001,'MARCAS TERCEROS');
@@ -771,8 +888,25 @@ GROUP BY F.DES_MES, A.Fecha,
 --que puede darse el caso de que hay codigos sin plan
 -- en Panales exectuando los 3 rows ficticios porque puede darse el caso de que hay codigos sin plan.
 
-
-
+----inserto el Plan de 2maya----------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+INSERT INTO VENTAS_TABLERO
+SELECT F.DES_MES Mes, A.Fecha Dia,
+	   A.CodCategoria CodCategoria, A.Categoria Categoria, A.CodFamilia CodFamilia, A.Familia Familia, A.CodAlicorp CodAlicorp, A.Des_Material Material, A.CodMarca CodMarca, A.Marca Marca,
+	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
+	   AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
+	   'SIN ASIGNAR - PA_PLAN ' Vendedor_Distribuidora, 'SIN ASIGNAR - PA_PLAN ' Tipo_tienda_Distribuidora, 'SIN ASIGNAR - PA_PLAN ' CodClienteSellOut, 'SIN ASIGNAR - PA_PLAN ' ClienteSellOut,
+	   'Consumo Masivo' Negocio, 0 FacUnitario, 0 TUnidades, SUM(ISNULL(A.Plan_Ton,0)) Plan_Ton,
+	  SUM(ISNULL(A.Ventas_Ton,0)) real_ton, SUM(ISNULL(A.Plan_Dol,0)) Plan_Dol, SUM(ISNULL(A.Ventas_Reales,0)) real_Dolares,
+	  A.Plataforma Plataforma
+FROM PLAN_2MAYA A  
+	LEFT JOIN BD_FECHAS F ON  A.Fecha= F.DIA
+	LEFT JOIN MAESTRO_AGENCIAS AG ON A.NomOficina = AG.NomOficina
+GROUP BY F.DES_MES, A.Fecha,
+	   A.CodCategoria, A.Categoria, A.CodFamilia, A.Familia, A.CodAlicorp, A.Des_Material, A.CodMarca, A.Marca,
+	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
+	   AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
+	   A.Plataforma;
 
 --------------------------------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------------------------------------------
@@ -781,13 +915,13 @@ GROUP BY F.DES_MES, A.Fecha,
 
 SET LANGUAGE SPANISH;
 
-DELETE FROM HULARUSS_HISTORICO WHERE LEFT(Fecha,7) = '2022-04';
+DELETE FROM HULARUSS_HISTORICO WHERE LEFT(Fecha,7) = '2022-05';
 
 
 ALTER TABLE HULARUSS_HISTORICO ALTER COLUMN Importe VARCHAR(100);
 
 BULK INSERT HULARUSS_HISTORICO
-FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\VentasHularuss.csv'
+FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\VentasHularuss_MAY.csv'
 WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
 
 SET LANGUAGE US_ENGLISH;
@@ -802,12 +936,12 @@ TRUNCATE TABLE VENTAS_HULARUSS;
 INSERT INTO VENTAS_HULARUSS
 SELECT *
 FROM HULARUSS_HISTORICO
-WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 04;
+WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 05;
 
 INSERT INTO VENTAS_HULARUSS
 SELECT *
 FROM HULARUSS_HISTORICO
-WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 03;
+WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 04;
 
 ------------------USAR CUANDO LLEGUE EL 2023------------------------------------------------------
 --INSERT INTO VENTAS_HULARUSS
@@ -882,7 +1016,7 @@ UPDATE A SET A.Ventakilos = (A.Cantidad * M.PesoKG) FROM VENTAS_HULARUSS A
 TRUNCATE TABLE PLAN_HULARUSS;
 
 BULK INSERT PLAN_HULARUSS
-FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\PLANES_HULARUSS.csv'
+FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\PLANES_HULARUSS_MAY.csv'
 WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
 
 DELETE PLAN_HULARUSS WHERE Plan_Dol = 0 AND Plan_Ton = 0;
@@ -920,7 +1054,11 @@ SET CodAlicorp = CASE CodAlicorp
 	WHEN '8309007' THEN '8309126'
 	WHEN '8309009' THEN '8309128'
 	WHEN '293369' THEN '29369' ELSE CodAlicorp END;
-
+--nuevo
+--preguntar hasta cuando sera este update
+UPDATE PLAN_HULARUSS
+SET Cliente = '1000029726'
+WHERE Cliente = '1000029761';
 
 --Creo tabla temporal para homologar los campos y darle formato a la fecha, tambien calculo las toneladas
 IF OBJECT_ID(N'tempdb..#HULARUSS') IS NOT NULL DROP TABLE #HULARUSS;
@@ -931,7 +1069,7 @@ SELECT CONVERT(VARCHAR(20), A.Fecha,103) Fecha, A.Agencia Agencia, 'H-SIN ASIGNA
 INTO #HULARUSS
 FROM VENTAS_HULARUSS A
 	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp;
---SELECT * FROM #HULARUSS WHERE VentaKil=0 AND VentaDolares= 0 AND Plan_Dol = 0 AND Plan_Ton = 0
+--SELECT * FROM #HULARUSS WHERE  FacUnitario is null VentaKil=0 AND VentaDolares= 0 AND Plan_Dol = 0 AND Plan_Ton = 0
 --Solo deben salir 28 rows por los datos ficticios simpre y cuando lo corra desde la línea donde se agregan
 
 ALTER TABLE #HULARUSS ALTER COLUMN Plan_Ton FLOAT;
