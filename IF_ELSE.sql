@@ -1,0 +1,27 @@
+/****** Script for SelectTopNRows command from SSMS  ******/
+
+IF OBJECT_ID(N'tempdb..#EE') IS NOT NULL DROP TABLE  #EE;
+
+  DECLARE @HOLI INT
+  SET @HOLI = YEAR(GETDATE())
+  PRINT @HOLI
+
+   
+   select *
+   into #EE from  (select @HOLI HOLI) A
+   
+
+
+  IF @HOLI IN (SELECT YEAR(FNC) FROM [LF_NC_HISTORICO] ) 
+
+   --SELECT *
+   --INTO #SUPERPRUEBAIF
+   --FROM
+  
+
+  SELECT distinct FNC A FROM [LF_NC_HISTORICO] A  LEFT JOIN [LF_NC_HISTORICO] B ON A.FNC  = B.FNC
+  
+  ELSE SELECT DISTINCT FNC 
+  FROM [LF_NC_HISTORICO] WHERE FNC = '2020-07-29' 
+
+
