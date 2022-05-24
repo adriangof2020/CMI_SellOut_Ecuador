@@ -136,109 +136,38 @@ PRINT @ds12;
 
 
 
+IF OBJECT_ID(N'tempdb..#FECHA1') IS NOT NULL DROP TABLE #FECHA1;
 
+SELECT *
+INTO #FECHA1
+FROM (SELECT @d1 Fecha) A
 
+IF OBJECT_ID(N'tempdb..#FECHA2') IS NOT NULL DROP TABLE #FECHA2;
 
+SELECT *
+INTO #FECHA2
+FROM (SELECT @d2 Fecha) A
 
+IF OBJECT_ID(N'tempdb..#FECHA3') IS NOT NULL DROP TABLE #FECHA3;
 
+SELECT *
+INTO #FECHA3
+FROM (SELECT @d3 Fecha) A
 
+IF OBJECT_ID(N'tempdb..#FECHA') IS NOT NULL DROP TABLE #FECHA;
 
+SELECT *
+INTO #FECHA
+FROM #FECHA1
 
---select SUM(Plan_Ton) from #PYDACO_SELL_IN_MA
+INSERT INTO #FECHA
+SELECT * FROM #FECHA2
 
+INSERT INTO #FECHA
+SELECT * FROM #FECHA3
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
---IF OBJECT_ID(N'tempdb..#CONSOLIDADO0') IS NOT NULL drop table #CONSOLIDADO0
-
---SELECT *
-----SELECT DAY(Fecha) Dia, SUM(Importe) SUBTOTAL_NETO
---INTO #CONSOLIDADO0
---FROM PYDACO_HISTORICO
---WHERE TRY_CONVERT(VARCHAR,YEAR(Fecha))+TRY_CONVERT(VARCHAR,MONTH(Fecha))
---	IN (TRY_CONVERT(VARCHAR,YEAR(@MA))+TRY_CONVERT(VARCHAR,MONTH(@MA)),
---		TRY_CONVERT(VARCHAR,YEAR(@MA_1))+TRY_CONVERT(VARCHAR,MONTH(@MA_1)),
---		TRY_CONVERT(VARCHAR,YEAR(@MA_2))+TRY_CONVERT(VARCHAR,MONTH(@MA_2)),
---		TRY_CONVERT(VARCHAR,YEAR(@MA_3))+TRY_CONVERT(VARCHAR,MONTH(@MA_3)))
-----SELECT * FROM #CONSOLIDADO0 where month (fecha) = 12 ORDER BY FECHA
-
---UPDATE A SET Agencia = TRIM(Agencia) FROM #CONSOLIDADO0 A;
---UPDATE A SET ClienteSellOut = TRIM(ClienteSellOut) FROM #CONSOLIDADO0 A;
---UPDATE A SET Vendedor_Distribuidora = TRIM(Vendedor_Distribuidora) FROM #CONSOLIDADO0 A;
---UPDATE A SET CodPydaco = TRIM(CodPydaco) FROM #CONSOLIDADO0 A;
---UPDATE A SET CodClienteSellOut = TRIM(CodClienteSellOut) FROM #CONSOLIDADO0 A;
-		
-----GROUP BY DAY(Fecha)
-----SELECT TRY_CONVERT(VARCHAR,YEAR(@MA))+TRY_CONVERT(VARCHAR,MONTH(@MA))
-
---IF OBJECT_ID(N'tempdb..#CONSOLIDADO0_1') IS NOT NULL DROP TABLE #CONSOLIDADO0_1; 
-
---SELECT A.Fecha Fecha, A.Agencia Agencia, A.CodClienteSellOut, A.ClienteSellOut,  A.Vendedor_Distribuidora, 'H-SIN ASIGNAR' Tipo_tienda_Distribuidora,
---	   MP.CodAlicorp, M.CodFamilia, M.Familia,
---	   A.TUnidades, 0  Plan_Ton, 0 Plan_Dol, A.Importe/1000 real_Dolares, A.TUnidades*M.PesoTon real_ton,
---	   'Consumo Masivo' Negocio
---INTO #CONSOLIDADO0_1
---FROM #CONSOLIDADO0 A
---	LEFT JOIN TABLA_MATERIALES_PYDACO MP ON A.CodPydaco = MP.CodPydaco
---	LEFT JOIN MAESTRO_ALICORP M ON MP.CodAlicorp = M.CodAlicorp;
-----SELECT distinct CodFamilia ,Familia  FROM #CONSOLIDADO0_1 where month (fecha ) =12 and day (fecha) = 29
-
-
---IF OBJECT_ID(N'tempdb..#CONSOLIDADO0_2') IS NOT NULL DROP TABLE #CONSOLIDADO0_2; 
-
---SELECT A.Fecha, A.Agencia, A.CodFamilia, A.Familia,
---	   SUM(A.Plan_Ton) Plan_Ton, SUM(A.Plan_Dol) Plan_Dol , SUM(A.real_Dolares) real_Dolares, SUM(A.real_ton) real_ton
---INTO #CONSOLIDADO0_2
---FROM #CONSOLIDADO0_1 A
---GROUP BY A.Fecha, A.Agencia, A.CodFamilia, A.Familia
-	   
---IF OBJECT_ID(N'tempdb..#CONSOLIDADO0_3') IS NOT NULL DROP TABLE #CONSOLIDADO0_3; 
-
---SELECT *
---INTO #CONSOLIDADO0_3
---FROM #CONSOLIDADO0_2
-
-
-
---IF TRY_CONVERT(VARCHAR,YEAR(@MA))+TRY_CONVERT(VARCHAR,MONTH(@MA)) IN (SELECT TRY_CONVERT(VARCHAR,YEAR(Fecha))+TRY_CONVERT(VARCHAR,MONTH(Fecha))
---						FROM #CONSOLIDADO0_3) DELETE FROM #CONSOLIDADO0_3 WHERE 
---TRY_CONVERT(VARCHAR,YEAR(Fecha))+TRY_CONVERT(VARCHAR,MONTH(Fecha)) IN (TRY_CONVERT(VARCHAR,YEAR(@MA_3))+TRY_CONVERT(VARCHAR,MONTH(@MA_3)))
-
---select distinct Fecha from #CONSOLIDADO0_3		order by 1 asc			
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+--SELECT * FROM #FECHA
+-- NO SE PUEDE HACER INSERT INTO DE VARIABLES
 
 
 --Este maestro solo tiene codigos alicorp y sus quiebres
@@ -626,12 +555,34 @@ SELECT CONVERT(VARCHAR(20), V.Fecha,103) Fecha, V.Agencia, CodClienteSellOut, Cl
 	   V.FacUnitario, V.TUnidades,V.Plan_Ton, V.Ventakil, V.Plan_Dol, V.VentaDolares, V.TipoProducto
 INTO #VENTAS_Y_NOTAS
 FROM #VENTAS_Y_NOTAS_CREDITO V
---SELECT SUM (Plan_Ton)FROM #VENTAS_Y_NOTAS
+--SELECT*FROM #VENTAS_Y_NOTAS
 --SELECT SUM (VentaKil)FROM #VENTAS_Y_NOTAS
 --SELECT SUM (Plan_Dol)FROM #VENTAS_Y_NOTAS
 --SELECT SUM (VentaDolares)FROM #VENTAS_Y_NOTAS
 --SELECT * FROM #VENTAS_Y_NOTAS WHERE CodAlicorp is null;
 --SELECT * FROM #VENTAS_Y_NOTAS  WHERE  Plan_Ton =0 AND VentaKil = 0 AND Plan_Dol = 0 AND VentaDolares = 0 CodAlicorp IS NULL;
+
+IF OBJECT_ID(N'tempdb..#PANALES_DUMMY') IS NOT NULL DROP TABLE #PANALES_DUMMY;
+
+SELECT B.Fecha, A.Agencia, C.CodAlicorp
+INTO #PANALES_DUMMY
+FROM (SELECT DISTINCT Agencia FROM #VENTAS_Y_NOTAS) A CROSS JOIN #FECHA B
+CROSS JOIN (SELECT DISTINCT CodAlicorp FROM #VENTAS_Y_NOTAS) C
+--SELECT DISTINCT CodAlicorp FROM #PANALES where VentaDolares = 0
+
+--SELECT *FROM  #PANALES_DUMMY
+--CodAlicorp 
+--SELECT DISTINCT CodAlicorp FROM #PANALES
+--4521
+INSERT INTO #VENTAS_Y_NOTAS
+SELECT A.Fecha Fecha, A.Agencia Agencia, 'Dummy' CodClienteSellOut, 'Dummy' ClienteSellOut, 'Dummy' Vendedor_Distribuidora, 'Dummy' Tipo_tienda_Distribuidora, 'Dummy' CodLaFabril,  A.CodAlicorp CodAlicorp,
+	   0 FacUnitario, 0 TUnidades, 0  Plan_Ton, 0 Ventakil, 0 Plan_Dol, 0 VentaDolares,
+	   'MARCAS TERCEROS' TipoProducto
+FROM #PANALES_DUMMY A
+
+
+
+
 
 UPDATE #VENTAS_Y_NOTAS 
 SET Fecha = RIGHT(Fecha,9)
@@ -752,6 +703,7 @@ SET CodAlicorp = CASE CodAlicorp
 	WHEN '8309003' THEN '8309122'
 	WHEN '8309007' THEN '8309126'
 	WHEN '8309009' THEN '8309128' 
+	WHEN 'P.3300147' THEN '3300147'
 	WHEN '293369' THEN '29369' ELSE CodAlicorp END;
 -- 293369 este error solo sale en la data de ventas de Panales
 
@@ -769,7 +721,7 @@ UPDATE BASE_MOBILVENDOR_AUTOMATICA SET CodAlicorp = '3300063' WHERE CodAlicorp =
 
 
 
---DELETE FROM BASE_MOBILVENDOR_AUTOMATICA WHERE Agencia = '100125698'
+--DELETE FROM BASE_MOBILVENDOR_AUTOMATICA WHERE Agencia IN ( )
 --DELETE FROM BASE_MOBILVENDOR_AUTOMATICA WHERE Agencia  NOT IN ('156150253', '156163360', '156131204', '156150076', '156148774', '156117292')
 --('156150253', '156163360', '156131204', '156150076')
 --PREGUNTAR A DIEGO HASTA CUANDO SERA HARA ESTOS DELETES
@@ -783,6 +735,7 @@ WITH (FIELDTERMINATOR=';', FIRSTROW=2, CODEPAGE='ACP');
 DELETE PLAN_PANALES WHERE Plan_Dol = 0 AND Plan_Ton = 0;
 DELETE FROM PLAN_PANALES WHERE Plan_Dol IS NULL AND Plan_Ton IS NULL;
 DELETE FROM PLAN_PANALES WHERE Plan_Dol = '' AND Plan_Ton = '';
+DELETE FROM PLAN_PANALES WHERE NomOficina IN ('CONTRERAS DELGADO WASHINGTON', 'MOGRO AVILA FERNANDO PATRICIO', 'ATI CAMPAﾑA FLAVIA MARINA')
 
 UPDATE A SET CodCategoria = TRIM(CodCategoria) FROM PLAN_PANALES A;
 UPDATE A SET Categoria = TRIM(Categoria) FROM PLAN_PANALES A;
@@ -822,6 +775,7 @@ SET NomOficina = CASE NomOficina
 	WHEN 'ESPINOZA ZEAS MANUEL JOHN' THEN 'ESPINOZA ZEAS MANUEL JHON'
 	WHEN 'GUADALUPE CASTILLO ERNESTO VICENTE' THEN 'GUADALUPE CASTILLO ERNESTO VICEN 2'
 	WHEN 'COPARESA S.A.' THEN 'COPARESA'
+	WHEN 'COPARESA S.A N 1' THEN 'COPARESA'
 	WHEN 'TAGLE GUERRERO ARISTIDES NORMANDO' THEN 'ARISTIDES NORMANDO TAGLE GUERRERO'
 	ELSE NomOficina END
 
@@ -880,6 +834,21 @@ SET NomOficina = CASE NomOficina
 	WHEN 'NEOPOR S.A.' THEN 'DISTRIBUIDORA DE CONSUMO MASIVO NEOPOR S.A'
 	ELSE NomOficina END
 
+
+
+--10494
+
+--SELECT A.Dia, B.Familia, ISNULL(C.VentaTonSO,0) VentaTonSO
+
+--INTO #CONSOLIDADO1
+
+--FROM (SELECT DISTINCT DAY(Fecha) Dia FROM BaseinicialSellOut) A CROSS JOIN (SELECT DISTINCT Familia FROM BaselnicialSellOut) B
+
+
+
+
+
+
 --Creo tabla temporal para homologar los campos y darle formato a la fecha, tambien calculo las toneladas
 IF OBJECT_ID(N'tempdb..#PANALES') IS NOT NULL DROP TABLE #PANALES;
 
@@ -893,28 +862,68 @@ INTO #PANALES
 FROM BASE_MOBILVENDOR_AUTOMATICA A
 	LEFT JOIN VENDEDORES_PANALES V ON A.Usuario = V.Codigo
 	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp;
---SELECT * FROM #PANALES WHERE   FacUnitario is null and agencia in ('156150253', '156163360', '156131204', '156150076') = '8410177' VentaTon=0 AND VentaDolares= 0 AND Plan_Dol = 0
+
+--DELETE FROM #PANALES WHERE   FacUnitario is null
+--preguntar hasta cuando sera este update
+--SELECT  DISTINCt CodAlicorp FROM #PANALES WHERE   FacUnitario is null and agencia in ('156150253', '156163360', '156131204', '156150076') = '8410177' VentaTon=0 AND VentaDolares= 0 AND Plan_Dol = 0
 DELETE FROM #PANALES WHERE CodAlicorp IN ('AD0220', 'AD0221', 'AD0224', 'AD0225', 'AD0226', 'AD0227', 'AD0228', 'AD0229', 'AD0230', 'AD0231', 'AD0232', 'AD0233', 'AD0234', 'AD0241', 'AD0242', 'AD0243', 'AD0246', 'AD0247',
-                                          'AD0248', 'Ali001', 'Ali002', 'Ali003', 'Ali005', 'Ali007', 'Ali008', 'Ali009', 'Ali011', 'Ali013', 'Ali015', 'Ali016', 'Ali017', 'Ali10', 'AD0219', 'AD0215', 'AD0218', 'Ali006')
+                                          'AD0248', 'Ali001', 'Ali002', 'Ali003', 'Ali005', 'Ali007', 'Ali008', 'Ali009', 'Ali011', 'Ali013', 'Ali015', 'Ali016', 'Ali017', 'Ali10', 'AD0219', 'AD0215', 'AD0218', 'Ali006',
+										  'AD0217', 'ESPAPROM')
+
+
+
 -- son codigos aun no identificados Diego ya los tiene mapeados
 
 ALTER TABLE #PANALES ALTER COLUMN Plan_Ton FLOAT;
 ALTER TABLE #PANALES ALTER COLUMN VentaTon FLOAT;
 ALTER TABLE #PANALES ALTER COLUMN Plan_Dol FLOAT;
 --
+IF OBJECT_ID(N'tempdb..#PANALES_DUMMY1') IS NOT NULL DROP TABLE #PANALES_DUMMY1;
+
+SELECT B.Fecha, A.Agencia, C.CodAlicorp
+INTO #PANALES_DUMMY1 
+FROM (SELECT DISTINCT Agencia FROM #PANALES) A CROSS JOIN #FECHA B
+CROSS JOIN (SELECT DISTINCT CodAlicorp FROM #PANALES) C
+--SELECT DISTINCT CodAlicorp FROM #PANALES where VentaDolares = 0
+
+--SELECT * FROM  #PANALES_DUMMY
+--CodAlicorp 
+--SELECT DISTINCT CodAlicorp FROM #PANALES
+--4521
+INSERT INTO #PANALES
+SELECT A.Fecha Fecha, A.Agencia Agencia, 'Dummy' CodClienteSellOut, 'Dummy' ClienteSellOut, 'Dummy' Vendedor_Distribuidora, 'Dummy' Tipo_tienda_Distribuidora, A.CodAlicorp CodAlicorp,
+	   0 FacUnitario, 0 TUnidades, 0  Plan_Ton, 0 VentaTon, 0 Plan_Dol, 0 VentaDolares,
+	   'Consumo Masivo' Negocio
+FROM #PANALES_DUMMY1 A
+
+
 --nuevo
 --Inserto informaci ficticia del a pasado para que no altere el reporte de excel esta informacion tiene ventas y plan 0
-INSERT INTO #PANALES VALUES (@d3,'156150076','1150603', 'TOSCANO CARRASCO AMPARO','NIRSA', '1 Tienda Bodega/Barrio','8410177',20,0,0,0,0,0,'Consumo Masivo');
-INSERT INTO #PANALES VALUES (@d3,'156131204','2758991', 'MONTESDEOCA LILIA CARMITA','NICANOR FERNANDO BACILIO PARRAGA','1 Tienda Bodega/Barrio','8410177',20,0,0,0,0,0,'Consumo Masivo');
-INSERT INTO #PANALES VALUES (@d3,'156163360', '1300061', 'NANCY HINOJOSA','JHONNY SIGUENCIA', '1 Tienda Bodega/Barrio','8410177',20,0,0,0,0,0,'Consumo Masivo');
-INSERT INTO #PANALES VALUES (@d3,'156150253', '821834', 'CHIRIGUAYA ZUﾃ選GA KARLA ESTEFANIA','NULL', 'MAYORISTA AUTOSERVICIO','8410177',20,0,0,0,0,0,'Consumo Masivo');
-INSERT INTO #PANALES VALUES (@d3,'156148774', '2850471', 'ISABEL MARTINEZ','NULL', 'TIENDA DE BARRIO','8410177',20,0,0,0,0,0,'Consumo Masivo');
-INSERT INTO #PANALES VALUES (@d3,'156117292', '606775', 'Maria Alexandra Alvarez Chisaquinga','NULL', 'PUESTO AL PASO','8410177',20,0,0,0,0,0,'Consumo Masivo');
-INSERT INTO #PANALES VALUES (@d3,'100125698', '606775', 'Maria Alexandra Alvarez Chisaquinga','NULL', 'PUESTO AL PASO','8410177',20,0,0,0,0,0,'Consumo Masivo');
---Estos 3 no tienen ventas el mes pasado.. una vez que tengan eliminar 
-INSERT INTO #PANALES VALUES (@d2,'156150253', '821834', 'CHIRIGUAYA ZUﾃ選GA KARLA ESTEFANIA','NULL', 'MAYORISTA AUTOSERVICIO','8410177',20,0,0,0,0,0,'Consumo Masivo');
-INSERT INTO #PANALES VALUES (@d2,'156148774', '2850471', 'ISABEL MARTINEZ','NULL', 'TIENDA DE BARRIO','8410177',20,0,0,0,0,0,'Consumo Masivo');
-INSERT INTO #PANALES VALUES (@d2,'156117292', '606775', 'Maria Alexandra Alvarez Chisaquinga','NULL', 'PUESTO AL PASO','8410177',20,0,0,0,0,0,'Consumo Masivo');
+--INSERT INTO #PANALES VALUES (@d3,'156150076','1150603', 'TOSCANO CARRASCO AMPARO','NIRSA', '1 Tienda Bodega/Barrio','8410177',20,0,0,0,0,0,'Consumo Masivo');
+--INSERT INTO #PANALES VALUES (@d3,'156131204','2758991', 'MONTESDEOCA LILIA CARMITA','NICANOR FERNANDO BACILIO PARRAGA','1 Tienda Bodega/Barrio','8410177',20,0,0,0,0,0,'Consumo Masivo');
+--INSERT INTO #PANALES VALUES (@d3,'156163360', '1300061', 'NANCY HINOJOSA','JHONNY SIGUENCIA', '1 Tienda Bodega/Barrio','8410177',20,0,0,0,0,0,'Consumo Masivo');
+--INSERT INTO #PANALES VALUES (@d3,'156150253', '821834', 'CHIRIGUAYA ZUﾃ選GA KARLA ESTEFANIA','NULL', 'MAYORISTA AUTOSERVICIO','8410177',20,0,0,0,0,0,'Consumo Masivo');
+--INSERT INTO #PANALES VALUES (@d3,'156148774', '2850471', 'ISABEL MARTINEZ','NULL', 'TIENDA DE BARRIO','8410177',20,0,0,0,0,0,'Consumo Masivo');
+--INSERT INTO #PANALES VALUES (@d3,'156117292', '606775', 'Maria Alexandra Alvarez Chisaquinga','NULL', 'PUESTO AL PASO','8410177',20,0,0,0,0,0,'Consumo Masivo');
+--INSERT INTO #PANALES VALUES (@d3,'1000029960', '606775', 'Maria Alexandra Alvarez Chisaquinga','NULL', 'PUESTO AL PASO','8410177',20,0,0,0,0,0,'Consumo Masivo');
+
+----Son 2Maya
+--INSERT INTO #PANALES VALUES (@d3,'100125698', '606775', 'Maria Alexandra Alvarez Chisaquinga','NULL', 'PUESTO AL PASO','8410177',20,0,0,0,0,0,'Consumo Masivo');
+--INSERT INTO #PANALES VALUES (@d3,'1000026577', '606775', 'Maria Alexandra Alvarez Chisaquinga','NULL', 'PUESTO AL PASO','8410177',20,0,0,0,0,0,'Consumo Masivo');
+--INSERT INTO #PANALES VALUES (@d3,'1000026947', '606775', 'Maria Alexandra Alvarez Chisaquinga','NULL', 'PUESTO AL PASO','8410177',20,0,0,0,0,0,'Consumo Masivo');
+--INSERT INTO #PANALES VALUES (@d3,'1000027689', '606775', 'Maria Alexandra Alvarez Chisaquinga','NULL', 'PUESTO AL PASO','8410177',20,0,0,0,0,0,'Consumo Masivo');
+----Estos 3 no tienen ventas el mes pasado.. una vez que tengan eliminar Panales
+--INSERT INTO #PANALES VALUES (@d2,'156150253', '821834', 'CHIRIGUAYA ZUﾃ選GA KARLA ESTEFANIA','NULL', 'MAYORISTA AUTOSERVICIO','8410177',20,0,0,0,0,0,'Consumo Masivo');
+--INSERT INTO #PANALES VALUES (@d2,'156148774', '2850471', 'ISABEL MARTINEZ','NULL', 'TIENDA DE BARRIO','8410177',20,0,0,0,0,0,'Consumo Masivo');
+--INSERT INTO #PANALES VALUES (@d2,'156117292', '606775', 'Maria Alexandra Alvarez Chisaquinga','NULL', 'PUESTO AL PASO','8410177',20,0,0,0,0,0,'Consumo Masivo');
+--INSERT INTO #PANALES VALUES (@d2,'1000029960', '606775', 'Maria Alexandra Alvarez Chisaquinga','NULL', 'PUESTO AL PASO','8410177',20,0,0,0,0,0,'Consumo Masivo');
+
+----Son 2Maya
+--INSERT INTO #PANALES VALUES (@d2,'100125698', '606775', 'Maria Alexandra Alvarez Chisaquinga','NULL', 'PUESTO AL PASO','8410177',20,0,0,0,0,0,'Consumo Masivo');
+--INSERT INTO #PANALES VALUES (@d2,'1000026577', '606775', 'Maria Alexandra Alvarez Chisaquinga','NULL', 'PUESTO AL PASO','8410177',20,0,0,0,0,0,'Consumo Masivo');
+--INSERT INTO #PANALES VALUES (@d2,'1000026947', '606775', 'Maria Alexandra Alvarez Chisaquinga','NULL', 'PUESTO AL PASO','8410177',20,0,0,0,0,0,'Consumo Masivo');
+--INSERT INTO #PANALES VALUES (@d2,'1000027689', '606775', 'Maria Alexandra Alvarez Chisaquinga','NULL', 'PUESTO AL PASO','8410177',20,0,0,0,0,0,'Consumo Masivo');
+
 
 --INSERT INTO #PANALES VALUES (@d3,'156150076','8410177',0,0,0,0.000001,'MARCAS TERCEROS');
 --INSERT INTO #PANALES VALUES (@d3,'156131204','8410177',0,0,0,0.000001,'MARCAS TERCEROS');
@@ -1250,7 +1259,6 @@ GROUP BY F.DES_MES, A.Fecha,
 	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
 	   AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
 	   A.Plataforma;
-
 -----------------------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------------
 --PYDACO
