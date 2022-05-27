@@ -562,10 +562,10 @@ FROM #VENTAS_Y_NOTAS_CREDITO V
 --SELECT * FROM #VENTAS_Y_NOTAS WHERE CodAlicorp is null;
 --SELECT * FROM #VENTAS_Y_NOTAS  WHERE  Plan_Ton =0 AND VentaKil = 0 AND Plan_Dol = 0 AND VentaDolares = 0 CodAlicorp IS NULL;
 
-IF OBJECT_ID(N'tempdb..#PANALES_DUMMY') IS NOT NULL DROP TABLE #PANALES_DUMMY;
+IF OBJECT_ID(N'tempdb..#LAFABRIL_DUMMY') IS NOT NULL DROP TABLE #LAFABRIL_DUMMY;
 
 SELECT B.Fecha, A.Agencia, C.CodAlicorp
-INTO #PANALES_DUMMY
+INTO #LAFABRIL_DUMMY
 FROM (SELECT DISTINCT Agencia FROM #VENTAS_Y_NOTAS) A CROSS JOIN #FECHA B
 CROSS JOIN (SELECT DISTINCT CodAlicorp FROM #VENTAS_Y_NOTAS) C
 --SELECT DISTINCT CodAlicorp FROM #PANALES where VentaDolares = 0
@@ -578,7 +578,7 @@ INSERT INTO #VENTAS_Y_NOTAS
 SELECT A.Fecha Fecha, A.Agencia Agencia, 'Dummy' CodClienteSellOut, 'Dummy' ClienteSellOut, 'Dummy' Vendedor_Distribuidora, 'Dummy' Tipo_tienda_Distribuidora, 'Dummy' CodLaFabril,  A.CodAlicorp CodAlicorp,
 	   0 FacUnitario, 0 TUnidades, 0  Plan_Ton, 0 Ventakil, 0 Plan_Dol, 0 VentaDolares,
 	   'MARCAS TERCEROS' TipoProducto
-FROM #PANALES_DUMMY A
+FROM #LAFABRIL_DUMMY A
 
 
 
@@ -736,6 +736,7 @@ DELETE PLAN_PANALES WHERE Plan_Dol = 0 AND Plan_Ton = 0;
 DELETE FROM PLAN_PANALES WHERE Plan_Dol IS NULL AND Plan_Ton IS NULL;
 DELETE FROM PLAN_PANALES WHERE Plan_Dol = '' AND Plan_Ton = '';
 DELETE FROM PLAN_PANALES WHERE NomOficina IN ('CONTRERAS DELGADO WASHINGTON', 'MOGRO AVILA FERNANDO PATRICIO', 'ATI CAMPAÑA FLAVIA MARINA')
+--preguntar este delete hasta cuando sera
 
 UPDATE A SET CodCategoria = TRIM(CodCategoria) FROM PLAN_PANALES A;
 UPDATE A SET Categoria = TRIM(Categoria) FROM PLAN_PANALES A;
