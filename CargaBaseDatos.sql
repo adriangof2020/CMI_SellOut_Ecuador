@@ -16,6 +16,9 @@ PRINT @workday;
 PRINT @workday_MA;
 PRINT 'd1 '+ @d1;
 
+
+
+
 DECLARE @f AS DATE;
 DECLARE @d2 AS VARCHAR(20);
 DECLARE @d3 AS VARCHAR(20); 
@@ -180,7 +183,6 @@ FROM BD_FECHAS
 
 DELETE FROM #WORKINGDAYS WHERE DIA_SEM = '7';
 DELETE FROM #WORKINGDAYS WHERE FESTIVO = '1';
-
 
 
 --Este maestro solo tiene codigos alicorp y sus quiebres
@@ -568,22 +570,30 @@ SELECT CONVERT(VARCHAR(20), V.Fecha,103) Fecha, V.Agencia, CodClienteSellOut, Cl
 	   V.FacUnitario, V.TUnidades,V.Plan_Ton, V.Ventakil, V.Plan_Dol, V.VentaDolares, V.TipoProducto
 INTO #VENTAS_Y_NOTAS
 FROM #VENTAS_Y_NOTAS_CREDITO V
+--SELECT*FROM #VENTAS_Y_NOTAS
+--SELECT SUM (VentaKil)FROM #VENTAS_Y_NOTAS
+--SELECT SUM (Plan_Dol)FROM #VENTAS_Y_NOTAS
+--SELECT SUM (VentaDolares)FROM #VENTAS_Y_NOTAS
+--SELECT * FROM #VENTAS_Y_NOTAS WHERE CodAlicorp is null;
+--SELECT * FROM #VENTAS_Y_NOTAS  WHERE  Plan_Ton =0 AND VentaKil = 0 AND Plan_Dol = 0 AND VentaDolares = 0 CodAlicorp IS NULL;
 
-
-IF OBJECT_ID(N'tempdb..#PANALES_DUMMY') IS NOT NULL DROP TABLE #PANALES_DUMMY;
+IF OBJECT_ID(N'tempdb..#LAFABRIL_DUMMY') IS NOT NULL DROP TABLE #LAFABRIL_DUMMY;
 
 SELECT B.Fecha, A.Agencia, C.CodAlicorp
-INTO #PANALES_DUMMY
+INTO #LAFABRIL_DUMMY
 FROM (SELECT DISTINCT Agencia FROM #VENTAS_Y_NOTAS) A CROSS JOIN #FECHA B
 CROSS JOIN (SELECT DISTINCT CodAlicorp FROM #VENTAS_Y_NOTAS) C
+--SELECT DISTINCT CodAlicorp FROM #PANALES where VentaDolares = 0
 
-
-
+--SELECT *FROM  #PANALES_DUMMY
+--CodAlicorp 
+--SELECT DISTINCT CodAlicorp FROM #PANALES
+--4521
 INSERT INTO #VENTAS_Y_NOTAS
 SELECT A.Fecha Fecha, A.Agencia Agencia, 'Dummy' CodClienteSellOut, 'Dummy' ClienteSellOut, 'Dummy' Vendedor_Distribuidora, 'Dummy' Tipo_tienda_Distribuidora, 'Dummy' CodLaFabril,  A.CodAlicorp CodAlicorp,
 	   0 FacUnitario, 0 TUnidades, 0  Plan_Ton, 0 Ventakil, 0 Plan_Dol, 0 VentaDolares,
 	   'MARCAS TERCEROS' TipoProducto
-FROM #PANALES_DUMMY A
+FROM #LAFABRIL_DUMMY A
 
 
 
@@ -741,6 +751,7 @@ DELETE PLAN_PANALES WHERE Plan_Dol = 0 AND Plan_Ton = 0;
 DELETE FROM PLAN_PANALES WHERE Plan_Dol IS NULL AND Plan_Ton IS NULL;
 DELETE FROM PLAN_PANALES WHERE Plan_Dol = '' AND Plan_Ton = '';
 DELETE FROM PLAN_PANALES WHERE NomOficina IN ('CONTRERAS DELGADO WASHINGTON', 'MOGRO AVILA FERNANDO PATRICIO', 'ATI CAMPAÑA FLAVIA MARINA')
+--preguntar este delete hasta cuando sera
 
 UPDATE A SET CodCategoria = TRIM(CodCategoria) FROM PLAN_PANALES A;
 UPDATE A SET Categoria = TRIM(Categoria) FROM PLAN_PANALES A;
@@ -800,7 +811,7 @@ DELETE PLAN_2MAYA WHERE Plan_Dol = 0 AND Plan_Ton = 0;
 DELETE FROM PLAN_2MAYA WHERE Plan_Dol IS NULL AND Plan_Ton IS NULL;
 DELETE FROM PLAN_2MAYA WHERE Plan_Dol = '' AND Plan_Ton = '';
 
-DELETE FROM PLAN_2MAYA WHERE NomOficina NOT IN ('NEOPOR S.A.') 
+DELETE FROM PLAN_2MAYA WHERE NomOficina NOT IN ('NEOPOR S.A.', 'PULLA', 'MARVECOBE S.A', 'HARO') 
 --PREGUNTAR HASTA CUANDO SERA ESTO
 
 UPDATE A SET CodCategoria = TRIM(CodCategoria) FROM PLAN_2MAYA A;
@@ -837,6 +848,9 @@ SET CodAlicorp = CASE CodAlicorp
 UPDATE PLAN_2MAYA
 SET NomOficina = CASE NomOficina
 	WHEN 'NEOPOR S.A.' THEN 'DISTRIBUIDORA DE CONSUMO MASIVO NEOPOR S.A'
+	WHEN 'PULLA' THEN 'PULLA VIMOS LOURDES CATALINA'
+	WHEN 'MARVECOBE S.A' THEN 'MARVECOBE'
+	WHEN 'HARO' THEN 'HARO IVAN'
 	ELSE NomOficina END
 
 
@@ -867,10 +881,10 @@ INTO #PANALES
 FROM BASE_MOBILVENDOR_AUTOMATICA A
 	LEFT JOIN VENDEDORES_PANALES V ON A.Usuario = V.Codigo
 	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp;
-
---DELETE FROM #PANALES WHERE   FacUnitario is null
+--select * from #PANALES where agencia = '156117292'
+DELETE FROM #PANALES WHERE   FacUnitario is null
 --preguntar hasta cuando sera este update
---SELECT  DISTINCt CodAlicorp FROM #PANALES WHERE   FacUnitario is null and agencia in ('156150253', '156163360', '156131204', '156150076') = '8410177' VentaTon=0 AND VentaDolares= 0 AND Plan_Dol = 0
+--SELECT  distinct CodAlicorp FROM #PANALES WHERE   FacUnitario is null and agencia in ('156150253', '156163360', '156131204', '156150076') = '8410177' VentaTon=0 AND VentaDolares= 0 AND Plan_Dol = 0
 DELETE FROM #PANALES WHERE CodAlicorp IN ('AD0220', 'AD0221', 'AD0224', 'AD0225', 'AD0226', 'AD0227', 'AD0228', 'AD0229', 'AD0230', 'AD0231', 'AD0232', 'AD0233', 'AD0234', 'AD0241', 'AD0242', 'AD0243', 'AD0246', 'AD0247',
                                           'AD0248', 'Ali001', 'Ali002', 'Ali003', 'Ali005', 'Ali007', 'Ali008', 'Ali009', 'Ali011', 'Ali013', 'Ali015', 'Ali016', 'Ali017', 'Ali10', 'AD0219', 'AD0215', 'AD0218', 'Ali006',
 										  'AD0217', 'ESPAPROM')
@@ -1013,6 +1027,8 @@ GROUP BY F.DES_MES, A.Fecha,
 	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
 	   AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
 	   A.Plataforma;
+
+
 
 --------------------------------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1297,14 +1313,41 @@ UPDATE A SET CodClienteSellOut = TRIM(CodClienteSellOut) FROM VENTAS_PYDACO_SELL
 --Creo tabla temporal para homologar los campos y darle formato a la fecha, tambien calculo las toneladas , VentaKilos real_ton
 IF OBJECT_ID(N'tempdb..#PYDACO') IS NOT NULL DROP TABLE #PYDACO; 
 
-SELECT CONVERT(VARCHAR(20), A.Fecha,103) Fecha, A.Agencia Agencia, A.CodClienteSellOut, A.ClienteSellOut,  A.Vendedor_Distribuidora, 'H-SIN ASIGNAR' Tipo_tienda_Distribuidora, M.CodAlicorp CodAlicorp,
+SELECT CONVERT(VARCHAR(20), A.Fecha, 103) Fecha, A.Agencia Agencia, A.CodClienteSellOut, A.ClienteSellOut,  A.Vendedor_Distribuidora, 'H-SIN ASIGNAR' Tipo_tienda_Distribuidora, M.CodAlicorp CodAlicorp,
 	   A.TUnidades, 0  Plan_Ton, 0 Plan_Dol, A.Importe real_Dolares,
 	   'Consumo Masivo' Negocio
 INTO #PYDACO
 FROM VENTAS_PYDACO_SELL_OUT A
 	LEFT JOIN TABLA_MATERIALES_PYDACO M ON A.CodPydaco = M.CodPydaco;
 
+
+
 --SELECT * FROM  #PYDACO WHERE CodAlicorp IS NULL
+
+IF OBJECT_ID(N'tempdb..#PYDACO_DUMMY') IS NOT NULL DROP TABLE #PYDACO_DUMMY;
+
+SELECT B.Fecha, A.Agencia, C.CodAlicorp
+INTO #PYDACO_DUMMY 
+FROM (SELECT DISTINCT Agencia FROM #PYDACO) A CROSS JOIN #FECHA B
+CROSS JOIN (SELECT DISTINCT CodAlicorp FROM #PYDACO) C
+--SELECT DISTINCT CodAlicorp FROM #PANALES where VentaDolares = 0
+
+--SELECT * FROM  #PYDACO_DUMMY
+--CodAlicorp 
+--SELECT DISTINCT CodAlicorp FROM #PYDACO
+--756
+INSERT INTO #PYDACO
+SELECT CONVERT(VARCHAR(20), A.Fecha, 103) Fecha, A.Agencia Agencia, 'Dummy' CodClienteSellOut, 'Dummy' ClienteSellOut, 'Dummy' Vendedor_Distribuidora, 'Dummy' Tipo_tienda_Distribuidora, A.CodAlicorp CodAlicorp,
+	   0 TUnidades, 0  Plan_Ton, 0 Plan_Dol, 0 real_Dolares,
+	   'Consumo Masivo' Negocio
+FROM #PYDACO_DUMMY A
+
+
+
+
+
+
+
 
 UPDATE #PYDACO 
 SET Fecha = RIGHT(Fecha,9)
@@ -1686,6 +1729,8 @@ UPDATE VENTAS_PYDACO SET Fecha = CASE WHEN Fecha > @dia THEN @dia ELSE Fecha END
 UPDATE A SET CodAlicorp = TRIM(CodAlicorp) FROM VENTAS_PYDACO A; 
 UPDATE A SET Agencia = TRIM(Agencia) FROM VENTAS_PYDACO A;
 UPDATE A SET NombreDistribuidor = TRIM(NombreDistribuidor) FROM VENTAS_PYDACO A;
+DELETE FROM VENTAS_PYDACO WHERE Agencia = '1000027901'
+--preguntar hasta cuando hare este update
 
 
 UPDATE VENTAS_PYDACO
@@ -1756,6 +1801,29 @@ FROM (SELECT DIA, Agencia, CodCategoria, Categoria, CodMarca, Marca, CodFamilia,
 
 	--SELECT  * FROM #PYDACO_SELL_IN_1 where Porcion_Ton is null
 
+
+IF OBJECT_ID(N'tempdb..#PYDACO_DUMMY_1') IS NOT NULL DROP TABLE #PYDACO_DUMMY_1;
+
+SELECT B.Fecha, A.Agencia, C.CodCategoria, C.Categoria, C.CodMarca, C.Marca, C.CodFamilia, C.Familia, C.Plataforma
+INTO #PYDACO_DUMMY_1
+FROM (SELECT DISTINCT Agencia FROM #PYDACO_SELL_IN_1) A CROSS JOIN #FECHA B
+CROSS JOIN (SELECT DISTINCT CodCategoria, Categoria, CodMarca, Marca, CodFamilia, Familia, Plataforma FROM #PYDACO_SELL_IN_1) C
+--SELECT DISTINCT CodAlicorp FROM #PANALES where VentaDolares = 0
+
+--SELECT DISTINCT MARCA FROM  #PYDACO_SELL_IN_1 WHERE MARCA =
+--CodAlicorp 
+--SELECT DISTINCT CodAlicorp FROM #PYDACO
+--756
+INSERT INTO #PYDACO_SELL_IN_1
+SELECT CONVERT(VARCHAR(20), A.Fecha, 103) Dia, @workday Workdays, A.Agencia, A.CodCategoria, A.Categoria, A.CodMarca, A.Marca, A.CodFamilia, A.Familia,
+	   0 Plan_Ton, 0 Plan_Dol, 0 real_ton, 0 real_Dolares , A.Plataforma, 0 Total_Ton, 0 Total_Dolares, 0 Porcion_Ton
+FROM #PYDACO_DUMMY_1 A
+
+
+
+
+
+
 ----ESPACIO PARA Mes anterior
 
 IF OBJECT_ID(N'tempdb..#PYDACO_SELL_IN_MA') IS NOT NULL DROP TABLE #PYDACO_SELL_IN_MA;
@@ -1772,7 +1840,7 @@ FROM (SELECT CONVERT(date,DIA,103) DIA FROM [BD_FECHAS] WHERE PER = @M2) A
 	  ON B.CodFamilia = C.CodFamilia AND A.DIA = C.Fecha AND B.Agencia = C.Agencia
 ORDER BY A.DIA , B.CodFamilia, B.Agencia;
 
---SELECT  * FROM  #PYDACO_SELL_IN_1_MA
+--SELECT  * FROM  #PYDACO_SELL_IN_1 where familia = 'Don Vittorio Clasico'_MA
 
 IF OBJECT_ID(N'tempdb..#PYDACO_SELL_IN_1_MA') IS NOT NULL DROP TABLE #PYDACO_SELL_IN_1_MA; 
 
@@ -1793,6 +1861,28 @@ FROM (SELECT DIA, Agencia, CodCategoria, Categoria, CodMarca, Marca, CodFamilia,
 
 --UPDATE A SET	
 --SELECT * FROM #PYDACO_SELL_IN_1
+
+
+IF OBJECT_ID(N'tempdb..#PYDACO_DUMMY_2') IS NOT NULL DROP TABLE #PYDACO_DUMMY_2;
+
+SELECT B.Fecha, A.Agencia, C.CodCategoria, C.Categoria, C.CodMarca, C.Marca, C.CodFamilia, C.Familia, C.Plataforma
+INTO #PYDACO_DUMMY_2
+FROM (SELECT DISTINCT Agencia FROM #PYDACO_SELL_IN_1_MA) A CROSS JOIN #FECHA B
+CROSS JOIN (SELECT DISTINCT CodCategoria, Categoria, CodMarca, Marca, CodFamilia, Familia, Plataforma FROM #PYDACO_SELL_IN_1_MA) C
+--SELECT DISTINCT CodAlicorp FROM #PANALES where VentaDolares = 0
+
+--SELECT * FROM  #PYDACO_DUMMY_1
+--CodAlicorp 
+--SELECT DISTINCT CodAlicorp FROM #PYDACO
+--756
+INSERT INTO #PYDACO_SELL_IN_1_MA
+SELECT CONVERT(VARCHAR(20), A.Fecha, 103) Dia, @workday_MA Workdays, A.Agencia, A.CodCategoria, A.Categoria, A.CodMarca, A.Marca, A.CodFamilia, A.Familia,
+	   0 Plan_Ton, 0 Plan_Dol, 0 real_ton, 0 real_Dolares , A.Plataforma, 0 Total_Ton, 0 Total_Dolares, 0 Porcion_Ton
+FROM #PYDACO_DUMMY_2 A
+
+
+
+
 
 
 --cambiar el formato de fecha al 103 luego ejecutar lo de abajo
@@ -1932,6 +2022,7 @@ LEFT JOIN MAESTRO_AGENCIAS AG ON A.Agencia = AG.Agencia
 
 
 
+-------------------------------------------------------------------------------------------------------------------------
 
 
 IF OBJECT_ID('DBO.TMP_SELL_OUT_21') IS NOT NULL DROP TABLE DBO.TMP_SELL_OUT_21;
