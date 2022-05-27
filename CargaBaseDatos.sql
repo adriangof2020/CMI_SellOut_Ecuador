@@ -172,9 +172,6 @@ SELECT * FROM #FECHA2
 INSERT INTO #FECHA
 SELECT * FROM #FECHA3
 
---SELECT * FROM #FECHA
--- NO SE PUEDE HACER INSERT INTO DE VARIABLES
-
 IF OBJECT_ID(N'tempdb..#WORKINGDAYS') IS NOT NULL DROP TABLE #WORKINGDAYS;
 
 SELECT *
@@ -183,88 +180,6 @@ FROM BD_FECHAS
 
 DELETE FROM #WORKINGDAYS WHERE DIA_SEM = '7';
 DELETE FROM #WORKINGDAYS WHERE FESTIVO = '1';
-
-
---SELECT * FROM #WORKINGDAYS
---PRIMERO EVALUAR EL JOIN CON UN SELECT Y PONER ISNULL
---poner a los null el promedio creando tal vez una tabla temporal
---SELECT * from
---(SELECT DIA_UTIL Dia FROM #WORKINGDAYS WHERE PER = @M1 ) A LEFT JOIN
---(SELECT D.DIA_UTIL Dia2,
---	--CodFamilia, Familia,
---					  SUM(E.Plan_Ton) Plan_Ton, SUM(E.Plan_Dol) Plan_Dol , SUM(E.real_Dolares) real_Dolares, SUM(E.real_ton) real_ton
---			 FROM (SELECT * FROM #WORKINGDAYS)  D
-			 
-			 
---			 JOIN  (SELECT Fecha, SUM(Plan_Ton) Plan_Ton, SUM(Plan_Dol) Plan_Dol , SUM(real_Dolares) real_Dolares, SUM(real_ton) real_ton
---			FROM  #CONSOLIDADO0_3  GROUP BY Fecha) E ON CONVERT(DATE,D.DIA,103) = E.Fecha
---			   GROUP BY D.DIA_UTIL) 
---			     --, CodFamilia, Familia
---			    C
---			   	ON
---	--B.CodFamilia = C.CodFamilia AND
---	A.Dia =C.Dia2;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
--- PROBAR CON VALORES NULL
-
---select * from #CONSOLIDADO0_4
-
---IF OBJECT_ID(N'tempdb..#CONSOLIDADO0_4') IS NOT NULL DROP TABLE #CONSOLIDADO0_4; 
-
---SELECT A.DIA Dia,
-----B.CodFamilia, B.Familia,
---	   C.Plan_Ton , C.Plan_Dol , C.real_Dolares, C.real_ton, AVG(C.real_Dolares) OVER() AS AVG_Dolares, AVG(C.real_ton) OVER() AS AVG_Ton
---INTO #CONSOLIDADO0_4
---FROM (SELECT DIA_UTIL Dia FROM #WORKINGDAYS WHERE PER = @M1 ) A
---	--CROSS JOIN (SELECT DISTINCT CodFamilia, Familia FROM #CONSOLIDADO0_3) B
---	LEFT JOIN 
---	(SELECT D.DIA_UTIL Dia2,
---	--CodFamilia, Familia,
---					  SUM(E.Plan_Ton) Plan_Ton, SUM(E.Plan_Dol) Plan_Dol , SUM(E.real_Dolares) real_Dolares, SUM(E.real_ton) real_ton
---			 FROM (SELECT * FROM #WORKINGDAYS)  D
-			 
-			 
---			 JOIN  (SELECT Fecha, SUM(Plan_Ton) Plan_Ton, SUM(Plan_Dol) Plan_Dol , SUM(real_Dolares) real_Dolares, SUM(real_ton) real_ton
---			FROM  #CONSOLIDADO0_3  GROUP BY Fecha) E ON CONVERT(DATE,D.DIA,103) = E.Fecha
---			   GROUP BY D.DIA_UTIL) 
---			     --, CodFamilia, Familia
---			    C
---			   	ON
---	--B.CodFamilia = C.CodFamilia AND
---	A.Dia =C.Dia2;
-	
-----INSERT INTO #CONSOLIDADO0_4 VALUES(26,NULL, NULL, NULL, NULL,9.3270372, 4.07487564 )
-
-
---UPDATE A SET A.real_Dolares = A.AVG_Dolares,
---             A.real_ton = A.AVG_Ton,
---			 A.Plan_Dol = 0,
---			 A.Plan_Ton = 0
---		FROM #CONSOLIDADO0_4 A 
---		WHERE A.real_Dolares IS NULL AND A.real_ton IS NULL AND A.Plan_Dol IS NULL AND A.Plan_Ton IS NULL;
-
-
- 
-
-
-
-
-
-
-
 
 
 
@@ -653,12 +568,7 @@ SELECT CONVERT(VARCHAR(20), V.Fecha,103) Fecha, V.Agencia, CodClienteSellOut, Cl
 	   V.FacUnitario, V.TUnidades,V.Plan_Ton, V.Ventakil, V.Plan_Dol, V.VentaDolares, V.TipoProducto
 INTO #VENTAS_Y_NOTAS
 FROM #VENTAS_Y_NOTAS_CREDITO V
---SELECT*FROM #VENTAS_Y_NOTAS
---SELECT SUM (VentaKil)FROM #VENTAS_Y_NOTAS
---SELECT SUM (Plan_Dol)FROM #VENTAS_Y_NOTAS
---SELECT SUM (VentaDolares)FROM #VENTAS_Y_NOTAS
---SELECT * FROM #VENTAS_Y_NOTAS WHERE CodAlicorp is null;
---SELECT * FROM #VENTAS_Y_NOTAS  WHERE  Plan_Ton =0 AND VentaKil = 0 AND Plan_Dol = 0 AND VentaDolares = 0 CodAlicorp IS NULL;
+
 
 IF OBJECT_ID(N'tempdb..#PANALES_DUMMY') IS NOT NULL DROP TABLE #PANALES_DUMMY;
 
@@ -666,12 +576,9 @@ SELECT B.Fecha, A.Agencia, C.CodAlicorp
 INTO #PANALES_DUMMY
 FROM (SELECT DISTINCT Agencia FROM #VENTAS_Y_NOTAS) A CROSS JOIN #FECHA B
 CROSS JOIN (SELECT DISTINCT CodAlicorp FROM #VENTAS_Y_NOTAS) C
---SELECT DISTINCT CodAlicorp FROM #PANALES where VentaDolares = 0
 
---SELECT *FROM  #PANALES_DUMMY
---CodAlicorp 
---SELECT DISTINCT CodAlicorp FROM #PANALES
---4521
+
+
 INSERT INTO #VENTAS_Y_NOTAS
 SELECT A.Fecha Fecha, A.Agencia Agencia, 'Dummy' CodClienteSellOut, 'Dummy' ClienteSellOut, 'Dummy' Vendedor_Distribuidora, 'Dummy' Tipo_tienda_Distribuidora, 'Dummy' CodLaFabril,  A.CodAlicorp CodAlicorp,
 	   0 FacUnitario, 0 TUnidades, 0  Plan_Ton, 0 Ventakil, 0 Plan_Dol, 0 VentaDolares,
