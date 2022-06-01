@@ -765,6 +765,9 @@ FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\PLAN_PANALES_MAY.csv'
 WITH (FIELDTERMINATOR=';', FIRSTROW=2, CODEPAGE='ACP');
 
 UPDATE A SET Fecha = REPLACE(Fecha, '.', '/') FROM PLAN_PANALES A;
+UPDATE A SET Ventas_Reales = 0 FROM PLAN_PANALES A;
+UPDATE A SET Ventas_Ton = 0 FROM PLAN_PANALES A;
+
 
 SET LANGUAGE US_ENGLISH;
 
@@ -817,7 +820,6 @@ SET NomOficina = CASE NomOficina
 	ELSE NomOficina END
 
 
-
 -----------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------------------
 
@@ -829,6 +831,8 @@ FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\PLAN_2MAYA_MAY.csv'
 WITH (FIELDTERMINATOR=';', FIRSTROW=2, CODEPAGE='ACP');
 
 UPDATE A SET Fecha = REPLACE(Fecha, '.', '/') FROM PLAN_2MAYA A;
+UPDATE A SET Ventas_Reales = 0 FROM PLAN_2MAYA A;
+UPDATE A SET Ventas_Ton = 0 FROM PLAN_2MAYA A;
 
 DELETE PLAN_2MAYA WHERE Plan_Dol = 0 AND Plan_Ton = 0;
 DELETE FROM PLAN_2MAYA WHERE Plan_Dol IS NULL AND Plan_Ton IS NULL;
@@ -997,6 +1001,7 @@ GROUP BY F.DES_MES, A.Fecha,
 
 SET LANGUAGE SPANISH;
 
+--Coloco el mes en curso
 DELETE FROM HULARUSS_HISTORICO WHERE LEFT(Fecha,7) = '2022-05';
 
 
@@ -1015,6 +1020,7 @@ ALTER TABLE HULARUSS_HISTORICO ALTER COLUMN Importe FLOAT;
 
 TRUNCATE TABLE VENTAS_HULARUSS;
 
+--Coloco los meses a comparar
 INSERT INTO VENTAS_HULARUSS
 SELECT *
 FROM HULARUSS_HISTORICO
@@ -1031,31 +1037,6 @@ WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 04;
 --FROM HULARUSS_HISTORICO
 --WHERE DATEPART(YEAR,Fecha) = PONER AÑOPASADO AND DATEPART(MONTH,Fecha) = PONER MES DE AÑO PASADO;
 -----------------------------------------------------------------------------------------------------------
-
-
-
-
-
-
-
-
-
-
---SET LANGUAGE SPANISH;
-
-
-
---TRUNCATE TABLE VENTAS_HULARUSS;
-
---ALTER TABLE VENTAS_HULARUSS ALTER COLUMN Importe VARCHAR(100);
-
---BULK INSERT VENTAS_HULARUSS
---FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\VentasHularuss.csv'
---WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
-
---SET LANGUAGE US_ENGLISH;
-
-
 
 UPDATE A SET CodAlicorp = TRIM(CodAlicorp) FROM VENTAS_HULARUSS A;
 UPDATE A SET Agencia = TRIM(Agencia) FROM VENTAS_HULARUSS A;
@@ -1102,6 +1083,8 @@ FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\PLANES_HULARUSS_MAY.csv
 WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
 
 UPDATE A SET Fecha = REPLACE(Fecha, '.', '/') FROM PLAN_HULARUSS A;
+UPDATE A SET Ventas_Reales = 0 FROM PLAN_HULARUSS A;
+UPDATE A SET Ventas_Ton = 0 FROM PLAN_HULARUSS A;
 
 DELETE PLAN_HULARUSS WHERE Plan_Dol = 0 AND Plan_Ton = 0;
 DELETE FROM PLAN_HULARUSS WHERE Plan_Dol IS NULL AND Plan_Ton IS NULL;
@@ -1223,7 +1206,7 @@ GROUP BY F.DES_MES, A.Fecha,
 
 ------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------
---Para el proyecto tablero de Valery
+--Para el proyecto tablero
 
 INSERT INTO VENTAS_TABLERO
 SELECT F.DES_MES Mes, A.Fecha Dia,
@@ -1254,6 +1237,11 @@ GROUP BY F.DES_MES, A.Fecha,
 --SET LANGUAGE US_ENGLISH;
 
 TRUNCATE TABLE VENTAS_PYDACO_SELL_OUT;
+--Colocar los meses a comparar
+INSERT INTO VENTAS_PYDACO_SELL_OUT
+SELECT *
+FROM PYDACO_HISTORICO
+WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 05;
 
 INSERT INTO VENTAS_PYDACO_SELL_OUT
 SELECT *
@@ -1282,8 +1270,6 @@ INTO #PYDACO
 FROM VENTAS_PYDACO_SELL_OUT A
 	LEFT JOIN TABLA_MATERIALES_PYDACO M ON A.CodPydaco = M.CodPydaco;
 
-
-
 --SELECT * FROM  #PYDACO WHERE CodAlicorp IS NULL
 
 IF OBJECT_ID(N'tempdb..#PYDACO_DUMMY') IS NOT NULL DROP TABLE #PYDACO_DUMMY;
@@ -1292,23 +1278,13 @@ SELECT B.Fecha, A.Agencia, C.CodAlicorp
 INTO #PYDACO_DUMMY 
 FROM (SELECT DISTINCT Agencia FROM #PYDACO) A CROSS JOIN #FECHA B
 CROSS JOIN (SELECT DISTINCT CodAlicorp FROM #PYDACO) C
---SELECT DISTINCT CodAlicorp FROM #PANALES where VentaDolares = 0
 
---SELECT * FROM  #PYDACO_DUMMY
---CodAlicorp 
---SELECT DISTINCT CodAlicorp FROM #PYDACO
---756
+
 INSERT INTO #PYDACO
 SELECT CONVERT(VARCHAR(20), A.Fecha, 103) Fecha, A.Agencia Agencia, 'Dummy' CodClienteSellOut, 'Dummy' ClienteSellOut, 'Dummy' Vendedor_Distribuidora, 'Dummy' Tipo_tienda_Distribuidora, A.CodAlicorp CodAlicorp,
 	   0 TUnidades, 0  Plan_Ton, 0 Plan_Dol, 0 real_Dolares,
 	   'Consumo Masivo' Negocio
 FROM #PYDACO_DUMMY A
-
-
-
-
-
-
 
 
 UPDATE #PYDACO 
@@ -1371,19 +1347,20 @@ INTO #CONSOLIDADO0_2
 FROM #CONSOLIDADO0_1 A
 GROUP BY A.Fecha, A.Agencia, A.CodFamilia, A.Familia
 	   
+
 IF OBJECT_ID(N'tempdb..#CONSOLIDADO0_3') IS NOT NULL DROP TABLE #CONSOLIDADO0_3; 
 
 SELECT *
 INTO #CONSOLIDADO0_3
 FROM #CONSOLIDADO0_2
 
+
+--Selecciono los 3 meses que necesito
 IF TRY_CONVERT(VARCHAR,YEAR(@MA))+TRY_CONVERT(VARCHAR,MONTH(@MA)) IN (SELECT TRY_CONVERT(VARCHAR,YEAR(Fecha))+TRY_CONVERT(VARCHAR,MONTH(Fecha))
 						                                              FROM #CONSOLIDADO0_3)
 DELETE FROM #CONSOLIDADO0_3
 WHERE TRY_CONVERT(VARCHAR,YEAR(Fecha))+TRY_CONVERT(VARCHAR,MONTH(Fecha)) IN (TRY_CONVERT(VARCHAR,YEAR(@MA_3))+TRY_CONVERT(VARCHAR,MONTH(@MA_3)))
 --select distinct Fecha from #CONSOLIDADO0_3		order by 1 asc	
-
-
 
 
 IF OBJECT_ID(N'tempdb..#CONSOLIDADO1') IS NOT NULL DROP TABLE #CONSOLIDADO1; 
@@ -1397,34 +1374,25 @@ FROM (SELECT DIA_UTIL Dia FROM #WORKINGDAYS WHERE PER = @M1 ) A
 	LEFT JOIN 
 	(SELECT D.DIA_UTIL Dia2,
 	--CodFamilia, Familia,
-					  SUM(E.Plan_Ton) Plan_Ton, SUM(E.Plan_Dol) Plan_Dol , SUM(E.real_Dolares) real_Dolares, SUM(E.real_ton) real_ton
-			 FROM (SELECT * FROM #WORKINGDAYS)  D
-			 
-			 
-			 JOIN  (SELECT Fecha, SUM(Plan_Ton) Plan_Ton, SUM(Plan_Dol) Plan_Dol , SUM(real_Dolares) real_Dolares, SUM(real_ton) real_ton
-			FROM  #CONSOLIDADO0_3  GROUP BY Fecha) E ON CONVERT(DATE,D.DIA,103) = E.Fecha
-			   GROUP BY D.DIA_UTIL) 
+	        SUM(E.Plan_Ton) Plan_Ton, SUM(E.Plan_Dol) Plan_Dol , SUM(E.real_Dolares) real_Dolares, SUM(E.real_ton) real_ton
+	 FROM (SELECT * FROM #WORKINGDAYS)  D
+		  JOIN  (SELECT Fecha, SUM(Plan_Ton) Plan_Ton, SUM(Plan_Dol) Plan_Dol , SUM(real_Dolares) real_Dolares, SUM(real_ton) real_ton
+			     FROM  #CONSOLIDADO0_3  GROUP BY Fecha) E ON CONVERT(DATE,D.DIA,103) = E.Fecha
+	 GROUP BY D.DIA_UTIL) 
 			     --, CodFamilia, Familia
-			    C
-			   	ON
+	 C	ON
 	--B.CodFamilia = C.CodFamilia AND
-	A.Dia =C.Dia2;
+	 A.Dia =C.Dia2;
 	
 --INSERT INTO #CONSOLIDADO1 VALUES(26,NULL, NULL, NULL, NULL,9.3270372, 4.07487564 )
 
-
+--Reemplazamos a los dias hábiles sin ventas por el promedio
 UPDATE A SET A.real_Dolares = A.AVG_Dolares,
              A.real_ton = A.AVG_Ton,
 			 A.Plan_Dol = 0,
 			 A.Plan_Ton = 0
 		FROM #CONSOLIDADO1 A 
 		WHERE A.real_Dolares IS NULL AND A.real_ton IS NULL AND A.Plan_Dol IS NULL AND A.Plan_Ton IS NULL;
-
-
-
-
-
-
 
 
 --IF OBJECT_ID(N'tempdb..#CONSOLIDADO1') IS NOT NULL DROP TABLE #CONSOLIDADO1; 
@@ -1450,7 +1418,7 @@ IF OBJECT_ID(N'tempdb..#CONSOLIDADO2') IS NOT NULL  DROP TABLE #CONSOLIDADO2;
 
 SELECT A.Dia, 
 --A.CodFamilia, A.Familia,
-A.real_Dolares Subtotal, A.real_ton Subtotal_Ton
+       A.real_Dolares Subtotal, A.real_ton Subtotal_Ton
 INTO #CONSOLIDADO2 
 --SELECT * from #CONSOLIDADO2 order by 1 asc, 2 asc , 2 asc 
 --SELECT *
@@ -1463,12 +1431,11 @@ IF OBJECT_ID(N'tempdb..#CONSOLIDADO3') IS NOT NULL  DROP TABLE #CONSOLIDADO3;
 
 SELECT A.Dia,
 --A.CodFamilia, B.CodFamilia CodFamilia2, B.Familia, 
-SUM(B.real_Dolares) Tot_Acum, SUM(B.real_ton) Tot_Acum_Ton
+       SUM(B.real_Dolares) Tot_Acum, SUM(B.real_ton) Tot_Acum_Ton
 INTO #CONSOLIDADO3 
 --SELECT *
 FROM #CONSOLIDADO1 A
-	LEFT JOIN #CONSOLIDADO1 B
-ON A.Dia>=B.Dia 
+	 LEFT JOIN #CONSOLIDADO1 B ON A.Dia>=B.Dia 
 GROUP BY A.Dia
 --, A.CodFamilia, B.CodFamilia, B.Familia
 
@@ -1487,11 +1454,11 @@ IF OBJECT_ID(N'tempdb..#CONSOLIDADO4') IS NOT NULL  DROP TABLE #CONSOLIDADO4;
 
 SELECT A.Dia,
 --A.CodFamilia,
-A.Subtotal, A.Subtotal_Ton, B.Tot_Acum, B.Tot_Acum_Ton
+       A.Subtotal, A.Subtotal_Ton, B.Tot_Acum, B.Tot_Acum_Ton
 INTO #CONSOLIDADO4
 --select *
 FROM #CONSOLIDADO2 A
-	LEFT JOIN #CONSOLIDADO3 B ON A.Dia= B.Dia 
+	 LEFT JOIN #CONSOLIDADO3 B ON A.Dia= B.Dia 
 	--AND  A.CodFamilia = B.CodFamilia AND A.CodFamilia = B.CodFamilia2
 
 --SELECT * FROM #CONSOLIDADO2 WHERE CodFamilia ='1003012081' AND Agencia = 'ESMERALDAS'
@@ -1499,15 +1466,14 @@ IF OBJECT_ID(N'tempdb..#PORCIONES') IS NOT NULL DROP TABLE #PORCIONES;
 
 SELECT A.Dia,
 --A.CodFamilia, 
-A.Subtotal, A.Subtotal_Ton, B.Dia Dia2,
+       A.Subtotal, A.Subtotal_Ton, B.Dia Dia2,
 --B.CodFamilia CodFamilia2,
-B.Tot_Acum, B.Tot_Acum_Ton, A.Subtotal/B.Tot_Acum Porcion, A.Subtotal_Ton/B.Tot_Acum_Ton Porcion_Ton
+       B.Tot_Acum, B.Tot_Acum_Ton, A.Subtotal/B.Tot_Acum Porcion, A.Subtotal_Ton/B.Tot_Acum_Ton Porcion_Ton
 INTO #PORCIONES
 FROM #CONSOLIDADO2 A
-LEFT JOIN #CONSOLIDADO4 B
-ON A.Dia<=B.Dia
+     LEFT JOIN #CONSOLIDADO4 B ON A.Dia<=B.Dia
 --ORDER BY 1 ASC
-WHERE B.Dia= @workday-- asignar el dia de corte(con esto se tendra la proy por dia)  167576.81
+WHERE B.Dia= @workday-- asigna el dia de corte(con esto se tendra la proy por dia)
 --AND A.CodFamilia = B.CodFamilia
 ORDER BY 1 ASC
 --, 2 ASC
@@ -1516,9 +1482,8 @@ ORDER BY 1 ASC
 --SELECT * FROM #PORCIONES_M1
 --SELECT distinct codfamilia FROM #CONSOLIDADO2
 --WHERE CodFamilia = '1003012081'
-----IF OBJECT_ID(N'tempdb..#CONSOLIDADO1') IS NOT NULL drop table #CONSOLIDADO1  5016105811  
 
-
+ 
 --SELECT * FROM #CONSOLIDADO1_M1 
 ----------------------------------------------------
 --Corte para agrupar los 3 meses que mecesito apartir  del MES-1
@@ -1535,29 +1500,24 @@ FROM (SELECT DIA_UTIL Dia FROM #WORKINGDAYS WHERE PER = @M2 ) A
 	--                   IN (TRY_CONVERT(VARCHAR,YEAR(@MA_1))+TRY_CONVERT(VARCHAR,MONTH(@MA_1)),
 	--	                   TRY_CONVERT(VARCHAR,YEAR(@MA_2))+TRY_CONVERT(VARCHAR,MONTH(@MA_2)),
 	--	                   TRY_CONVERT(VARCHAR,YEAR(@MA_3))+TRY_CONVERT(VARCHAR,MONTH(@MA_3)))) B
-	LEFT JOIN 
-	(SELECT D.DIA_UTIL Dia2,
+	 LEFT JOIN 
+	 (SELECT D.DIA_UTIL Dia2,
 	--CodFamilia, Familia,
-					  SUM(E.Plan_Ton) Plan_Ton, SUM(E.Plan_Dol) Plan_Dol , SUM(E.real_Dolares) real_Dolares, SUM(E.real_ton) real_ton
-			   FROM (SELECT * FROM #WORKINGDAYS)  D
-			    JOIN  (SELECT Fecha, SUM(Plan_Ton) Plan_Ton, SUM(Plan_Dol) Plan_Dol , SUM(real_Dolares) real_Dolares, SUM(real_ton) real_ton
-				FROM  #CONSOLIDADO0_2 
-			  
-			   WHERE  TRY_CONVERT(VARCHAR,YEAR(Fecha))+TRY_CONVERT(VARCHAR,MONTH(Fecha))
+			 SUM(E.Plan_Ton) Plan_Ton, SUM(E.Plan_Dol) Plan_Dol , SUM(E.real_Dolares) real_Dolares, SUM(E.real_ton) real_ton
+	  FROM (SELECT * FROM #WORKINGDAYS)  D
+		   JOIN  (SELECT Fecha, SUM(Plan_Ton) Plan_Ton, SUM(Plan_Dol) Plan_Dol , SUM(real_Dolares) real_Dolares, SUM(real_ton) real_ton
+				  FROM  #CONSOLIDADO0_2 
+			  	  WHERE  TRY_CONVERT(VARCHAR,YEAR(Fecha))+TRY_CONVERT(VARCHAR,MONTH(Fecha))
 					  IN (TRY_CONVERT(VARCHAR,YEAR(@MA_1))+TRY_CONVERT(VARCHAR,MONTH(@MA_1)),
 						  TRY_CONVERT(VARCHAR,YEAR(@MA_2))+TRY_CONVERT(VARCHAR,MONTH(@MA_2)),
 						  TRY_CONVERT(VARCHAR,YEAR(@MA_3))+TRY_CONVERT(VARCHAR,MONTH(@MA_3)))
-			   GROUP BY Fecha)
-			   E ON CONVERT(DATE,D.DIA,103) = E.Fecha
-			   GROUP BY D.DIA_UTIL) 
+			      GROUP BY Fecha) E ON CONVERT(DATE,D.DIA,103) = E.Fecha
+	  GROUP BY D.DIA_UTIL) 
 			     --, CodFamilia, Familia
-			    C
-			   	ON
+	  C	ON
 	--B.CodFamilia = C.CodFamilia AND
-	A.Dia =C.Dia2;
+	  A.Dia =C.Dia2;
 
-
-	
 --INSERT INTO #CONSOLIDADO1 VALUES(26,NULL, NULL, NULL, NULL,9.3270372, 4.07487564 )
 
 
@@ -1571,88 +1531,62 @@ UPDATE A SET A.real_Dolares = A.AVG_Dolares,
 
 --SELECT * FROM #CONSOLIDADO1_M1 WHERE DIA IN (29 ,30)
 
--- VERIFICAR SI EXISTIERA ALGUN DIA EN QUE ESA FAMILIA NO TUVIERA DATOS 
-
 IF OBJECT_ID(N'tempdb..#CONSOLIDADO2_M1') IS NOT NULL  DROP TABLE #CONSOLIDADO2_M1;
 
 SELECT A.Dia, 
 --A.CodFamilia, A.Familia,
 A.real_Dolares Subtotal, A.real_ton Subtotal_Ton
 INTO #CONSOLIDADO2_M1 
---SELECT DISTINCT CODFAMILIA from #CONSOLIDADO2_M1   WHERE DIA = 30
---1003012081
---1003012099
---1003012100
---5015109571
---5016096878
---5016105811
 --SELECT *
 FROM #CONSOLIDADO1_M1 A
-
 --ORDER BY 1 ASC,8 ASC
 --GROUP BY A.DIA, A.CodFamilia, A.Familia
+
 
 IF OBJECT_ID(N'tempdb..#CONSOLIDADO3_M1') IS NOT NULL  DROP TABLE #CONSOLIDADO3_M1;
 
 SELECT A.Dia,
 --A.CodFamilia, B.CodFamilia CodFamilia2, B.Familia, 
-SUM(B.real_Dolares) Tot_Acum, SUM(B.real_ton) Tot_Acum_Ton
+       SUM(B.real_Dolares) Tot_Acum, SUM(B.real_ton) Tot_Acum_Ton
 INTO #CONSOLIDADO3_M1 
 --SELECT *
 FROM #CONSOLIDADO1_M1 A
-	LEFT JOIN #CONSOLIDADO1_M1 B
-ON A.Dia>=B.Dia  
+	 LEFT JOIN #CONSOLIDADO1_M1 B ON A.Dia>=B.Dia  
 --ORDER BY 1 ASC,8 ASC
 GROUP BY A.Dia
 --, A.CodFamilia, B.CodFamilia, B.Familia
 
 
---SELECT * FROM #CONSOLIDADO3 WHERE CodFamilia ='5016096878' AND CodFamilia2= '5016096878' ORDER BY 1 ASC,2 ASC, 3 ASC 36.23656  249.32736
---ORDER BY 1 ASC,2 ASC
---SELECT * FROM #CONSOLIDADO2  where codfamilia = '5016105811' ORDER BY 1 ASC,2 ASC   396.26518
--- 1 Dia Rellenas  1.32778
---2 Dia Rellenas  14.12782 SELECT (1.32778 + 14.12782) 15.4556
--- 3 Dia Rellenas 30.25043 SELECT (1.32778 + 14.12782+ 30.25043) 45.70603
---SELECT 0.10289 +0.73249+0.75286 PLUSBRLLE 1
---SELECT 0.00293+0.29795+0.10317 PLUSBRLLE 1
-
 IF OBJECT_ID(N'tempdb..#CONSOLIDADO4_M1') IS NOT NULL  DROP TABLE #CONSOLIDADO4_M1;
 
 SELECT A.Dia, 
 --A.CodFamilia,
-A.Subtotal, A.Subtotal_Ton, B.Tot_Acum, B.Tot_Acum_Ton
+       A.Subtotal, A.Subtotal_Ton, B.Tot_Acum, B.Tot_Acum_Ton
 INTO #CONSOLIDADO4_M1
 FROM #CONSOLIDADO2_M1 A
-	LEFT JOIN #CONSOLIDADO3_M1 B ON A.Dia= B.Dia 
+	 LEFT JOIN #CONSOLIDADO3_M1 B ON A.Dia= B.Dia 
 	--AND  A.CodFamilia = B.CodFamilia AND A.CodFamilia = B.CodFamilia2
 
 
---SELECT * FROM #CONSOLIDADO2_M1 WHERE CodFamilia ='1003012081'
 IF OBJECT_ID(N'tempdb..#PORCIONES_M1') IS NOT NULL DROP TABLE #PORCIONES_M1; 
 
 SELECT A.Dia, 
 --A.CodFamilia,
-A.Subtotal, A.Subtotal_Ton, B.Dia Dia2,
+       A.Subtotal, A.Subtotal_Ton, B.Dia Dia2,
 --B.CodFamilia CodFamilia2,
-B.Tot_Acum, B.Tot_Acum_Ton, A.Subtotal/B.Tot_Acum Porcion, A.Subtotal_Ton/B.Tot_Acum_Ton Porcion_Ton
+       B.Tot_Acum, B.Tot_Acum_Ton, A.Subtotal/B.Tot_Acum Porcion, A.Subtotal_Ton/B.Tot_Acum_Ton Porcion_Ton
 INTO #PORCIONES_M1
-FROM #CONSOLIDADO2_M1 A
-LEFT JOIN #CONSOLIDADO4_M1 B
-ON A.Dia<=B.Dia 
-WHERE B.Dia= @workday_MA-- asignar el dia de corte(con esto se tendra la proy por dia)  167576.81
+FROM #CONSOLIDADO2_M1 A 
+     LEFT JOIN #CONSOLIDADO4_M1 B ON A.Dia<=B.Dia 
+WHERE B.Dia= @workday_MA-- asigna el dia de corte(con esto se tendra la proy por dia)
 --AND A.CodFamilia = B.CodFamilia
 ORDER BY 1 ASC
 --, 2 ASC
 
-
 --SELECT * FROM #PORCIONES_M1
 --SELECT * FROM #PORCIONES
 
-
-
-
-
-
+--Cargo la información del Sell In
 SET LANGUAGE SPANISH;
 
 TRUNCATE TABLE VENTAS_PYDACO;
@@ -1671,22 +1605,7 @@ SET LANGUAGE US_ENGLISH;
 
 UPDATE VENTAS_PYDACO SET Fecha = CASE WHEN Fecha > @dia THEN @dia ELSE Fecha END;
 
-
-
---UPDATE VENTAS_PYDACO 
---SET Fecha = RIGHT(Fecha,9)
---WHERE Fecha LIKE '0_/%'
-
-
-
---ALTER TABLE VENTAS_PYDACO ALTER COLUMN Fecha DATE NOT NULL;
-
---SET LANGUAGE US_ENGLISH;
-
 --VER TEMA VENDEDORES, DISTRIBUIDORES , CLIENTES DE CLIENTES, ver el tema de unidades x2, ver lo de agencias 
-
---DELETE FROM VENTAS_PYDACO WHERE Ventas_Plan_TON = 0 AND Ventas_Reales_TON = 0 AND Ventas_Plan_USD = 0 AND Ventas_Reales_USD = 0;
---esperar hasta poner el historico
 
 UPDATE A SET CodAlicorp = TRIM(CodAlicorp) FROM VENTAS_PYDACO A; 
 UPDATE A SET Agencia = TRIM(Agencia) FROM VENTAS_PYDACO A;
@@ -1704,7 +1623,6 @@ SET CodMarca = RIGHT(CodMarca,2)
 WHERE CodMarca LIKE '0%';
 -- Debido a que cuando subo la información del csv se agrega un cero a la izquierda
 
- 
 
 UPDATE VENTAS_PYDACO
 SET CodAlicorp = CASE CodAlicorp
@@ -1717,29 +1635,18 @@ SET CodAlicorp = CASE CodAlicorp
 	WHEN '293369' THEN '29369' ELSE CodAlicorp END;
 
 
---SELECT A.Dia, B.Familia, ISNULL(C.VentaTonSO,0) VentaTonSO
---INTO #CONSOLIDADO1
---FROM (SELECT DISTINCT DAY(Fecha) Dia 
---FROM BaseinicialSellOut) A 
---CROSS JOIN 
---	(SELECT DISTINCT Familia 
---		FROM BaselnicialSellOut) B 
---			LEFT JOIN (SELECT DAY(Fecha) Dia, Familia, SUM(VentaTonSO) VentaTonSO 
---			FROM BaselnicialSellOut
---			GROUP BY DAY(Fecha), Familia) C ON B.Familia = C.Familia AND A.Dia =C.Dia
---		ORDER BY A Dia, B.Familia
-
+--Creo tabla temporal para darle los campos y el formato a la información que viene del Sell In
 IF OBJECT_ID(N'tempdb..#PYDACO_SELL_IN') IS NOT NULL DROP TABLE #PYDACO_SELL_IN;
 
 SELECT A.DIA, B.Agencia, B.CodCategoria, B.Categoria, B.CodMarca, B.Marca, B.CodFamilia, B.Familia,
 	   ISNULL(C.Plan_Ton, 0) Plan_Ton, ISNULL(C.real_ton, 0) real_ton, ISNULL(C.Plan_Dol, 0) Plan_Dol, ISNULL(C.real_Dolares, 0) real_Dolares,
 	   B.Plataforma
 INTO #PYDACO_SELL_IN
-FROM (SELECT CONVERT(date,DIA,103) DIA FROM [BD_FECHAS] WHERE PER = @M1 AND TRY_CONVERT(DATE, DIA, 103) < = @dia) A
-	CROSS JOIN (SELECT DISTINCT Agencia, CodCategoria, Categoria, CodMarca, Marca, CodFamilia, Familia, Plataforma FROM VENTAS_PYDACO WHERE MONTH(Fecha) = MONTH (@dia)) B
-	LEFT JOIN (SELECT Fecha, Agencia, CodCategoria, Categoria, CodMarca, Marca, CodFamilia, Familia, Plataforma,
-			   ISNULL(SUM(Plan_Ton),0) Plan_Ton, ISNULL(SUM(real_ton), 0) real_ton, ISNULL(SUM(Plan_Dol), 0) Plan_Dol, ISNULL(SUM(real_Dolares), 0) real_Dolares
-			   FROM VENTAS_PYDACO  WHERE MONTH(Fecha) = MONTH (@dia) GROUP BY Fecha, Agencia, CodCategoria, Categoria, CodMarca, Marca, CodFamilia, Familia, Plataforma) C
+FROM (SELECT CONVERT(DATE,DIA,103) DIA FROM [BD_FECHAS] WHERE PER = @M1 AND TRY_CONVERT(DATE, DIA, 103) < = @dia) A
+	 CROSS JOIN (SELECT DISTINCT Agencia, CodCategoria, Categoria, CodMarca, Marca, CodFamilia, Familia, Plataforma FROM VENTAS_PYDACO WHERE MONTH(Fecha) = MONTH (@dia)) B
+	 LEFT JOIN (SELECT Fecha, Agencia, CodCategoria, Categoria, CodMarca, Marca, CodFamilia, Familia, Plataforma,
+			    ISNULL(SUM(Plan_Ton),0) Plan_Ton, ISNULL(SUM(real_ton), 0) real_ton, ISNULL(SUM(Plan_Dol), 0) Plan_Dol, ISNULL(SUM(real_Dolares), 0) real_Dolares
+			    FROM VENTAS_PYDACO  WHERE MONTH(Fecha) = MONTH (@dia) GROUP BY Fecha, Agencia, CodCategoria, Categoria, CodMarca, Marca, CodFamilia, Familia, Plataforma) C
 	ON B.CodFamilia = C.CodFamilia AND A.DIA = C.Fecha AND B.Agencia = C.Agencia
 ORDER BY A.DIA , B.CodFamilia, B.Agencia;
 --SELECT  * FROM #PYDACO_SELL_IN
@@ -1747,81 +1654,64 @@ ORDER BY A.DIA , B.CodFamilia, B.Agencia;
 IF OBJECT_ID(N'tempdb..#PYDACO_SELL_IN_1') IS NOT NULL DROP TABLE #PYDACO_SELL_IN_1; 
 
 SELECT CONVERT(VARCHAR(20), A.DIA, 103) Dia, ISNULL(C.DIA_UTIL, 0) Workdays, A.Agencia, A.CodCategoria, A.Categoria, A.CodMarca, A.Marca, A.CodFamilia, A.Familia,
-		A.Plan_Ton, A.Plan_Dol, A.real_ton, A.real_Dolares ,  A.Plataforma, A.Total_Ton, A.Total_Dolares, ISNULL(B.Porcion_Ton, 0) Porcion_Ton
+	   A.Plan_Ton, A.Plan_Dol, A.real_ton, A.real_Dolares ,  A.Plataforma, A.Total_Ton, A.Total_Dolares, ISNULL(B.Porcion_Ton, 0) Porcion_Ton
 INTO #PYDACO_SELL_IN_1 
 --select *
 FROM (SELECT DIA, Agencia, CodCategoria, Categoria, CodMarca, Marca, CodFamilia, Familia,
-	Plan_Ton, Plan_Dol, real_ton, real_Dolares ,  Plataforma ,SUM(real_ton) OVER (PARTITION BY CodFamilia, Agencia ) AS Total_Ton , SUM(real_Dolares) OVER (PARTITION BY CodFamilia, Agencia  ) AS Total_Dolares
-	FROM #PYDACO_SELL_IN) A
-	LEFT JOIN 
-	#WORKINGDAYS C ON A.DIA = CONVERT(DATE, C.DIA, 103)
-
-	LEFT JOIN 
-	#PORCIONES B ON C.DIA_UTIL = B.DIA 
+	         Plan_Ton, Plan_Dol, real_ton, real_Dolares ,  Plataforma ,SUM(real_ton) OVER (PARTITION BY CodFamilia, Agencia ) AS Total_Ton , SUM(real_Dolares) OVER (PARTITION BY CodFamilia, Agencia  ) AS Total_Dolares
+	  FROM #PYDACO_SELL_IN) A
+	LEFT JOIN	#WORKINGDAYS C ON A.DIA = CONVERT(DATE, C.DIA, 103)
+	LEFT JOIN 	#PORCIONES B ON C.DIA_UTIL = B.DIA 
 	--AND A.CodFamilia = B.CodFamilia
-
-
-	--SELECT  * FROM #PYDACO_SELL_IN_1 where Porcion_Ton is null
+	
+--SELECT  * FROM #PYDACO_SELL_IN_1 where Porcion_Ton is null
 
 
 IF OBJECT_ID(N'tempdb..#PYDACO_DUMMY_1') IS NOT NULL DROP TABLE #PYDACO_DUMMY_1;
 
 SELECT B.Fecha, A.Agencia, C.CodCategoria, C.Categoria, C.CodMarca, C.Marca, C.CodFamilia, C.Familia, C.Plataforma
 INTO #PYDACO_DUMMY_1
-FROM (SELECT DISTINCT Agencia FROM #PYDACO_SELL_IN_1) A CROSS JOIN #FECHA B
-CROSS JOIN (SELECT DISTINCT CodCategoria, Categoria, CodMarca, Marca, CodFamilia, Familia, Plataforma FROM #PYDACO_SELL_IN_1) C
---SELECT DISTINCT CodAlicorp FROM #PANALES where VentaDolares = 0
+FROM (SELECT DISTINCT Agencia FROM #PYDACO_SELL_IN_1) A
+     CROSS JOIN #FECHA B
+     CROSS JOIN (SELECT DISTINCT CodCategoria, Categoria, CodMarca, Marca, CodFamilia, Familia, Plataforma FROM #PYDACO_SELL_IN_1) C
 
---SELECT DISTINCT MARCA FROM  #PYDACO_SELL_IN_1 WHERE MARCA =
---CodAlicorp 
---SELECT DISTINCT CodAlicorp FROM #PYDACO
---756
+
 INSERT INTO #PYDACO_SELL_IN_1
 SELECT CONVERT(VARCHAR(20), A.Fecha, 103) Dia, @workday Workdays, A.Agencia, A.CodCategoria, A.Categoria, A.CodMarca, A.Marca, A.CodFamilia, A.Familia,
 	   0 Plan_Ton, 0 Plan_Dol, 0 real_ton, 0 real_Dolares , A.Plataforma, 0 Total_Ton, 0 Total_Dolares, 0 Porcion_Ton
 FROM #PYDACO_DUMMY_1 A
 
 
-
-
-
-
-----ESPACIO PARA Mes anterior
-
+----Mes anterior
 IF OBJECT_ID(N'tempdb..#PYDACO_SELL_IN_MA') IS NOT NULL DROP TABLE #PYDACO_SELL_IN_MA;
 
 SELECT A.DIA, B.Agencia, B.CodCategoria, B.Categoria, B.CodMarca, B.Marca, B.CodFamilia, B.Familia,
 	   ISNULL(C.Plan_Ton, 0) Plan_Ton, ISNULL(C.real_ton, 0) real_ton, ISNULL(C.Plan_Dol, 0) Plan_Dol, ISNULL(C.real_Dolares, 0) real_Dolares,
-		B.Plataforma
+	   B.Plataforma
 INTO #PYDACO_SELL_IN_MA
-FROM (SELECT CONVERT(date,DIA,103) DIA FROM [BD_FECHAS] WHERE PER = @M2) A
-      CROSS JOIN (SELECT DISTINCT Agencia, CodCategoria, Categoria, CodMarca, Marca, CodFamilia, Familia, Plataforma FROM VENTAS_PYDACO WHERE MONTH(Fecha) = MONTH(DATEADD(MONTH, -1, @dia))) B
-      LEFT JOIN (SELECT Fecha, Agencia, CodCategoria, Categoria, CodMarca, Marca, CodFamilia, Familia, Plataforma,
-				 ISNULL(SUM(Plan_Ton),0) Plan_Ton, ISNULL(SUM(real_ton), 0) real_ton, ISNULL(SUM(Plan_Dol), 0) Plan_Dol, ISNULL(SUM(real_Dolares), 0) real_Dolares
-			     FROM VENTAS_PYDACO  WHERE MONTH(Fecha) = MONTH(DATEADD(MONTH, -1, @dia)) GROUP BY Fecha, Agencia, CodCategoria, Categoria, CodMarca, Marca, CodFamilia, Familia, Plataforma) C
-	  ON B.CodFamilia = C.CodFamilia AND A.DIA = C.Fecha AND B.Agencia = C.Agencia
+FROM (SELECT CONVERT(DATE,DIA,103) DIA FROM [BD_FECHAS] WHERE PER = @M2) A
+     CROSS JOIN (SELECT DISTINCT Agencia, CodCategoria, Categoria, CodMarca, Marca, CodFamilia, Familia, Plataforma FROM VENTAS_PYDACO WHERE MONTH(Fecha) = MONTH(DATEADD(MONTH, -1, @dia))) B
+     LEFT JOIN (SELECT Fecha, Agencia, CodCategoria, Categoria, CodMarca, Marca, CodFamilia, Familia, Plataforma,
+				ISNULL(SUM(Plan_Ton),0) Plan_Ton, ISNULL(SUM(real_ton), 0) real_ton, ISNULL(SUM(Plan_Dol), 0) Plan_Dol, ISNULL(SUM(real_Dolares), 0) real_Dolares
+			    FROM VENTAS_PYDACO  WHERE MONTH(Fecha) = MONTH(DATEADD(MONTH, -1, @dia)) GROUP BY Fecha, Agencia, CodCategoria, Categoria, CodMarca, Marca, CodFamilia, Familia, Plataforma) C
+	 ON B.CodFamilia = C.CodFamilia AND A.DIA = C.Fecha AND B.Agencia = C.Agencia
 ORDER BY A.DIA , B.CodFamilia, B.Agencia;
 
---SELECT  * FROM  #PYDACO_SELL_IN_1 where familia = 'Don Vittorio Clasico'_MA
+--SELECT  * FROM  #PYDACO_SELL_IN_1
 
 IF OBJECT_ID(N'tempdb..#PYDACO_SELL_IN_1_MA') IS NOT NULL DROP TABLE #PYDACO_SELL_IN_1_MA; 
 
 SELECT CONVERT(VARCHAR(20), A.DIA, 103) Dia, ISNULL(C.DIA_UTIL, 0) Workdays, A.Agencia, A.CodCategoria, A.Categoria, A.CodMarca, A.Marca, A.CodFamilia, A.Familia,
-		A.Plan_Ton, A.Plan_Dol, A.real_ton, A.real_Dolares ,  A.Plataforma, A.Total_Ton, A.Total_Dolares, ISNULL(B.Porcion_Ton, 0) Porcion_Ton
+	   A.Plan_Ton, A.Plan_Dol, A.real_ton, A.real_Dolares ,  A.Plataforma, A.Total_Ton, A.Total_Dolares, ISNULL(B.Porcion_Ton, 0) Porcion_Ton
 INTO #PYDACO_SELL_IN_1_MA
 FROM (SELECT DIA, Agencia, CodCategoria, Categoria, CodMarca, Marca, CodFamilia, Familia,
-	Plan_Ton, Plan_Dol, real_ton, real_Dolares ,  Plataforma ,SUM(real_ton) OVER (PARTITION BY CodFamilia, Agencia ) AS Total_Ton , SUM(real_Dolares) OVER (PARTITION BY CodFamilia, Agencia  ) AS Total_Dolares
-	FROM #PYDACO_SELL_IN_MA) A
-	LEFT JOIN 
-	#WORKINGDAYS C ON A.DIA = CONVERT(DATE, C.DIA, 103)
-	LEFT JOIN 
-	#PORCIONES_M1 B ON C.DIA_UTIL = B.DIA 
+	  Plan_Ton, Plan_Dol, real_ton, real_Dolares ,  Plataforma ,SUM(real_ton) OVER (PARTITION BY CodFamilia, Agencia ) AS Total_Ton , SUM(real_Dolares) OVER (PARTITION BY CodFamilia, Agencia  ) AS Total_Dolares
+	  FROM #PYDACO_SELL_IN_MA) A
+	 LEFT JOIN #WORKINGDAYS C ON A.DIA = CONVERT(DATE, C.DIA, 103)
+	 LEFT JOIN #PORCIONES_M1 B ON C.DIA_UTIL = B.DIA 
 	--AND A.CodFamilia = B.CodFamilia
 
-
-	--select * from #PYDACO_SELL_IN_1_MA
-
---UPDATE A SET	
+--select * from #PYDACO_SELL_IN_1_MA	
 --SELECT * FROM #PYDACO_SELL_IN_1
 
 
@@ -1830,24 +1720,15 @@ IF OBJECT_ID(N'tempdb..#PYDACO_DUMMY_2') IS NOT NULL DROP TABLE #PYDACO_DUMMY_2;
 SELECT B.Fecha, A.Agencia, C.CodCategoria, C.Categoria, C.CodMarca, C.Marca, C.CodFamilia, C.Familia, C.Plataforma
 INTO #PYDACO_DUMMY_2
 FROM (SELECT DISTINCT Agencia FROM #PYDACO_SELL_IN_1_MA) A CROSS JOIN #FECHA B
-CROSS JOIN (SELECT DISTINCT CodCategoria, Categoria, CodMarca, Marca, CodFamilia, Familia, Plataforma FROM #PYDACO_SELL_IN_1_MA) C
---SELECT DISTINCT CodAlicorp FROM #PANALES where VentaDolares = 0
+     CROSS JOIN (SELECT DISTINCT CodCategoria, Categoria, CodMarca, Marca, CodFamilia, Familia, Plataforma FROM #PYDACO_SELL_IN_1_MA) C
 
---SELECT * FROM  #PYDACO_DUMMY_1
---CodAlicorp 
---SELECT DISTINCT CodAlicorp FROM #PYDACO
---756
+
 INSERT INTO #PYDACO_SELL_IN_1_MA
 SELECT CONVERT(VARCHAR(20), A.Fecha, 103) Dia, @workday_MA Workdays, A.Agencia, A.CodCategoria, A.Categoria, A.CodMarca, A.Marca, A.CodFamilia, A.Familia,
 	   0 Plan_Ton, 0 Plan_Dol, 0 real_ton, 0 real_Dolares , A.Plataforma, 0 Total_Ton, 0 Total_Dolares, 0 Porcion_Ton
 FROM #PYDACO_DUMMY_2 A
 
 
-
-
-
-
---cambiar el formato de fecha al 103 luego ejecutar lo de abajo
 ALTER TABLE VENTAS_PYDACO ALTER COLUMN Fecha VARCHAR (100) NOT NULL;
 
 ALTER TABLE #PYDACO_SELL_IN_1 ALTER COLUMN DIA VARCHAR (100) NOT NULL;
@@ -1862,7 +1743,7 @@ UPDATE #PYDACO_SELL_IN_1_MA
 SET DIA = RIGHT(DIA,9)
 WHERE DIA LIKE '0_/%'
 
--- Para el proyecto de tablero de Valery
+-- Para el proyecto de tablero
 -----------------------------------------------------------------
 -----Inserto la data  que se paso de las tabla ventas sellout  a la tabla temporal a esta tabla de ventas tablero
 
@@ -1880,11 +1761,11 @@ FROM #PYDACO A
 	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp
 	LEFT JOIN MAESTRO_AGENCIAS AG ON A.Agencia = AG.Agencia
 GROUP BY F.DES_MES, A.Fecha,
-	   M.CodCategoria, M.Categoria, M.CodFamilia, M.Familia, A.CodAlicorp, M.Material, M.CodMarca, M.Marca,
-	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
-	   AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
-	   A.Vendedor_Distribuidora,  A.CodClienteSellOut, A.ClienteSellOut,
-	   M.FacUnitario, M.Plataforma;
+	     M.CodCategoria, M.Categoria, M.CodFamilia, M.Familia, A.CodAlicorp, M.Material, M.CodMarca, M.Marca,
+	     AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
+	     AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
+	     A.Vendedor_Distribuidora,  A.CodClienteSellOut, A.ClienteSellOut,
+	     M.FacUnitario, M.Plataforma;
 
 ----------------------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------------------
@@ -1914,11 +1795,6 @@ GROUP BY A.MES, A.Dia,
 ---INSERTO PYDACO SELL IN------------------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------------------
 
---IF OBJECT_ID('VENTAS_CONSOLIDADO') IS NOT NULL DROP TABLE VENTAS_CONSOLIDADO;
---Creo tabla donde consolido la información de la tabla tablero 
---En esta tabla se va a insertar la información de todas las distribuidoras
-
-
 INSERT INTO VENTAS_CONSOLIDADO
 SELECT F.DES_MES Mes, A.Dia,
 	   A.CodCategoria, A.Categoria, A.CodFamilia, A.Familia, A.CodMarca, A.Marca,
@@ -1938,18 +1814,8 @@ SELECT F.DES_MES Mes, A.Dia,
 	  A.Plataforma Plataforma
 --SELECT *
 FROM #PYDACO_SELL_IN_1 A
---WHERE Agencia=  '1000025065'  AND CodFamilia = '1003012081'
-
-LEFT JOIN BD_FECHAS F ON  A.DIA= F.DIA
-	
-LEFT JOIN MAESTRO_AGENCIAS AG ON A.Agencia = AG.Agencia
-
---GROUP BY A.MES, A.Dia,
---	   A.CodCategoria, A.Categoria, A.CodFamilia, A.Familia, A.CodMarca, A.Marca,
---	   A.ZonaV2, A.CodOficina, A.NomOficina, A.CodTerritorio, A.NomTerritorio, A.CodZona, A.NomZona,
---	   A.Oficina_Ventas, A.Grupo_Vendedores, A.Territorio, A.Agrupacion_Distribuidora, A.Agencia_Distribuidora, A.Zona_Clientes, A.Grupo_Condiciones,
---	   A.Negocio,
---	   A.Plataforma;
+     LEFT JOIN BD_FECHAS F ON  A.DIA= F.DIA
+     LEFT JOIN MAESTRO_AGENCIAS AG ON A.Agencia = AG.Agencia
 
 
 --Inserto Pydaco mes anterior
@@ -1973,99 +1839,76 @@ SELECT F.DES_MES Mes, A.Dia,
 	  A.Plataforma Plataforma
 --SELECT *
 FROM #PYDACO_SELL_IN_1_MA A
---WHERE Agencia=  '1000025065'  AND CodFamilia = '1003012081'
-LEFT JOIN BD_FECHAS F ON  A.DIA= F.DIA	
-LEFT JOIN MAESTRO_AGENCIAS AG ON A.Agencia = AG.Agencia
+	 LEFT JOIN BD_FECHAS F ON  A.DIA= F.DIA	
+	 LEFT JOIN MAESTRO_AGENCIAS AG ON A.Agencia = AG.Agencia
 
 
 ------------------------------------------------------------------------------------------------------------------------------------------
 -----------------------------------------------------------------------------------------------------------------------------------------
 
-
-
-
--------------------------------------------------------------------------------------------------------------------------
-
-
 IF OBJECT_ID('DBO.TMP_SELL_OUT_21') IS NOT NULL DROP TABLE DBO.TMP_SELL_OUT_21;
 --Creo tabla final donde se van a elaborar todos los indicadores
 SELECT *
-INTO TMP_SELL_OUT_21 FROM 
-(SELECT 
-A.Mes "MES",
-'Sem' "Semana",
-A.DIA DIA,
-B.DIA_2 dia_2,
-CONCAT(A.CodCategoria,' ', A.Categoria) "Categoria",
-A.Negocio Negocio,
-CONCAT(A.CodFamilia,' ',A.Familia) Familia,
-CONCAT(A.CodMarca,' ',A.Marca) Marca,
-
-A.Oficina_Ventas, A.Grupo_Vendedores, A.Territorio, A.Agrupacion_Distribuidora, A.Agencia_Distribuidora, A.Zona_Clientes, A.Grupo_Condiciones,
-
-A.Plan_Ton plan_ton,
-A.real_ton real_ton,
-A.Plan_Dol plan_dol,
-A.real_Dolares real_dol,
-A.real_ton/@dm1 * @DMAX	 PROY_LIN_TON,
-A.real_Dolares/@dm1 * @DMAX	PROY_LIN_DOL,
-0 PROY_TON,
-0 PROY_DOL,
-B.ANIO ANIO,
-B.SEM SEM,
-B.MES MES2,
-CASE WHEN B.PER=@M1 AND TRY_CONVERT(DATE, A.Dia, 103) <=TRY_CONVERT(DATE,@d1,103) THEN  A.real_ton/@dm1 
-WHEN B.PER=@M2  AND TRY_CONVERT(date, A.Dia,103) <=TRY_CONVERT(DATE,@d2,103) THEN  A.real_ton/@dm2 
-WHEN B.PER=@M3  AND TRY_CONVERT(date, A.Dia,103) <=TRY_CONVERT(DATE,@d3,103) THEN  A.real_ton/@dm3 END  PROM_AV,
+INTO TMP_SELL_OUT_21
+FROM (SELECT A.Mes "MES", 'Sem' "Semana", A.DIA DIA, B.DIA_2 dia_2,
+      CONCAT(A.CodCategoria,' ', A.Categoria) "Categoria",
+      A.Negocio Negocio,
+      CONCAT(A.CodFamilia,' ',A.Familia) Familia, CONCAT(A.CodMarca,' ',A.Marca) Marca,
+      A.Oficina_Ventas, A.Grupo_Vendedores, A.Territorio, A.Agrupacion_Distribuidora, A.Agencia_Distribuidora, A.Zona_Clientes, A.Grupo_Condiciones,
+      A.Plan_Ton plan_ton, A.real_ton real_ton, A.Plan_Dol plan_dol, A.real_Dolares real_dol,
+      A.real_ton/@dm1 * @DMAX	 PROY_LIN_TON, A.real_Dolares/@dm1 * @DMAX	PROY_LIN_DOL, 0 PROY_TON, 0 PROY_DOL,
+      B.ANIO ANIO, B.SEM SEM, B.MES MES2,
+      CASE WHEN B.PER=@M1 AND TRY_CONVERT(DATE, A.Dia, 103) <=TRY_CONVERT(DATE,@d1,103) THEN  A.real_ton/@dm1 
+           WHEN B.PER=@M2  AND TRY_CONVERT(date, A.Dia,103) <=TRY_CONVERT(DATE,@d2,103) THEN  A.real_ton/@dm2 
+           WHEN B.PER=@M3  AND TRY_CONVERT(date, A.Dia,103) <=TRY_CONVERT(DATE,@d3,103) THEN  A.real_ton/@dm3 END  PROM_AV,
 -- PROMEDIO AL AVANCE TONELADAS
-CASE WHEN B.PER=@M1 AND B.SEM LIKE '%1 AL 7%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d1,103) THEN  IIF(@ds1=0,null,A.real_ton/@ds1 )
-WHEN B.PER=@M1 AND B.SEM LIKE '%8 AL 14%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d1,103) THEN  IIF(@ds2=0,null,A.real_ton/@ds2 )
-WHEN B.PER=@M1 AND B.SEM LIKE '%15 AL 21%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d1,103) THEN  IIF(@ds3=0,null,A.real_ton/@ds3 )
-WHEN B.PER=@M1 AND B.SEM LIKE '%22 AL 31%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d1,103) THEN  IIF(@ds4=0,null,A.real_ton/@ds4 )
-WHEN B.PER=@M2 AND B.SEM LIKE '%1 AL 7%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d2,103) THEN IIF(@ds5=0,null,A.real_ton/@ds5)
-WHEN B.PER=@M2 AND B.SEM LIKE '%8 AL 14%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d2,103) THEN  IIF(@ds6=0,null,A.real_ton/@ds6 )
-WHEN B.PER=@M2 AND B.SEM LIKE '%15 AL 21%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d2,103) THEN IIF(@ds7=0,null,A.real_ton/@ds7 )
-WHEN B.PER=@M2 AND B.SEM LIKE '%22 AL 31%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d2,103) THEN  IIF(@ds8=0,null,A.real_ton/@ds8 )
-WHEN B.PER=@M3 AND B.SEM LIKE '%1 AL 7%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d3,103) THEN  IIF(@ds9=0,null,A.real_ton/@ds9)
-WHEN B.PER=@M3 AND B.SEM LIKE '%8 AL 14%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d3,103) THEN  IIF(@ds10=0,null,A.real_ton/@ds10 )
-WHEN B.PER=@M3 AND B.SEM LIKE '%15 AL 21%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d3,103) THEN  IIF(@ds11=0,null,A.real_ton/@ds11 )
-WHEN B.PER=@M3 AND B.SEM LIKE '%22 AL 31%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d3,103) THEN  IIF(@ds12=0,null,A.real_ton/@ds12 ) END  PROM_SEM,
+	  CASE WHEN B.PER=@M1 AND B.SEM LIKE '%1 AL 7%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d1,103) THEN  IIF(@ds1=0,null,A.real_ton/@ds1 )
+		   WHEN B.PER=@M1 AND B.SEM LIKE '%8 AL 14%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d1,103) THEN  IIF(@ds2=0,null,A.real_ton/@ds2 )
+		   WHEN B.PER=@M1 AND B.SEM LIKE '%15 AL 21%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d1,103) THEN  IIF(@ds3=0,null,A.real_ton/@ds3 )
+		   WHEN B.PER=@M1 AND B.SEM LIKE '%22 AL 31%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d1,103) THEN  IIF(@ds4=0,null,A.real_ton/@ds4 )
+		   WHEN B.PER=@M2 AND B.SEM LIKE '%1 AL 7%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d2,103) THEN IIF(@ds5=0,null,A.real_ton/@ds5)
+		   WHEN B.PER=@M2 AND B.SEM LIKE '%8 AL 14%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d2,103) THEN  IIF(@ds6=0,null,A.real_ton/@ds6 )
+		   WHEN B.PER=@M2 AND B.SEM LIKE '%15 AL 21%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d2,103) THEN IIF(@ds7=0,null,A.real_ton/@ds7 )
+		   WHEN B.PER=@M2 AND B.SEM LIKE '%22 AL 31%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d2,103) THEN  IIF(@ds8=0,null,A.real_ton/@ds8 )
+		   WHEN B.PER=@M3 AND B.SEM LIKE '%1 AL 7%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d3,103) THEN  IIF(@ds9=0,null,A.real_ton/@ds9)
+		   WHEN B.PER=@M3 AND B.SEM LIKE '%8 AL 14%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d3,103) THEN  IIF(@ds10=0,null,A.real_ton/@ds10 )
+		   WHEN B.PER=@M3 AND B.SEM LIKE '%15 AL 21%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d3,103) THEN  IIF(@ds11=0,null,A.real_ton/@ds11 )
+		   WHEN B.PER=@M3 AND B.SEM LIKE '%22 AL 31%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d3,103) THEN  IIF(@ds12=0,null,A.real_ton/@ds12 ) END  PROM_SEM,
 -- PROMEDIO SEMANAL TONELADAS
-CASE WHEN  @DMAX=@dm1 THEN A.Plan_Ton - A.real_ton ELSE (A.Plan_Ton - A.real_ton)/(@DMAX-@dm1) END OBJ_DIA,
+	  CASE WHEN  @DMAX=@dm1 THEN A.Plan_Ton - A.real_ton ELSE (A.Plan_Ton - A.real_ton)/(@DMAX-@dm1) END OBJ_DIA,
 -- OBJETIVO DIARIO TONELADAS
-CASE WHEN  @DMAX=@dm1 THEN (A.Plan_Ton - A.real_ton) - A.real_ton/@dm1 ELSE (A.Plan_Ton - A.real_ton)/(@DMAX-@dm1) - A.real_ton/@dm1 END INCREMENTO_TON,
+	  CASE WHEN  @DMAX=@dm1 THEN (A.Plan_Ton - A.real_ton) - A.real_ton/@dm1 ELSE (A.Plan_Ton - A.real_ton)/(@DMAX-@dm1) - A.real_ton/@dm1 END INCREMENTO_TON,
 --INCREMENTO_TON
-CASE WHEN B.PER=@M1  AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d1,103)  THEN  A.real_Dolares/@dm1 
-WHEN B.PER=@M2  AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d2,103)  THEN  A.real_Dolares/@dm2 
-WHEN B.PER=@M3  AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d3,103)  THEN  A.real_Dolares/@dm3 END  PROM_AV_DOL,
+	  CASE WHEN B.PER=@M1  AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d1,103)  THEN  A.real_Dolares/@dm1 
+		   WHEN B.PER=@M2  AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d2,103)  THEN  A.real_Dolares/@dm2 
+		   WHEN B.PER=@M3  AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d3,103)  THEN  A.real_Dolares/@dm3 END  PROM_AV_DOL,
 -- PROMEDIO AL AVANCE DOLARES
-CASE WHEN B.PER=@M1 AND B.SEM LIKE '%1 AL 7%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d1,103) THEN IIF(@ds1=0,null,A.real_Dolares/@ds1)
-WHEN B.PER=@M1 AND B.SEM LIKE '%8 AL 14%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d1,103)THEN  IIF(@ds2=0,null,A.real_Dolares/@ds2)
-WHEN B.PER=@M1 AND B.SEM LIKE '%15 AL 21%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d1,103) THEN  IIF(@ds3=0,null,A.real_Dolares/@ds3)
-WHEN B.PER=@M1 AND B.SEM LIKE '%22 AL 31%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d1,103) THEN  IIF(@ds4=0,null,A.real_Dolares/@ds4)
-WHEN B.PER=@M2 AND B.SEM LIKE '%1 AL 7%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d2,103) THEN  IIF(@ds5=0,null,A.real_Dolares/@ds5)
-WHEN B.PER=@M2 AND B.SEM LIKE '%8 AL 14%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d2,103) THEN  IIF(@ds6=0,null,A.real_Dolares/@ds6)
-WHEN B.PER=@M2 AND B.SEM LIKE '%15 AL 21%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d2,103) THEN  IIF(@ds7=0,null,A.real_Dolares/@ds7)
-WHEN B.PER=@M2 AND B.SEM LIKE '%22 AL 31%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d2,103) THEN  IIF(@ds8=0,null,A.real_Dolares/@ds8)
-WHEN B.PER=@M3 AND B.SEM LIKE '%1 AL 7%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d3,103) THEN  IIF(@ds9=0,null,A.real_Dolares/@ds9)
-WHEN B.PER=@M3 AND B.SEM LIKE '%8 AL 14%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d3,103) THEN  IIF(@ds10=0,null,A.real_Dolares/@ds10)
-WHEN B.PER=@M3 AND B.SEM LIKE '%15 AL 21%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d3,103) THEN  IIF(@ds11=0,null,A.real_Dolares/@ds11)
-WHEN B.PER=@M3 AND B.SEM LIKE '%22 AL 31%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d3,103) THEN  IIF(@ds12=0,null,A.real_Dolares/@ds12) END  PROM_SEM_DOL,
+	  CASE WHEN B.PER=@M1 AND B.SEM LIKE '%1 AL 7%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d1,103) THEN IIF(@ds1=0,null,A.real_Dolares/@ds1)
+		   WHEN B.PER=@M1 AND B.SEM LIKE '%8 AL 14%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d1,103)THEN  IIF(@ds2=0,null,A.real_Dolares/@ds2)
+		   WHEN B.PER=@M1 AND B.SEM LIKE '%15 AL 21%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d1,103) THEN  IIF(@ds3=0,null,A.real_Dolares/@ds3)
+		   WHEN B.PER=@M1 AND B.SEM LIKE '%22 AL 31%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d1,103) THEN  IIF(@ds4=0,null,A.real_Dolares/@ds4)
+		   WHEN B.PER=@M2 AND B.SEM LIKE '%1 AL 7%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d2,103) THEN  IIF(@ds5=0,null,A.real_Dolares/@ds5)
+		   WHEN B.PER=@M2 AND B.SEM LIKE '%8 AL 14%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d2,103) THEN  IIF(@ds6=0,null,A.real_Dolares/@ds6)
+		   WHEN B.PER=@M2 AND B.SEM LIKE '%15 AL 21%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d2,103) THEN  IIF(@ds7=0,null,A.real_Dolares/@ds7)
+		   WHEN B.PER=@M2 AND B.SEM LIKE '%22 AL 31%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d2,103) THEN  IIF(@ds8=0,null,A.real_Dolares/@ds8)
+		   WHEN B.PER=@M3 AND B.SEM LIKE '%1 AL 7%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d3,103) THEN  IIF(@ds9=0,null,A.real_Dolares/@ds9)
+		   WHEN B.PER=@M3 AND B.SEM LIKE '%8 AL 14%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d3,103) THEN  IIF(@ds10=0,null,A.real_Dolares/@ds10)
+		   WHEN B.PER=@M3 AND B.SEM LIKE '%15 AL 21%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d3,103) THEN  IIF(@ds11=0,null,A.real_Dolares/@ds11)
+		   WHEN B.PER=@M3 AND B.SEM LIKE '%22 AL 31%' AND TRY_CONVERT(DATE, A.Dia,103) <=TRY_CONVERT(DATE,@d3,103) THEN  IIF(@ds12=0,null,A.real_Dolares/@ds12) END  PROM_SEM_DOL,
 -- PROMEDIO SEMANAL DOLARES
-CASE WHEN  @DMAX=@dm1 THEN A.Plan_Dol - A.real_Dolares ELSE (A.Plan_Dol - A.real_Dolares)/(@DMAX-@dm1) END OBJ_DIA_DOL,
+	  CASE WHEN  @DMAX=@dm1 THEN A.Plan_Dol - A.real_Dolares ELSE (A.Plan_Dol - A.real_Dolares)/(@DMAX-@dm1) END OBJ_DIA_DOL,
 --- OBJETIVO DIARIO DOLARES
-CASE WHEN  @DMAX=@dm1 THEN (A.Plan_Dol - A.real_Dolares) - A.real_Dolares/@dm1 ELSE (A.Plan_Dol- A.real_Dolares)/(@DMAX-@dm1) - A.real_Dolares/@dm1 END INCREMENTO_DOL,
+	  CASE WHEN  @DMAX=@dm1 THEN (A.Plan_Dol - A.real_Dolares) - A.real_Dolares/@dm1 ELSE (A.Plan_Dol- A.real_Dolares)/(@DMAX-@dm1) - A.real_Dolares/@dm1 END INCREMENTO_DOL,
 --INCREMENTO_DOLARES
-CASE WHEN B.PER = @M1 THEN A.real_ton/@dm1 
-WHEN B.PER = @M2 THEN A.real_ton/@DMAX2 
-WHEN B.PER = @M3 THEN A.real_ton/@DMAX3
-END prom_mes,
+	  CASE WHEN B.PER = @M1 THEN A.real_ton/@dm1 
+		   WHEN B.PER = @M2 THEN A.real_ton/@DMAX2 
+		   WHEN B.PER = @M3 THEN A.real_ton/@DMAX3 END prom_mes,
 --VENTA PROMEDIO MENSUAL TONELADAS
-CASE WHEN B.PER = @M1 THEN A.real_Dolares/@dm1 
-WHEN B.PER = @M2 THEN A.real_Dolares/@DMAX2 
-WHEN B.PER = @M3 THEN A.real_Dolares/@DMAX3
-END prom_mes_dol,
+	  CASE WHEN B.PER = @M1 THEN A.real_Dolares/@dm1 
+		   WHEN B.PER = @M2 THEN A.real_Dolares/@DMAX2 
+		   WHEN B.PER = @M3 THEN A.real_Dolares/@DMAX3 END prom_mes_dol,
 --VENTA PROMEDIO MENSUAL DOLARES
-A.Plataforma as Plataforma
+	  A.Plataforma as Plataforma
 FROM VENTAS_CONSOLIDADO  A 
-left JOIN BD_FECHAS  B ON A.DIA = B.DIA) A WHERE A.ANIO IS NOT NULL ;
+	 LEFT JOIN BD_FECHAS  B ON A.DIA = B.DIA) A 
+WHERE A.ANIO IS NOT NULL ;
