@@ -20,9 +20,6 @@ PRINT @workday;
 PRINT @workday_MA;
 PRINT 'd1 '+ @d1;
 
-
-
-
 DECLARE @f AS DATE;
 DECLARE @d2 AS VARCHAR(20);
 DECLARE @d3 AS VARCHAR(20); 
@@ -229,7 +226,7 @@ UPDATE TABLA_MATERIALES SET Plataforma = TRIM(Plataforma);
 TRUNCATE TABLE PLAN_LA_FABRIL;
 
 BULK INSERT PLAN_LA_FABRIL
-FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\PLAN_LA_FABRIL_MAY.csv'
+FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\PLAN_LA_FABRIL_JUN.csv'
 WITH (FIELDTERMINATOR=';', FIRSTROW=2, CODEPAGE='ACP');
 
 DELETE [PLAN_LA_FABRIL] WHERE Plan_Ton = 0 AND Importe = 0;
@@ -255,7 +252,7 @@ SET LANGUAGE SPANISH;
 TRUNCATE TABLE BASE_INICIAL_CARGA;
 
 BULK INSERT BASE_INICIAL_CARGA
-FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\BDPRUEBAVENTAS_MAY.csv'
+FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\BDPRUEBAVENTAS_JUN.csv'
 WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
 
 UPDATE BASE_INICIAL_CARGA
@@ -283,7 +280,7 @@ SET TUnidades = REPLACE(TUnidades,',','')
 WHERE CHARINDEX(',',TUnidades) > 0;
 
 --colocamos el periodo actual
-DELETE FROM LF_VENTAS_HISTORICO WHERE LEFT(FFactura,7) = '2022-05';
+DELETE FROM LF_VENTAS_HISTORICO WHERE LEFT(FFactura,7) = '2022-06';
 
 INSERT INTO LF_VENTAS_HISTORICO
 SELECT *
@@ -297,17 +294,17 @@ TRUNCATE TABLE BASE_INICIAL_VENTAS;
 INSERT INTO BASE_INICIAL_VENTAS
 SELECT *
 FROM LF_VENTAS_HISTORICO
+WHERE DATEPART(YEAR, FFactura)= 2022 AND DATEPART(MONTH, FFactura) = 06
+
+INSERT INTO BASE_INICIAL_VENTAS
+SELECT *
+FROM LF_VENTAS_HISTORICO
+WHERE DATEPART(YEAR, FFactura)= 2021 AND DATEPART(MONTH, FFactura) = 06
+
+INSERT INTO BASE_INICIAL_VENTAS
+SELECT *
+FROM LF_VENTAS_HISTORICO
 WHERE DATEPART(YEAR, FFactura)= 2022 AND DATEPART(MONTH, FFactura) = 05
-
-INSERT INTO BASE_INICIAL_VENTAS
-SELECT *
-FROM LF_VENTAS_HISTORICO
-WHERE DATEPART(YEAR, FFactura)= 2021 AND DATEPART(MONTH, FFactura) = 05
-
-INSERT INTO BASE_INICIAL_VENTAS
-SELECT *
-FROM LF_VENTAS_HISTORICO
-WHERE DATEPART(YEAR, FFactura)= 2022 AND DATEPART(MONTH, FFactura) = 04
 
 
 --Este código se puede usar si en algún momento descargas la información del b2b en csv
@@ -383,6 +380,7 @@ WHERE DATEPART(YEAR, FFactura)= 2022 AND DATEPART(MONTH, FFactura) = 04
 --FacUnitario es la cantidad de sku que viene en cada material
 --FactKilos es la cantidad de kilos que pesa cada sku
 --TUnidades es la cantdad de sku comprados
+DELETE FROM BASE_INICIAL_VENTAS WHERE Kilos = 0 AND Importe = 0;
 
 UPDATE A SET Agencia = TRIM(Agencia) FROM BASE_INICIAL_VENTAS A;
 UPDATE A SET CodArticulo = TRIM(CodArticulo) FROM BASE_INICIAL_VENTAS A;
@@ -435,12 +433,12 @@ SET CodAlicorp = CASE CodAlicorp
 
 SET LANGUAGE SPANISH;
 --colocamos el periodo actual
-DELETE FROM LF_NC_HISTORICO WHERE LEFT(FNC,7) = '2022-05';
+DELETE FROM LF_NC_HISTORICO WHERE LEFT(FNC,7) = '2022-06';
 
 ALTER TABLE LF_NC_HISTORICO ALTER COLUMN Importe VARCHAR(100)
 
 BULK INSERT LF_NC_HISTORICO
-FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\BDPRUEBA_MAY.csv'
+FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\BDPRUEBA_JUN.csv'
 WITH (FIELDTERMINATOR=';', FIRSTROW=2, CODEPAGE='ACP');
 
 UPDATE LF_NC_HISTORICO
@@ -464,18 +462,18 @@ TRUNCATE TABLE NOTAS_CREDITO;
 INSERT INTO NOTAS_CREDITO
 SELECT *
 FROM LF_NC_HISTORICO
+WHERE DATEPART(YEAR, FNC)= 2022 AND DATEPART(MONTH, FNC) = 06;
+
+
+INSERT INTO NOTAS_CREDITO
+SELECT *
+FROM LF_NC_HISTORICO
+WHERE DATEPART(YEAR, FNC)= 2021 AND DATEPART(MONTH, FNC) = 06;
+
+INSERT INTO NOTAS_CREDITO
+SELECT *
+FROM LF_NC_HISTORICO
 WHERE DATEPART(YEAR, FNC)= 2022 AND DATEPART(MONTH, FNC) = 05;
-
-
-INSERT INTO NOTAS_CREDITO
-SELECT *
-FROM LF_NC_HISTORICO
-WHERE DATEPART(YEAR, FNC)= 2021 AND DATEPART(MONTH, FNC) = 05;
-
-INSERT INTO NOTAS_CREDITO
-SELECT *
-FROM LF_NC_HISTORICO
-WHERE DATEPART(YEAR, FNC)= 2022 AND DATEPART(MONTH, FNC) = 04;
 
 DELETE FROM NOTAS_CREDITO WHERE Importe = 0;
 
@@ -686,10 +684,10 @@ UPDATE VENDEDORES_PANALES SET Codigo = TRIM(Codigo);
 --Esta es la base de ventas de Panales
 
 --Coloco el periodo actual
-DELETE FROM BASE_PANALES_HISTORICA WHERE LEFT(Fecha,7) = '2022-05';
+DELETE FROM BASE_PANALES_HISTORICA WHERE LEFT(Fecha,7) = '2022-06';
 
 BULK INSERT BASE_PANALES_HISTORICA
-FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\Panales_MAY.txt'
+FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\Panales_JUN.txt'
 WITH (FIELDTERMINATOR='|',FIRSTROW=2,CODEPAGE='ACP');
 
 --Colocar los meses que deseamos comparar con el mes actual
@@ -698,12 +696,12 @@ TRUNCATE TABLE BASE_MOBILVENDOR_AUTOMATICA;
 INSERT INTO BASE_MOBILVENDOR_AUTOMATICA
 SELECT *
 FROM BASE_PANALES_HISTORICA
-WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 05;
+WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 06;
 
 INSERT INTO BASE_MOBILVENDOR_AUTOMATICA
 SELECT *
 FROM BASE_PANALES_HISTORICA
-WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 04;
+WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 05;
 
 ------------------USAR CUANDO LLEGUE EL 2023------------------------------------------------------
 --INSERT INTO BASE_MOBILVENDOR_AUTOMATICA
@@ -715,8 +713,9 @@ WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 04;
 DELETE FROM [BASE_MOBILVENDOR_AUTOMATICA] WHERE Importe = 0;
 DELETE FROM [BASE_MOBILVENDOR_AUTOMATICA] WHERE Importe IS NULL;
 
---Esos importes menores a 0 son los regalos
+
 UPDATE BASE_MOBILVENDOR_AUTOMATICA SET CodAlicorp = [Codigo Articulo] WHERE CodAlicorp IS NULL;
+UPDATE BASE_MOBILVENDOR_AUTOMATICA SET CodAlicorp = [Codigo Articulo] WHERE CodAlicorp = 'null';
 UPDATE A SET CodAlicorp = TRIM(CodAlicorp) FROM BASE_MOBILVENDOR_AUTOMATICA A;
 UPDATE A SET Agencia = TRIM(Agencia) FROM BASE_MOBILVENDOR_AUTOMATICA A;
 UPDATE A SET Usuario = TRIM(Usuario) FROM BASE_MOBILVENDOR_AUTOMATICA A;
@@ -761,7 +760,7 @@ UPDATE BASE_MOBILVENDOR_AUTOMATICA SET CodAlicorp = '3300063' WHERE CodAlicorp =
 TRUNCATE TABLE PLAN_PANALES;
 
 BULK INSERT PLAN_PANALES
-FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\PLAN_PANALES_MAY.csv'
+FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\PLAN_PANALES_JUN.csv'
 WITH (FIELDTERMINATOR=';', FIRSTROW=2, CODEPAGE='ACP');
 
 UPDATE A SET Fecha = REPLACE(Fecha, '.', '/') FROM PLAN_PANALES A;
@@ -774,6 +773,8 @@ SET LANGUAGE US_ENGLISH;
 DELETE PLAN_PANALES WHERE Plan_Dol = 0 AND Plan_Ton = 0;
 DELETE FROM PLAN_PANALES WHERE Plan_Dol IS NULL AND Plan_Ton IS NULL;
 DELETE FROM PLAN_PANALES WHERE Plan_Dol = '' AND Plan_Ton = '';
+
+--cada vez que aparescan panales que de momento no se incluiran en en reporte incluirlo aca
 DELETE FROM PLAN_PANALES WHERE NomOficina IN ('CONTRERAS DELGADO WASHINGTON', 'MOGRO AVILA FERNANDO PATRICIO', 'ATI CAMPAÑA FLAVIA MARINA')
 --preguntar este delete hasta cuando sera
 
@@ -808,6 +809,7 @@ SET CodAlicorp = CASE CodAlicorp
 	WHEN '8309009' THEN '8309128'
 	WHEN '293369' THEN '29369' ELSE CodAlicorp END;
 
+-- Cada vez que ingrese un nuevo panal registrarlo en este update para homologarlo con el maestro de agencia
 UPDATE PLAN_PANALES
 SET NomOficina = CASE NomOficina
 	WHEN 'JINES CAJAS CESAR XAVIER' THEN 'JINES CAJAS XAVIER CESAR'
@@ -827,7 +829,7 @@ SET NomOficina = CASE NomOficina
 TRUNCATE TABLE PLAN_2MAYA;
 
 BULK INSERT PLAN_2MAYA
-FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\PLAN_2MAYA_MAY.csv'
+FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\PLAN_2MAYA_JUN.csv'
 WITH (FIELDTERMINATOR=';', FIRSTROW=2, CODEPAGE='ACP');
 
 UPDATE A SET Fecha = REPLACE(Fecha, '.', '/') FROM PLAN_2MAYA A;
@@ -838,6 +840,7 @@ DELETE PLAN_2MAYA WHERE Plan_Dol = 0 AND Plan_Ton = 0;
 DELETE FROM PLAN_2MAYA WHERE Plan_Dol IS NULL AND Plan_Ton IS NULL;
 DELETE FROM PLAN_2MAYA WHERE Plan_Dol = '' AND Plan_Ton = '';
 
+--Cada vez que haya una nueva agencia incluirlo aca que se considerara en el reporte incluirla aca
 DELETE FROM PLAN_2MAYA WHERE NomOficina NOT IN ('NEOPOR S.A.', 'PULLA', 'MARVECOBE S.A', 'HARO') 
 --PREGUNTAR HASTA CUANDO SERA ESTO
 
@@ -872,6 +875,7 @@ SET CodAlicorp = CASE CodAlicorp
 	WHEN '8309009' THEN '8309128'
 	WHEN '293369' THEN '29369' ELSE CodAlicorp END;
 
+-- Cada vez que ingrese una nueva agencia registrarlo en este update para homologarlo con el maestro de agencia
 UPDATE PLAN_2MAYA
 SET NomOficina = CASE NomOficina
 	WHEN 'NEOPOR S.A.' THEN 'DISTRIBUIDORA DE CONSUMO MASIVO NEOPOR S.A'
@@ -892,12 +896,12 @@ FROM BASE_MOBILVENDOR_AUTOMATICA A
 	LEFT JOIN VENDEDORES_PANALES V ON A.Usuario = V.Codigo
 	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp;
 
-DELETE FROM #PANALES WHERE   FacUnitario is null
---preguntar hasta cuando sera este update
+--DELETE FROM #PANALES WHERE   FacUnitario is null
+
 --SELECT  distinct CodAlicorp FROM #PANALES WHERE   FacUnitario is null and agencia in ('156150253', '156163360', '156131204', '156150076') = '8410177' VentaTon=0 AND VentaDolares= 0 AND Plan_Dol = 0
 DELETE FROM #PANALES WHERE CodAlicorp IN ('AD0220', 'AD0221', 'AD0224', 'AD0225', 'AD0226', 'AD0227', 'AD0228', 'AD0229', 'AD0230', 'AD0231', 'AD0232', 'AD0233', 'AD0234', 'AD0241', 'AD0242', 'AD0243', 'AD0246', 'AD0247',
                                           'AD0248', 'Ali001', 'Ali002', 'Ali003', 'Ali005', 'Ali007', 'Ali008', 'Ali009', 'Ali011', 'Ali013', 'Ali015', 'Ali016', 'Ali017', 'Ali10', 'AD0219', 'AD0215', 'AD0218', 'Ali006',
-										  'AD0217', 'ESPAPROM')
+										  'AD0217', 'ESPAPROM', 'AD0103', 'AD239', 'Ali014', 'ALIC063', 'H450C200', 'H523B017', 'H523B222', 'H523B223', 'P.33001461', '617080', '688320' )
 
 ALTER TABLE #PANALES ALTER COLUMN Plan_Ton FLOAT;
 ALTER TABLE #PANALES ALTER COLUMN VentaTon FLOAT;
@@ -999,24 +1003,41 @@ GROUP BY F.DES_MES, A.Fecha,
 --Hularruss
 
 
-SET LANGUAGE SPANISH;
+--SET LANGUAGE SPANISH;
 
 --Coloco el mes en curso
-DELETE FROM HULARUSS_HISTORICO WHERE LEFT(Fecha,7) = '2022-05';
+DELETE FROM HULARUSS_HISTORICO WHERE LEFT(Fecha,7) = '2022-06';
 
 
-ALTER TABLE HULARUSS_HISTORICO ALTER COLUMN Importe VARCHAR(100);
+--ALTER TABLE HULARUSS_HISTORICO ALTER COLUMN Importe VARCHAR(100);
+ALTER TABLE HULARUSS_HISTORICO ALTER COLUMN VentaKilos VARCHAR(100);
+ALTER TABLE HULARUSS_HISTORICO ALTER COLUMN importe VARCHAR(100);
+ALTER TABLE HULARUSS_HISTORICO ALTER COLUMN Cantidad VARCHAR(100);
 
 BULK INSERT HULARUSS_HISTORICO
-FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\VentasHularuss_MAY.csv'
-WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
+FROM 'C:\Proyectos\Ecuador\HULARUSS\VentasHularuss.csv'
+WITH (FIELDTERMINATOR= ';', FIRSTROW=2, CODEPAGE='ACP');
 
-SET LANGUAGE US_ENGLISH;
 
-UPDATE A SET Importe = REPLACE(Importe,'$','') FROM HULARUSS_HISTORICO A;
-UPDATE A SET Importe = REPLACE(Importe,',','') FROM HULARUSS_HISTORICO A;
+--SET LANGUAGE US_ENGLISH;
 
-ALTER TABLE HULARUSS_HISTORICO ALTER COLUMN Importe FLOAT;
+UPDATE HULARUSS_HISTORICO
+SET Cantidad = REPLACE(Cantidad,',','')
+WHERE CHARINDEX(',',Cantidad) > 0;
+
+UPDATE HULARUSS_HISTORICO
+SET importe = REPLACE(importe,',','')
+WHERE CHARINDEX(',',importe) > 0;
+
+UPDATE HULARUSS_HISTORICO
+SET VentaKilos = REPLACE(VentaKilos,',','')
+WHERE CHARINDEX(',',VentaKilos) > 0;
+
+ALTER TABLE HULARUSS_HISTORICO ALTER COLUMN VentaKilos FLOAT;
+ALTER TABLE HULARUSS_HISTORICO ALTER COLUMN importe FLOAT;
+ALTER TABLE HULARUSS_HISTORICO ALTER COLUMN Cantidad DECIMAL (18,2);
+
+--ALTER TABLE HULARUSS_HISTORICO ALTER COLUMN Importe FLOAT;
 
 TRUNCATE TABLE VENTAS_HULARUSS;
 
@@ -1024,12 +1045,12 @@ TRUNCATE TABLE VENTAS_HULARUSS;
 INSERT INTO VENTAS_HULARUSS
 SELECT *
 FROM HULARUSS_HISTORICO
-WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 05;
+WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 06;
 
 INSERT INTO VENTAS_HULARUSS
 SELECT *
 FROM HULARUSS_HISTORICO
-WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 04;
+WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 05;
 
 ------------------USAR CUANDO LLEGUE EL 2023------------------------------------------------------
 --INSERT INTO VENTAS_HULARUSS
@@ -1040,6 +1061,12 @@ WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 04;
 
 UPDATE A SET CodAlicorp = TRIM(CodAlicorp) FROM VENTAS_HULARUSS A;
 UPDATE A SET Agencia = TRIM(Agencia) FROM VENTAS_HULARUSS A;
+UPDATE A SET Empaque = TRIM(Empaque) FROM VENTAS_HULARUSS A;
+
+UPDATE VENTAS_HULARUSS SET CodAlicorp = REPLACE(CodAlicorp, 'A', '')
+
+
+
 --UPDATE A SET Importe = TRIM(Importe) FROM VENTAS_HULARUSS A;
 
 --UPDATE A SET Importe = REPLACE(Importe,'$','') FROM VENTAS_HULARUSS A;
@@ -1049,11 +1076,13 @@ UPDATE A SET Agencia = TRIM(Agencia) FROM VENTAS_HULARUSS A;
 --ALTER TABLE VENTAS_HULARUSS ALTER COLUMN Importe FLOAT;
 
 --DELETE FROM VENTAS_HULARUSS WHERE Importe = 0; Esperar a ver que dice sobre las importes negativos
+DELETE FROM VENTAS_HULARUSS WHERE CodAlicorp LIKE '%PROMO%';
 DELETE FROM VENTAS_HULARUSS WHERE Importe IS NULL;
-DELETE FROM VENTAS_HULARUSS WHERE Importe =0; 
 
---preguntar esto de negativos si se van a borrar
---Esos importes menores a 0 son los regalos
+DELETE FROM VENTAS_HULARUSS WHERE Importe =0; 
+--Ver este delete
+
+
 
 --UPDATE A SET PesoKG = TRIM(PesoKG) FROM BASE_MOBILVENDOR_AUTOMATICA A;
 --UPDATE A SET PesoTon = TRIM(PesoTon) FROM BASE_MOBILVENDOR_AUTOMATICA A;
@@ -1069,6 +1098,10 @@ SET CodAlicorp = CASE CodAlicorp
 	WHEN '293369' THEN '29369' ELSE CodAlicorp END;
 -- 293369 este error solo sale en la data de ventas de Panales
 
+UPDATE A SET A.Cantidad = A.Cantidad*M.FacUnitario FROM VENTAS_HULARUSS A
+	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp
+	WHERE Empaque <> 'Unidad'
+
 
 UPDATE A SET A.Ventakilos = (A.Cantidad * M.PesoKG) FROM VENTAS_HULARUSS A 
 	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp
@@ -1079,7 +1112,7 @@ UPDATE A SET A.Ventakilos = (A.Cantidad * M.PesoKG) FROM VENTAS_HULARUSS A
 TRUNCATE TABLE PLAN_HULARUSS;
 
 BULK INSERT PLAN_HULARUSS
-FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\PLANES_HULARUSS_MAY.csv'
+FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\PLANES_HULARUSS_JUN.csv'
 WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
 
 UPDATE A SET Fecha = REPLACE(Fecha, '.', '/') FROM PLAN_HULARUSS A;
@@ -1139,47 +1172,32 @@ FROM VENTAS_HULARUSS A
 --SELECT * FROM #HULARUSS WHERE  FacUnitario is null VentaKil=0 AND VentaDolares= 0 AND Plan_Dol = 0 AND Plan_Ton = 0
 --Solo deben salir 28 rows por los datos ficticios simpre y cuando lo corra desde la línea donde se agregan
 
+--Creo tabla temporal para insertar variables Dummies ya que no todas los sku tienen registros suficientes y asi no se desconfigure el excel
+IF OBJECT_ID(N'tempdb..#HULARUSS_DUMMY') IS NOT NULL DROP TABLE #HULARUSS_DUMMY;
+
+SELECT B.Fecha, A.Agencia, C.CodAlicorp
+INTO #HULARUSS_DUMMY
+FROM (SELECT DISTINCT Agencia FROM #HULARUSS) A CROSS JOIN #FECHA B
+CROSS JOIN (SELECT DISTINCT CodAlicorp FROM #HULARUSS) C
+
+
+INSERT INTO #HULARUSS
+SELECT A.Fecha Fecha, A.Agencia Agencia, 'Dummy' Vendedor_Distribuidora, 'Dummy' Tipo_tienda_Distribuidora,  A.CodAlicorp CodAlicorp,
+	   0 FacUnitario, 0 TUnidades, 0  Plan_Ton, 0 Ventakil, 0 Plan_Dol, 0 VentaDolares,
+	   'Consumo Masivo' Negocio
+FROM #HULARUSS_DUMMY A
+
+
+
 ALTER TABLE #HULARUSS ALTER COLUMN Plan_Ton FLOAT;
 ALTER TABLE #HULARUSS ALTER COLUMN Plan_Dol FLOAT;
 
---Inserto información ficticia del año pasado y del mes pasado para que no altere el reporte de excel esta informacion tiene ventas y plan 0
-INSERT INTO #HULARUSS VALUES (@d2,'MCH', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
-INSERT INTO #HULARUSS VALUES (@d2,'GYE', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
-INSERT INTO #HULARUSS VALUES (@d2,'CUE', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
-INSERT INTO #HULARUSS VALUES (@d2,'AMB', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
-INSERT INTO #HULARUSS VALUES (@d2,'MNB', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
-INSERT INTO #HULARUSS VALUES (@d2,'STO', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
-INSERT INTO #HULARUSS VALUES (@d2,'ESM', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
-INSERT INTO #HULARUSS VALUES (@d2,'QVD', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
-INSERT INTO #HULARUSS VALUES (@d2,'STE', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
-INSERT INTO #HULARUSS VALUES (@d2,'MLG', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
-INSERT INTO #HULARUSS VALUES (@d2,'UIO', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
-INSERT INTO #HULARUSS VALUES (@d2,'LOJ', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
-INSERT INTO #HULARUSS VALUES (@d2,'IBR', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
 
-INSERT INTO #HULARUSS VALUES (@d3,'MCH', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
-INSERT INTO #HULARUSS VALUES (@d3,'GYE', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
-INSERT INTO #HULARUSS VALUES (@d3,'CUE', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
-INSERT INTO #HULARUSS VALUES (@d3,'AMB', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
-INSERT INTO #HULARUSS VALUES (@d3,'MNB', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
-INSERT INTO #HULARUSS VALUES (@d3,'STO', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
-INSERT INTO #HULARUSS VALUES (@d3,'ESM', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
-INSERT INTO #HULARUSS VALUES (@d3,'QVD', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
-INSERT INTO #HULARUSS VALUES (@d3,'STE', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
-INSERT INTO #HULARUSS VALUES (@d3,'MLG', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
-INSERT INTO #HULARUSS VALUES (@d3,'UIO', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
-INSERT INTO #HULARUSS VALUES (@d3,'LOJ', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
-INSERT INTO #HULARUSS VALUES (@d3,'IBR', 'H-SIN ASIGNAR', 'H-SIN ASIGNAR','8410177',20,0,0,0,0,0,'Consumo Masivo');
-
-
---INSERT INTO #PANALES VALUES (@d3,'156150076','8410177',0,0,0,0.000001,'MARCAS TERCEROS');
---INSERT INTO #PANALES VALUES (@d3,'156131204','8410177',0,0,0,0.000001,'MARCAS TERCEROS');
---INSERT INTO #PANALES VALUES (@d3,'156163360','8410177',0,0,0,0.000001,'MARCAS TERCEROS');
 UPDATE #HULARUSS 
 SET Fecha = RIGHT(Fecha,9)
 WHERE Fecha LIKE '0_/%'
 
--- Para el proyecto de tablero de Valery
+-- Para el proyecto de tablero
 
 INSERT INTO VENTAS_TABLERO
 SELECT F.DES_MES Mes, A.Fecha Dia,
@@ -1241,17 +1259,17 @@ TRUNCATE TABLE VENTAS_PYDACO_SELL_OUT;
 INSERT INTO VENTAS_PYDACO_SELL_OUT
 SELECT *
 FROM PYDACO_HISTORICO
+WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 06;
+
+INSERT INTO VENTAS_PYDACO_SELL_OUT
+SELECT *
+FROM PYDACO_HISTORICO
+WHERE DATEPART(YEAR,Fecha) = 2021 AND DATEPART(MONTH,Fecha) = 06;
+
+INSERT INTO VENTAS_PYDACO_SELL_OUT
+SELECT *
+FROM PYDACO_HISTORICO
 WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 05;
-
-INSERT INTO VENTAS_PYDACO_SELL_OUT
-SELECT *
-FROM PYDACO_HISTORICO
-WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 04;
-
-INSERT INTO VENTAS_PYDACO_SELL_OUT
-SELECT *
-FROM PYDACO_HISTORICO
-WHERE DATEPART(YEAR,Fecha) = 2021 AND DATEPART(MONTH,Fecha) = 05;
 
 
 UPDATE A SET Agencia = TRIM(Agencia) FROM VENTAS_PYDACO_SELL_OUT A;
@@ -1263,7 +1281,7 @@ UPDATE A SET CodClienteSellOut = TRIM(CodClienteSellOut) FROM VENTAS_PYDACO_SELL
 --Creo tabla temporal para homologar los campos y darle formato a la fecha, tambien calculo las toneladas , VentaKilos real_ton
 IF OBJECT_ID(N'tempdb..#PYDACO') IS NOT NULL DROP TABLE #PYDACO; 
 
-SELECT CONVERT(VARCHAR(20), A.Fecha, 103) Fecha, A.Agencia Agencia, A.CodClienteSellOut, A.ClienteSellOut,  A.Vendedor_Distribuidora, 'H-SIN ASIGNAR' Tipo_tienda_Distribuidora, M.CodAlicorp CodAlicorp,
+SELECT CONVERT(VARCHAR(20), A.Fecha, 103) Fecha, A.Agencia Agencia, A.CodClienteSellOut, A.ClienteSellOut,  A.Vendedor_Distribuidora, 'SIN ASIGNAR - PYCO' Tipo_tienda_Distribuidora, M.CodAlicorp CodAlicorp,
 	   A.TUnidades, 0  Plan_Ton, 0 Plan_Dol, A.Importe real_Dolares,
 	   'Consumo Masivo' Negocio
 INTO #PYDACO
@@ -1328,7 +1346,7 @@ UPDATE A SET CodClienteSellOut = TRIM(CodClienteSellOut) FROM #CONSOLIDADO0 A;
 
 IF OBJECT_ID(N'tempdb..#CONSOLIDADO0_1') IS NOT NULL DROP TABLE #CONSOLIDADO0_1; 
 
-SELECT A.Fecha Fecha, A.Agencia Agencia, A.CodClienteSellOut, A.ClienteSellOut,  A.Vendedor_Distribuidora, 'H-SIN ASIGNAR' Tipo_tienda_Distribuidora,
+SELECT A.Fecha Fecha, A.Agencia Agencia, A.CodClienteSellOut, A.ClienteSellOut,  A.Vendedor_Distribuidora, 'SIN ASIGNAR - PYCO' Tipo_tienda_Distribuidora,
 	   MP.CodAlicorp, M.CodFamilia, M.Familia,
 	   A.TUnidades, 0  Plan_Ton, 0 Plan_Dol, A.Importe/1000 real_Dolares, A.TUnidades*M.PesoTon real_ton,
 	   'Consumo Masivo' Negocio
@@ -1440,15 +1458,10 @@ GROUP BY A.Dia
 --, A.CodFamilia, B.CodFamilia, B.Familia
 
 --SELECT * from #CONSOLIDADO2
---where codfamilia = '1003012081'AND Agencia = 'ESMERALDAS' order by 1 asc, 3 asc , 2 asc 
 --SELECT * FROM #CONSOLIDADO3 where codfamilia = '1003012081'  and codfamilia2 = '1003012081' AND Agencia = 'ESMERALDAS' ORDER BY 1 ASC,3 ASC, 2 ASC 36.23656  249.32736
 --ORDER BY 1 ASC,2 ASC
 --SELECT * FROM #CONSOLIDADO2  where codfamilia = '5016105811' ORDER BY 1 ASC,2 ASC   396.26518
--- 1 Dia Rellenas  1.32778
---2 Dia Rellenas  14.12782 SELECT (1.32778 + 14.12782) 15.4556
--- 3 Dia Rellenas 30.25043 SELECT (1.32778 + 14.12782+ 30.25043) 45.70603
---SELECT 0.10289 +0.73249+0.75286 PLUSBRLLE 1
---SELECT 0.00293+0.29795+0.10317 PLUSBRLLE 1
+
 
 IF OBJECT_ID(N'tempdb..#CONSOLIDADO4') IS NOT NULL  DROP TABLE #CONSOLIDADO4;
 
@@ -1604,9 +1617,6 @@ ALTER TABLE VENTAS_PYDACO ALTER COLUMN Fecha DATE NOT NULL;
 SET LANGUAGE US_ENGLISH;
 
 UPDATE VENTAS_PYDACO SET Fecha = CASE WHEN Fecha > @dia THEN @dia ELSE Fecha END;
-
---VER TEMA VENDEDORES, DISTRIBUIDORES , CLIENTES DE CLIENTES, ver el tema de unidades x2, ver lo de agencias 
-
 UPDATE A SET CodAlicorp = TRIM(CodAlicorp) FROM VENTAS_PYDACO A; 
 UPDATE A SET Agencia = TRIM(Agencia) FROM VENTAS_PYDACO A;
 UPDATE A SET NombreDistribuidor = TRIM(NombreDistribuidor) FROM VENTAS_PYDACO A;
@@ -1752,7 +1762,7 @@ SELECT F.DES_MES Mes, A.Fecha Dia,
 	   M.CodCategoria CodCategoria, M.Categoria Categoria, M.CodFamilia CodFamilia, M.Familia Familia, A.CodAlicorp CodAlicorp, M.Material Material, M.CodMarca CodMarca, M.Marca Marca,
 	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
 	   AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
-	   A.Vendedor_Distribuidora, 'SIN ASIGNAR - PYCO' Tipo_tienda_Distribuidora, A.CodClienteSellOut, A.ClienteSellOut,
+	   A.Vendedor_Distribuidora, A.Tipo_tienda_Distribuidora, A.CodClienteSellOut, A.ClienteSellOut,
 	   'Consumo Masivo' Negocio, M.FacUnitario, SUM(ISNULL(A.TUnidades,0)) TUnidades, SUM(ISNULL(A.Plan_Ton,0)) Plan_Ton,
 	  SUM(ISNULL((A.TUnidades*M.PesoTon),0)) real_ton, SUM(ISNULL(A.Plan_Dol,0)) Plan_Dol, SUM(ISNULL(A.real_Dolares/1000,0)) real_Dolares,
 	  M.Plataforma Plataforma
@@ -1764,14 +1774,14 @@ GROUP BY F.DES_MES, A.Fecha,
 	     M.CodCategoria, M.Categoria, M.CodFamilia, M.Familia, A.CodAlicorp, M.Material, M.CodMarca, M.Marca,
 	     AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
 	     AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
-	     A.Vendedor_Distribuidora,  A.CodClienteSellOut, A.ClienteSellOut,
+	     A.Vendedor_Distribuidora, A.Tipo_tienda_Distribuidora, A.CodClienteSellOut, A.ClienteSellOut,
 	     M.FacUnitario, M.Plataforma;
 
 ----------------------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------------------
 
 IF OBJECT_ID('VENTAS_CONSOLIDADO') IS NOT NULL DROP TABLE VENTAS_CONSOLIDADO;
---Creo tabla donde consolido la información de la tabla tablero 
+--Creo tabla donde consolido la información de la tabla tablero
 --En esta tabla se va a insertar la información de todas las distribuidoras
 SELECT A.Mes, A.Dia,
 	   A.CodCategoria, A.Categoria, A.CodFamilia, A.Familia, A.CodMarca, A.Marca,
