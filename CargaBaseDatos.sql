@@ -797,7 +797,13 @@ UPDATE PLAN_PANALES
 SET CodMarca = RIGHT(CodMarca,2)
 WHERE CodMarca LIKE '0%';
 -- Debido a que cuando subo la información del csv se agrega un cero a la izquierda
-	 
+
+
+
+UPDATE PLAN_PANALES 
+SET Fecha = RIGHT(Fecha,9)
+WHERE Fecha LIKE '0_/%';
+
 
 UPDATE PLAN_PANALES
 SET CodAlicorp = CASE CodAlicorp
@@ -863,6 +869,12 @@ UPDATE PLAN_2MAYA
 SET CodMarca = RIGHT(CodMarca,2)
 WHERE CodMarca LIKE '0%';
 -- Debido a que cuando subo la información del csv se agrega un cero a la izquierda
+
+
+UPDATE PLAN_2MAYA 
+SET Fecha = RIGHT(Fecha,9)
+WHERE Fecha LIKE '0_/%';
+
 	 
 
 UPDATE PLAN_2MAYA
@@ -1014,8 +1026,9 @@ ALTER TABLE HULARUSS_HISTORICO ALTER COLUMN VentaKilos VARCHAR(100);
 ALTER TABLE HULARUSS_HISTORICO ALTER COLUMN importe VARCHAR(100);
 ALTER TABLE HULARUSS_HISTORICO ALTER COLUMN Cantidad VARCHAR(100);
 
+
 BULK INSERT HULARUSS_HISTORICO
-FROM 'C:\Proyectos\Ecuador\HULARUSS\VentasHularuss.csv'
+FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\VentasHularuss_JUN.csv'
 WITH (FIELDTERMINATOR= ';', FIRSTROW=2, CODEPAGE='ACP');
 
 
@@ -1143,6 +1156,12 @@ UPDATE PLAN_HULARUSS
 SET CodMarca = RIGHT(CodMarca,2)
 WHERE CodMarca LIKE '0%';
 -- Debido a que cuando subo la información del csv se agrega un cero a la izquierda
+
+
+UPDATE PLAN_HULARUSS 
+SET Fecha = RIGHT(Fecha,9)
+WHERE Fecha LIKE '0_/%'
+
 	 
 
 UPDATE PLAN_HULARUSS
@@ -1159,6 +1178,9 @@ SET CodAlicorp = CASE CodAlicorp
 UPDATE PLAN_HULARUSS
 SET Cliente = '1000029726'
 WHERE Cliente = '1000029761';
+
+DELETE FROM PLAN_HULARUSS WHERE Cliente = '1000029671'
+--preguntar hasta cuando sera este DELETE
 
 --Creo tabla temporal para homologar los campos y darle formato a la fecha, tambien calculo las toneladas
 IF OBJECT_ID(N'tempdb..#HULARUSS') IS NOT NULL DROP TABLE #HULARUSS;
