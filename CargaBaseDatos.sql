@@ -1179,8 +1179,9 @@ UPDATE PLAN_HULARUSS
 SET Cliente = '1000029726'
 WHERE Cliente = '1000029761';
 
-DELETE FROM PLAN_HULARUSS WHERE Cliente = '1000029671'
---preguntar hasta cuando sera este DELETE
+UPDATE PLAN_HULARUSS
+SET Cliente = '1000029732'
+WHERE Cliente = '1000029671';
 
 --Creo tabla temporal para homologar los campos y darle formato a la fecha, tambien calculo las toneladas
 IF OBJECT_ID(N'tempdb..#HULARUSS') IS NOT NULL DROP TABLE #HULARUSS;
