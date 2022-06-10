@@ -847,7 +847,8 @@ DELETE FROM PLAN_2MAYA WHERE Plan_Dol IS NULL AND Plan_Ton IS NULL;
 DELETE FROM PLAN_2MAYA WHERE Plan_Dol = '' AND Plan_Ton = '';
 
 --Cada vez que haya una nueva agencia incluirlo aca que se considerara en el reporte incluirla aca
-DELETE FROM PLAN_2MAYA WHERE NomOficina NOT IN ('NEOPOR S.A.', 'PULLA', 'MARVECOBE S.A', 'HARO') 
+DELETE FROM PLAN_2MAYA WHERE NomOficina NOT IN ('NEOPOR S.A.', 'PULLA', 'MARVECOBE S.A', 'HARO')
+--DELETE FROM PLAN_2MAYA WHERE NomOficina NOT IN ('NEOPOR S.A.', 'PULLA', 'MARVECOBE S.A', 'HARO', 'ALVAREZ') 
 --PREGUNTAR HASTA CUANDO SERA ESTO
 
 UPDATE A SET CodCategoria = TRIM(CodCategoria) FROM PLAN_2MAYA A;
