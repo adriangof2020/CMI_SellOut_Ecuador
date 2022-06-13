@@ -750,7 +750,6 @@ UPDATE BASE_MOBILVENDOR_AUTOMATICA SET CodAlicorp = '8325021' WHERE CodAlicorp =
 UPDATE BASE_MOBILVENDOR_AUTOMATICA SET CodAlicorp = '3300063' WHERE CodAlicorp = 'AD0244';
 
 
-
 --DELETE FROM BASE_MOBILVENDOR_AUTOMATICA WHERE Agencia IN ( )
 --DELETE FROM BASE_MOBILVENDOR_AUTOMATICA WHERE Agencia  NOT IN ('156150253', '156163360', '156131204', '156150076', '156148774', '156117292')
 --('156150253', '156163360', '156131204', '156150076')
@@ -794,8 +793,6 @@ CROSS JOIN (SELECT DISTINCT CodAlicorp FROM #PANALES) C
 --FROM #PANALES_DUMMY1 A
 
 
-
-
 --Ingreso los planes
 
 TRUNCATE TABLE PLAN_PANALES;
@@ -837,11 +834,6 @@ WHERE CodMarca LIKE '0%';
 -- Debido a que cuando subo la información del csv se agrega un cero a la izquierda
 
 
-
-
-
-
-
 UPDATE PLAN_PANALES 
 SET Fecha = RIGHT(Fecha,9)
 WHERE Fecha LIKE '0_/%';
@@ -875,11 +867,6 @@ INSERT INTO #PANALES_DUMMY1
 SELECT B.Fecha, A.Agencia, C.CodAlicorp
 FROM  (SELECT F.Agencia FROM (SELECT DISTINCT NomOficina FROM PLAN_PANALES) D LEFT JOIN MAESTRO_AGENCIAS F ON D.NomOficina = F.NomOficina)  A CROSS JOIN #FECHA B
 CROSS JOIN (SELECT DISTINCT CodAlicorp FROM PLAN_PANALES) C
-
-
-
------------------------------------------------------------------------------------------------------------
--------------------------------------------------------------------------------------------------------------------------
 
 
 TRUNCATE TABLE PLAN_2MAYA;
@@ -922,15 +909,9 @@ WHERE CodMarca LIKE '0%';
 -- Debido a que cuando subo la información del csv se agrega un cero a la izquierda
 
 
-
-
-
-
-
 UPDATE PLAN_2MAYA 
 SET Fecha = RIGHT(Fecha,9)
 WHERE Fecha LIKE '0_/%';
-
 	 
 
 UPDATE PLAN_2MAYA
@@ -966,8 +947,6 @@ SELECT A.Fecha Fecha, A.Agencia Agencia, 'Dummy' CodClienteSellOut, 'Dummy' Clie
 	   0 FacUnitario, 0 TUnidades, 0  Plan_Ton, 0 VentaTon, 0 Plan_Dol, 0 VentaDolares,
 	   'Consumo Masivo' Negocio
 FROM #PANALES_DUMMY1 A
-
-
 
 
 UPDATE #PANALES 
