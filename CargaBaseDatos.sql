@@ -313,6 +313,7 @@ UPDATE BASE_MOBILVENDOR_AUTOMATICA SET CodAlicorp = '4302037' WHERE CodAlicorp =
 UPDATE BASE_MOBILVENDOR_AUTOMATICA SET CodAlicorp = '8325017' WHERE CodAlicorp = 'AD0222';
 UPDATE BASE_MOBILVENDOR_AUTOMATICA SET CodAlicorp = '8325021' WHERE CodAlicorp = 'AD0223';
 UPDATE BASE_MOBILVENDOR_AUTOMATICA SET CodAlicorp = '3300063' WHERE CodAlicorp = 'AD0244';
+UPDATE BASE_MOBILVENDOR_AUTOMATICA SET CodAlicorp = '8305209' WHERE CodAlicorp = '83052090';
 
 
 --DELETE FROM BASE_MOBILVENDOR_AUTOMATICA WHERE Agencia IN ( )
@@ -333,10 +334,11 @@ FROM BASE_MOBILVENDOR_AUTOMATICA A
 
 --DELETE FROM #PANALES WHERE   FacUnitario is null
 
---SELECT  distinct CodAlicorp FROM #PANALES WHERE   FacUnitario is null and agencia in ('156150253', '156163360', '156131204', '156150076') = '8410177' VentaTon=0 AND VentaDolares= 0 AND Plan_Dol = 0
+--SELECT  *  FROM #PANALES WHERE   FacUnitario is null and agencia in ('156150253', '156163360', '156131204', '156150076') = '8410177' VentaTon=0 AND VentaDolares= 0 AND Plan_Dol = 0
 DELETE FROM #PANALES WHERE CodAlicorp IN ('AD0220', 'AD0221', 'AD0224', 'AD0225', 'AD0226', 'AD0227', 'AD0228', 'AD0229', 'AD0230', 'AD0231', 'AD0232', 'AD0233', 'AD0234', 'AD0241', 'AD0242', 'AD0243', 'AD0246', 'AD0247',
                                           'AD0248', 'Ali001', 'Ali002', 'Ali003', 'Ali005', 'Ali007', 'Ali008', 'Ali009', 'Ali011', 'Ali013', 'Ali015', 'Ali016', 'Ali017', 'Ali10', 'AD0219', 'AD0215', 'AD0218', 'Ali006',
-										  'AD0217', 'ESPAPROM', 'AD0103', 'AD239', 'Ali014', 'ALIC063', 'H450C200', 'H523B017', 'H523B222', 'H523B223', 'P.33001461', '617080', '688320', '484168')
+										  'AD0217', 'ESPAPROM', 'AD0103', 'AD239', 'Ali014', 'ALIC063', 'H450C200', 'H523B017', 'H523B222', 'H523B223', 'P.33001461', '617080', '688320', '484168', '29116B', '453-G', '648-001', 'AMB360',
+										  'H180-G', 'MY', 'SP', 'TALL')
 
 ALTER TABLE #PANALES ALTER COLUMN Plan_Ton FLOAT;
 ALTER TABLE #PANALES ALTER COLUMN VentaTon FLOAT;
@@ -521,7 +523,8 @@ WHERE Fecha LIKE '0_/%'
 --------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------
 -- Para el proyecto de tablero
-INSERT INTO VENTAS_TABLERO
+IF OBJECT_ID('VENTAS_TABLERO') IS NOT NULL DROP TABLE VENTAS_TABLERO;
+
 SELECT F.DES_MES Mes, A.Fecha Dia,
 	   M.CodCategoria CodCategoria, M.Categoria Categoria, M.CodFamilia CodFamilia, M.Familia Familia, M.CodAlicorp CodAlicorp, M.Material Material, M.CodMarca CodMarca, M.Marca Marca,
 	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
@@ -530,6 +533,7 @@ SELECT F.DES_MES Mes, A.Fecha Dia,
 	   A.Negocio, A.FacUnitario, SUM(ISNULL(A.TUnidades,0)) TUnidades, SUM(ISNULL(A.Plan_Ton,0)) Plan_Ton,
 	  SUM(ISNULL(A.VentaTon,0)) real_ton, SUM(ISNULL(A.Plan_Dol,0)) Plan_Dol, SUM(ISNULL(A.VentaDolares,0)/1000) real_Dolares,
 	  M.Plataforma Plataforma
+INTO VENTAS_TABLERO
 FROM #PANALES A
 	LEFT JOIN BD_FECHAS F ON  A.Fecha= F.DIA
 	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp
