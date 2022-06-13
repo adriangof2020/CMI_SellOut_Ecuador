@@ -1132,7 +1132,6 @@ DELETE FROM VENTAS_HULARUSS WHERE Importe =0;
 --Ver este delete
 
 
-
 --UPDATE A SET PesoKG = TRIM(PesoKG) FROM BASE_MOBILVENDOR_AUTOMATICA A;
 --UPDATE A SET PesoTon = TRIM(PesoTon) FROM BASE_MOBILVENDOR_AUTOMATICA A;
 
@@ -1157,7 +1156,6 @@ UPDATE A SET A.Ventakilos = (A.Cantidad * M.PesoKG) FROM VENTAS_HULARUSS A
 	WHERE A.Ventakilos = 0
 
 
-
 --Creo tabla temporal para homologar los campos y darle formato a la fecha, tambien calculo las toneladas
 IF OBJECT_ID(N'tempdb..#HULARUSS') IS NOT NULL DROP TABLE #HULARUSS;
 
@@ -1179,14 +1177,8 @@ FROM (SELECT DISTINCT Agencia FROM #HULARUSS) A CROSS JOIN #FECHA B
 CROSS JOIN (SELECT DISTINCT CodAlicorp FROM #HULARUSS) C
 
 
-
-
-
-
 ALTER TABLE #HULARUSS ALTER COLUMN Plan_Ton FLOAT;
 ALTER TABLE #HULARUSS ALTER COLUMN Plan_Dol FLOAT;
-
-
 
 
 --Inserto plan Hularuss
@@ -1230,7 +1222,6 @@ UPDATE PLAN_HULARUSS
 SET Fecha = RIGHT(Fecha,9)
 WHERE Fecha LIKE '0_/%'
 
-	 
 
 UPDATE PLAN_HULARUSS
 SET CodAlicorp = CASE CodAlicorp
@@ -1252,12 +1243,10 @@ SET Cliente = '1000029732'
 WHERE Cliente = '1000029671';
 
 
-
 INSERT INTO #HULARUSS_DUMMY
 SELECT B.Fecha, A.Agencia, C.CodAlicorp
 FROM  (SELECT F.Agencia FROM (SELECT DISTINCT Cliente FROM PLAN_HULARUSS) D LEFT JOIN MAESTRO_AGENCIAS F ON D.Cliente = F.CodOficina)  A CROSS JOIN #FECHA B
 CROSS JOIN (SELECT DISTINCT CodAlicorp FROM PLAN_HULARUSS) C
-
 
 
 INSERT INTO #HULARUSS
@@ -1265,8 +1254,6 @@ SELECT A.Fecha Fecha, A.Agencia Agencia, 'Dummy' Vendedor_Distribuidora, 'Dummy'
 	   0 FacUnitario, 0 TUnidades, 0  Plan_Ton, 0 Ventakil, 0 Plan_Dol, 0 VentaDolares,
 	   'Consumo Masivo' Negocio
 FROM #HULARUSS_DUMMY A
-
-
 
 
 UPDATE #HULARUSS 
