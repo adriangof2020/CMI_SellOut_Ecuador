@@ -1318,10 +1318,11 @@ GROUP BY F.DES_MES, A.Fecha,
 -----------------------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------------
 --PYDACO
+-- Usar cada vez para cargar meses nuevo al histórico
 --SET LANGUAGE SPANISH;
 
 --BULK INSERT PYDACO_HISTORICO
---FROM 'C:\Proyectos\Ecuador\PYDACO\ABRIL2022.csv'
+--FROM 'C:\Proyectos\Ecuador\PYDACO\MAYO2022.csv'
 --WITH (FIELDTERMINATOR = ';', FIRSTROW = 2, CODEPAGE = 'ACP') 
 ----USAR CADA VEZ QUE SE TENGA LA INFO DEL MES CERRADO
 --SET LANGUAGE US_ENGLISH;
