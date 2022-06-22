@@ -1068,7 +1068,7 @@ WITH (
 	Vendedor VARCHAR(100),
 	Categoria VARCHAR(100)
 )
-WHERE YEAR(Fecha) = YEAR(@dia) AND MONTH(Fecha) = MONTH(@dia);
+WHERE YEAR(Fecha) = 2022 AND MONTH(Fecha) = 06;
  
 
 --BULK INSERT HULARUSS_HISTORICO
