@@ -765,6 +765,7 @@ UPDATE A SET CodAlicorp = TRIM(CodAlicorp) FROM VENTAS_HULARUSS A;
 UPDATE A SET Agencia = TRIM(Agencia) FROM VENTAS_HULARUSS A;
 UPDATE A SET Empaque = TRIM(Empaque) FROM VENTAS_HULARUSS A;
 UPDATE A SET CodClienteSellOut = TRIM(CodClienteSellOut) FROM VENTAS_HULARUSS A
+UPDATE A SET Canal = TRIM(Canal) FROM VENTAS_HULARUSS A
 
 UPDATE VENTAS_HULARUSS SET CodAlicorp = REPLACE(CodAlicorp, 'A', '')
 
@@ -810,6 +811,9 @@ UPDATE A SET A.Ventakilos = (A.Cantidad * M.PesoKG) FROM VENTAS_HULARUSS A
 	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp
 	WHERE A.Ventakilos = 0
 
+UPDATE A SET A.Canal = 'MAYORISTAS' FROM VENTAS_HULARUSS A 
+	WHERE  A.Canal <> 'TAT'
+
 
 --Creo tabla temporal para homologar los campos y darle formato a la fecha, tambien calculo las toneladas
 IF OBJECT_ID(N'tempdb..#HULARUSS') IS NOT NULL DROP TABLE #HULARUSS;
@@ -819,8 +823,9 @@ SELECT CONVERT(VARCHAR(20), A.Fecha,103) Fecha, A.Agencia Agencia, 'H-SIN ASIGNA
 	   'Consumo Masivo' Negocio
 INTO #HULARUSS
 FROM VENTAS_HULARUSS A
-	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp;
---SELECT * FROM #HULARUSS WHERE  FacUnitario is null VentaKil=0 AND VentaDolares= 0 AND Plan_Dol = 0 AND Plan_Ton = 0
+	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp
+--WHERE A.Canal = 'MAYORISTAS';
+--SELECT sum(VentaDolares) FROM #HULARUSS WHERE  FacUnitario is null VentaKil=0 AND VentaDolares= 0 AND Plan_Dol = 0 AND Plan_Ton = 0
 --Solo deben salir 28 rows por los datos ficticios simpre y cuando lo corra desde la línea donde se agregan
 
 --Creo tabla temporal para insertar variables Dummies ya que no todas los sku tienen registros suficientes y asi no se desconfigure el excel
