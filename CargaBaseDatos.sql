@@ -1071,7 +1071,7 @@ GROUP BY F.DES_MES, A.Fecha,
 --	   AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
 --	   'SIN ASIGNAR - HU_PLAN ' Vendedor_Distribuidora, 'SIN ASIGNAR - HU_PLAN ' Tipo_tienda_Distribuidora, 'SIN ASIGNAR - HU' CodClienteSellOut, 'SIN ASIGNAR - HU' ClienteSellOut,
 --	   'Consumo Masivo' Negocio, 0 FacUnitario, 0 TUnidades, SUM(ISNULL(A.Plan_Ton,0)) Plan_Ton,
---	  0 real_ton, SUM(ISNULL(A.Plan_Dol,0)) Plan_Dol, 0 real_Dolares,
+--	  0 real_ton, SUM(ISNULL(A.Plan_Dol/1000,0)) Plan_Dol, 0 real_Dolares,
 --	  M.Plataforma Plataforma
 --FROM #HULARUSS_PLAN_NUEVO_MAYOR A
 --	LEFT JOIN BD_FECHAS F ON  A.Fecha= F.DIA
