@@ -909,6 +909,100 @@ FROM  (SELECT F.Agencia FROM (SELECT DISTINCT Cliente FROM PLAN_HULARUSS) D LEFT
 CROSS JOIN (SELECT DISTINCT CodAlicorp FROM PLAN_HULARUSS) C
 
 
+--SET LANGUAGE US_ENGLISH;
+
+--TRUNCATE TABLE NuevoPlanHularussFormato;
+
+--BULK INSERT NuevoPlanHularussFormato
+--FROM 'C:\Proyectos\Ecuador\HULARUSS\NuevoPlanHularussFormato.csv'
+--WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
+
+--DELETE FROM NuevoPlanHularussFormato WHERE CodAlicorp LIKE '%TOTAL%'
+
+--UPDATE A SET CodAlicorp = TRIM(CodAlicorp) FROM NuevoPlanHularussFormato A;
+--UPDATE A SET Canal = TRIM(Canal) FROM NuevoPlanHularussFormato A;
+--UPDATE NuevoPlanHularussFormato SET CodAlicorp = LEFT(CodAlicorp,CHARINDEX(' ',CodAlicorp)-1);
+
+--IF OBJECT_ID(N'tempdb..#HULARUSS_PLAN_NUEVO') IS NOT NULL DROP TABLE #HULARUSS_PLAN_NUEVO;
+
+--SELECT Canal, CodAlicorp, NomOficina, MontoCantidad
+--INTO #HULARUSS_PLAN_NUEVO
+--FROM
+--(SELECT * FROM NuevoPlanHularussFormato) PLAN_HULARUSS
+--UNPIVOT
+--(MontoCantidad FOR NomOficina IN (AMBATO,AMBATO_TN,CHONE,CHONE_TN,CUENCA,CUENCA_TN,ESMERALDAS,ESMERALDAS_TN,GUAYAQUIL,GUAYAQUIL_TN,IBARRA,IBARRA_TN,LOJA,LOJA_TN,MACHALA,MACHALA_TN,
+--MANABI,MANABI_TN,MILAGRO,MILAGRO_TN,ORIENTE,ORIENTE_TN,QUEVEDO,QUEVEDO_TN,QUITO,QUITO_TN,[SANTA ELENA],[SANTA ELENA_TN],[SANTO DGO],[SANTO DGO_TN])) AS PLAN_UNPIVOT
+
+--UPDATE A SET Canal = 'MINORISTAS' FROM #HULARUSS_PLAN_NUEVO A  WHERE Canal = 'TIENDA';
+
+--DELETE FROM #HULARUSS_PLAN_NUEVO WHERE NomOficina IN ('CHONE', 'CHONE_TN', 'ORIENTE', 'ORIENTE_TN' )
+
+--IF OBJECT_ID(N'tempdb..#HULARUSS_PLAN_NUEVO_TON') IS NOT NULL DROP TABLE #HULARUSS_PLAN_NUEVO_TON;
+
+--SELECT *
+--INTO #HULARUSS_PLAN_NUEVO_TON
+--FROM #HULARUSS_PLAN_NUEVO
+--WHERE NomOficina IN('AMBATO_TN','CHONE_TN','CUENCA_TN','ESMERALDAS_TN','GUAYAQUIL_TN',
+--'IBARRA_TN','LOJA_TN','MACHALA_TN','MANABI_TN','MILAGRO_TN','ORIENTE_TN','QUEVEDO_TN',
+--'QUITO_TN','SANTA ELENA_TN','SANTO DGO_TN')
+
+--UPDATE A SET NomOficina = LEFT(NomOficina,LEN(NomOficina)-3) FROM #HULARUSS_PLAN_NUEVO_TON A;
+----SELECT * FROM #HULARUSS_PLAN_NUEVO_TON WHERE MontoCantidad IS NULL
+
+--IF OBJECT_ID(N'tempdb..#HULARUSS_PLAN_NUEVO_DOL') IS NOT NULL DROP TABLE #HULARUSS_PLAN_NUEVO_DOL;
+
+--SELECT *
+--INTO #HULARUSS_PLAN_NUEVO_DOL
+--FROM #HULARUSS_PLAN_NUEVO
+--WHERE NomOficina IN('AMBATO','CHONE','CUENCA','ESMERALDAS','GUAYAQUIL',
+--'IBARRA','LOJA','MACHALA','MANABI','MILAGRO','ORIENTE','QUEVEDO',
+--'QUITO','SANTA ELENA','SANTO DGO')
+
+--IF OBJECT_ID(N'tempdb..#HULARUSS_PLAN_NUEVO_MAYOR') IS NOT NULL DROP TABLE #HULARUSS_PLAN_NUEVO_MAYOR;
+
+--SELECT @d1 Fecha, A.Canal Canal, A.CodAlicorp CodAlicorp, A.NomOficina, A.MontoCantidad Plan_Ton, B.MontoCantidad Plan_Dol
+--INTO #HULARUSS_PLAN_NUEVO_MAYOR
+--FROM #HULARUSS_PLAN_NUEVO_TON A 
+--	LEFT JOIN #HULARUSS_PLAN_NUEVO_DOL B ON A.CodAlicorp = B.CodAlicorp AND A.NomOficina = B.NomOficina AND A.Canal = B.Canal
+--WHERE A.Canal = 'MAYORISTAS'
+
+--DELETE #HULARUSS_PLAN_NUEVO_MAYOR WHERE Plan_Dol = 0 AND Plan_Ton = 0;
+
+----select SUM(Plan_Ton) FROM #HULARUSS_PLAN_NUEVO_MAYOR
+
+--UPDATE #HULARUSS_PLAN_NUEVO_MAYOR 
+--SET Fecha = RIGHT(Fecha,9)
+--WHERE Fecha LIKE '0_/%'
+
+--UPDATE #HULARUSS_PLAN_NUEVO_MAYOR
+--SET CodAlicorp = CASE CodAlicorp
+--	WHEN '8309000' THEN '8309119'
+--	WHEN '8309001' THEN '8309120'
+--	WHEN '8309002' THEN '8309121'
+--	WHEN '8309003' THEN '8309122'
+--	WHEN '8309007' THEN '8309126'
+--	WHEN '8309009' THEN '8309128'
+--	WHEN '293369' THEN '29369' ELSE CodAlicorp END;
+
+
+
+
+
+
+
+----select SUM(Plan_Ton) FROM #HULARUSS_PLAN_NUEVO_MAYOR
+	
+--INSERT INTO #HULARUSS_DUMMY
+--SELECT B.Fecha, A.Agencia, C.CodAlicorp
+--FROM  (SELECT F.Agencia FROM (SELECT DISTINCT NomOficina FROM #HULARUSS_PLAN_NUEVO_MAYOR) D LEFT JOIN MAESTRO_AGENCIAS F ON D.NomOficina = F.NomOficina)  A CROSS JOIN #FECHA B
+--CROSS JOIN (SELECT DISTINCT CodAlicorp FROM #HULARUSS_PLAN_NUEVO_MAYOR) C
+
+
+
+
+
+
+
 INSERT INTO #HULARUSS
 SELECT A.Fecha Fecha, A.Agencia Agencia, 'Dummy' Vendedor_Distribuidora, 'Dummy' Tipo_tienda_Distribuidora, 'Dummy' CodClienteSellOut, A.CodAlicorp CodAlicorp,
 	   0 FacUnitario, 0 TUnidades, 0  Plan_Ton, 0 Ventakil, 0 Plan_Dol, 0 VentaDolares,
@@ -967,6 +1061,27 @@ GROUP BY F.DES_MES, A.Fecha,
 	   AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
 	   A.Plataforma;
 
+
+
+
+--INSERT INTO VENTAS_TABLERO
+--SELECT F.DES_MES Mes, A.Fecha Dia,
+--	   M.CodCategoria CodCategoria, M.Categoria Categoria, M.CodFamilia CodFamilia, M.Familia Familia, A.CodAlicorp CodAlicorp, M.Material Material, M.CodMarca CodMarca, M.Marca Marca,
+--	   AG.ZonaV2, AG.CodOficina, A.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
+--	   AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
+--	   'SIN ASIGNAR - HU_PLAN ' Vendedor_Distribuidora, 'SIN ASIGNAR - HU_PLAN ' Tipo_tienda_Distribuidora, 'SIN ASIGNAR - HU' CodClienteSellOut, 'SIN ASIGNAR - HU' ClienteSellOut,
+--	   'Consumo Masivo' Negocio, 0 FacUnitario, 0 TUnidades, SUM(ISNULL(A.Plan_Ton,0)) Plan_Ton,
+--	  0 real_ton, SUM(ISNULL(A.Plan_Dol,0)) Plan_Dol, 0 real_Dolares,
+--	  M.Plataforma Plataforma
+--FROM #HULARUSS_PLAN_NUEVO_MAYOR A
+--	LEFT JOIN BD_FECHAS F ON  A.Fecha= F.DIA
+--	LEFT JOIN MAESTRO_AGENCIAS AG ON A.NomOficina = AG.NomOficina
+--	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp
+--GROUP BY F.DES_MES, A.Fecha,
+--	   M.CodCategoria, M.Categoria, M.CodFamilia, M.Familia, A.CodAlicorp, M.Material, M.CodMarca, M.Marca,
+--	   AG.ZonaV2, AG.CodOficina, A.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
+--	   AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
+--	   M.Plataforma;
 ----------------------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------------------
 
