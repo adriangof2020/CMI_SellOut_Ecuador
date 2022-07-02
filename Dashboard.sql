@@ -83,6 +83,7 @@ SET CodAlicorp = CASE CodAlicorp
 DELETE FROM PLAN_PANALES WHERE RIGHT(Fecha,7) = '06/2022';
 --DELETE FROM PLAN_PANALES WHERE Agencia_Distribuidora IN ('ATI CAMPAÑA FLAVIA MARINA', 'MOGRO AVILA FERNANDO PATRICIO', 'CONTRERAS DELGADO WASHINGTON' )
 
+--Si en algun momento se llevan la base a otro servidor cambiarlo
 INSERT INTO PLAN_PANALES
 SELECT *
 FROM CmiSellOutEcuador.dbo.PLAN_PANALES;
