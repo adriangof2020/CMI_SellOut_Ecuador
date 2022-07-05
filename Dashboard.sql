@@ -1,6 +1,99 @@
 USE TABLERO_ECUADOR3;
 
 
+SET LANGUAGE US_ENGLISH;
+
+DECLARE @dia DATE;
+DECLARE @workday INT;
+--Dia hábil de la fecha
+DECLARE @workday_MA INT;
+--Dia hábil que hay en el mes anterior
+DECLARE @d1 AS VARCHAR(20);
+
+SELECT @dia= DATEADD(DAY,-2,SYSDATETIME());
+-- poner el último día de ventas
+SELECT @workday = DIA_UTIL FROM BD_FECHAS WHERE TRY_CONVERT(DATE,DIA,103) = @dia
+SELECT @workday_MA = DIA_UTIL FROM BD_FECHAS WHERE  TRY_CONVERT(DATE,DIA,103) = EOMONTH(@dia,-1)
+SELECT @d1= TRY_CONVERT(VARCHAR(20), TRY_CONVERT(DATE, @dia,103),103);
+
+PRINT @dia;
+PRINT @workday;
+PRINT @workday_MA;
+PRINT 'd1 '+ @d1;
+
+DECLARE @f AS DATE;
+DECLARE @d2 AS VARCHAR(20);
+DECLARE @d3 AS VARCHAR(20); 
+
+
+SELECT @f= CASE WHEN TRY_CONVERT(VARCHAR(20), TRY_CONVERT(DATE, @dia,103),103)= TRY_CONVERT(VARCHAR(10),TRY_CONVERT(DATE,EOMONTH(@dia),103),103)
+THEN TRY_CONVERT(DATE,EOMONTH(DATEADD(MONTH,-1,(@dia))),103) ELSE TRY_CONVERT(DATE, DATEADD(MONTH,-1,TRY_CONVERT(DATE, @d1, 103)),103) END;
+SELECT @d2 = TRY_CONVERT(VARCHAR(10), @f, 103);
+SELECT @d3 = TRY_CONVERT(VARCHAR(10), TRY_CONVERT(DATE,DATEADD(YEAR,-1,@dia),103),103); 
+
+PRINT 'd2  '+ @d2;
+PRINT 'd3  '+@d3;
+
+DECLARE @M1 AS VARCHAR(20); 
+DECLARE @M2 AS VARCHAR(20);
+DECLARE @M3 AS VARCHAR(20);
+
+SELECT @M1= PER FROM BD_FECHAS WHERE TRY_CONVERT(VARCHAR(10),TRY_CONVERT(DATE,DIA,103),103) = @d1;
+SELECT @M2= PER FROM BD_FECHAS WHERE TRY_CONVERT(VARCHAR(10),TRY_CONVERT(DATE,DIA,103),103)  = @d2;
+SELECT @M3= PER FROM BD_FECHAS WHERE TRY_CONVERT(VARCHAR(10),TRY_CONVERT(DATE,DIA,103),103)  = @d3;
+ 
+PRINT @M1;
+PRINT @M2;
+PRINT @M3;
+
+ --Para Pydaco
+DECLARE @MA AS DATE;
+DECLARE @MA_1 AS DATE;
+DECLARE @MA_2 AS DATE;
+DECLARE @MA_3 AS DATE;
+
+SELECT @MA = DATEADD(MONTH,-1,@dia);
+SELECT @MA_1 = DATEADD(MONTH,-2,@dia);
+SELECT @MA_2 = DATEADD(MONTH,-3,@dia);
+SELECT @MA_3 = DATEADD(MONTH,-4,@dia);
+
+PRINT @MA;
+PRINT @MA_1;
+PRINT @MA_2;
+PRINT @MA_3;
+
+
+DECLARE @dm1 AS INTEGER; 
+DECLARE @dm2 AS INTEGER;
+DECLARE @dm3 AS INTEGER;
+
+SELECT @dm1 = DIA_UTIL FROM BD_FECHAS
+WHERE TRY_CONVERT(DATETIME, DIA,103) = TRY_CONVERT(DATETIME,@d1,103);
+SELECT @dm2 = DIA_UTIL  FROM BD_FECHAS
+WHERE TRY_CONVERT(DATETIME, dia,103) = TRY_CONVERT(DATETIME,@d2,103);
+SELECT @dm3 = DIA_UTIL  FROM BD_FECHAS
+WHERE TRY_CONVERT(DATETIME, dia,103) = TRY_CONVERT(DATETIME,@d3,103);
+
+PRINT 'dm1 ' + TRY_CONVERT(VARCHAR(10),@dm1);
+PRINT 'dm2 ' +  TRY_CONVERT(VARCHAR(10),@dm2);
+PRINT 'dm3 ' +  TRY_CONVERT(VARCHAR(10),@dm3);
+
+DECLARE @DMAX AS INTEGER;
+DECLARE @DMAX2 AS INTEGER;
+DECLARE @DMAX3 AS INTEGER;
+
+SELECT @DMAX= MAX(DIA_UTIL) FROM BD_FECHAS 
+WHERE PER IN  (SELECT PER FROM BD_FECHAS WHERE TRY_CONVERT(VARCHAR(10),TRY_CONVERT(DATE,DIA,103),103)=@d1);
+SELECT @DMAX2= MAX(DIA_UTIL) FROM BD_FECHAS 
+WHERE PER IN  (SELECT PER FROM BD_FECHAS WHERE TRY_CONVERT(VARCHAR(10),TRY_CONVERT(DATE,DIA,103),103)=@d2);
+SELECT @DMAX3= MAX(DIA_UTIL) FROM BD_FECHAS 
+WHERE PER IN  (SELECT PER FROM BD_FECHAS WHERE TRY_CONVERT(VARCHAR(10),TRY_CONVERT(DATE,DIA,103),103)=@d3);
+
+PRINT @DMAX;
+PRINT @DMAX2;
+PRINT @DMAX3;
+
+
 DROP TABLE MAESTRO_ALICORP;
 
 SELECT *
@@ -263,7 +356,7 @@ SELECT AG.Agrupacion_Distribuidora Grupo_Cliente, F.Periodo Periodo,'Real' Tipo,
 	   M.Plataforma Plataforma, CONCAT(M.CodMarca,' ',M.Marca) Marca, M.CodMarca Marcacod, M.Marca Marcadesc, CONCAT(M.CodFamilia,' ',M.Familia) Familia, M.CodFamilia Familiacod, M.Familia Familiadesc,
 	   CONCAT(M.CodCategoria,' ', M.Categoria) Categoria, M.CodCategoria Categoriacod, M.Categoria Categoriadesc, M.Material Material, M.CodAlicorp Materialcod, M.Material Materialdesc,
 	   CONVERT(DATE,A.Fecha,103) Fecha, ISNULL(A.VentaDolares,0)/1000 Real_USD, A.Plan_Dol Plan_USD,	 
-	   0 Clientes_Activos, 0.96, 0.96
+	   0 Clientes_Activos, (ISNULL(A.VentaDolares,0)/1000)/@dm1 * @DMAX	PROY_LIN_DOL, 0.96
 FROM #PANALES_D A
 	LEFT JOIN BD_FECHAS F ON  A.Fecha= F.DIA
 	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp
@@ -272,82 +365,37 @@ FROM #PANALES_D A
 --Inserto plan panales
 
 INSERT INTO BASE_FINAL
-SELECT AG.Agrupacion_Distribuidora Grupo_Cliente, F.Periodo Periodo,'Real' Tipo, AG.Agencia_Distribuidora Distribuidora, A.CodClienteSellOut Cliente_Dist,
+SELECT AG.Agrupacion_Distribuidora Grupo_Cliente, F.Periodo Periodo,'NULL' Tipo, AG.Agencia_Distribuidora Distribuidora, 'NULL' Cliente_Dist,
 	   M.Plataforma Plataforma, CONCAT(M.CodMarca,' ',M.Marca) Marca, M.CodMarca Marcacod, M.Marca Marcadesc, CONCAT(M.CodFamilia,' ',M.Familia) Familia, M.CodFamilia Familiacod, M.Familia Familiadesc,
-	   CONCAT(M.CodCategoria,' ', M.Categoria) Categoria, M.CodCategoria Categoriacod, M.Categoria Categoriadesc, M.Material Material, M.CodAlicorp Materialcod, M.Material Materialdesc,
-	   CONVERT(DATE,A.Fecha,103) Fecha, ISNULL(A.VentaDolares,0)/1000 Real_USD, A.Plan_Dol Plan_USD,	 
-	   0 Clientes_Activos, 0.96, 0.96
-FROM #PANALES_D A
+	   CONCAT(M.CodCategoria,' ', M.Categoria) Categoria, M.CodCategoria Categoriacod, M.Categoria Categoriadesc, M.Material Material, A.CodAlicorp Materialcod, M.Material Materialdesc,
+	   CONVERT(DATE,A.Fecha,103) Fecha, A.Ventas_Reales Real_USD, A.Plan_Dol Plan_USD,	 
+	   0 Clientes_Activos, 0, 0
+FROM PLAN_PANALES_1 A
 	LEFT JOIN BD_FECHAS F ON  A.Fecha= F.DIA
 	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp
-	LEFT JOIN MAESTRO_AGENCIAS AG ON A.Agencia = AG.Agencia
+	LEFT JOIN MAESTRO_AGENCIAS AG ON A.Agencia_Distribuidora = AG.Agencia_Distribuidora
 
 
- INSERT INTO BASE_FINAL(Grupo_Cliente,Periodo,Distribuidora,Categoriadesc,Plan_USD,Clientes_Activos,Plataforma)
- SELECT Grupo_Cliente,periodo,distribuidora,categoria,"plan",clientes_activos, case when (len(isnull(plataforma,''))<=0 and categoria in ('Pastas','Salsas','Galletas')) then 'Foods' 
- when (len(isnull(plataforma,''))<=0 and categoria not in ('Pastas','Salsas','Galletas')) then 'Home Care'
- else plataforma end as plataforma
- --select *
- FROM MAE_PLANES
- --where distribuidora like'%MAR%'
+--Inserto plan 2Maya
+
+INSERT INTO BASE_FINAL
+SELECT AG.Agrupacion_Distribuidora Grupo_Cliente, F.Periodo Periodo,'NULL' Tipo, AG.Agencia_Distribuidora Distribuidora, 'NULL' Cliente_Dist,
+	   M.Plataforma Plataforma, CONCAT(M.CodMarca,' ',M.Marca) Marca, M.CodMarca Marcacod, M.Marca Marcadesc, CONCAT(M.CodFamilia,' ',M.Familia) Familia, M.CodFamilia Familiacod, M.Familia Familiadesc,
+	   CONCAT(M.CodCategoria,' ', M.Categoria) Categoria, M.CodCategoria Categoriacod, M.Categoria Categoriadesc, M.Material Material, A.CodAlicorp Materialcod, M.Material Materialdesc,
+	   CONVERT(DATE,A.Fecha,103) Fecha, A.Ventas_Reales Real_USD, A.Plan_Dol Plan_USD,	 
+	   0 Clientes_Activos, 0, 0
+FROM PLAN_2MAYA_1 A
+	LEFT JOIN BD_FECHAS F ON  A.Fecha= F.DIA
+	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp
+	LEFT JOIN MAESTRO_AGENCIAS AG ON A.Agencia_Distribuidora = AG.Agencia_Distribuidora
+
+
+
  
- ;
- go
 
- --alter table MAE_PLANES add Grupo_Cliente varchar(100)
 
- update a set Fecha=RIGHT(PERIODO,4)+'-0'+LEFT(PERIODO,1)+'-01'
- --select *
- from BASE_FINAL a
- where Cliente_Dist is null;
- go
+ 
 
 
 
-
-
-
- UPDATE A SET  DISTRIBUIDORA=CASE 
- WHEN DISTRIBUIDORA IN ('ARISTIDES NORMANDO TAGLE GUERRERO','TAGLE GUERRERO ARISTIDES NORMANDO') THEN 'TAGLE GUERRERO ARISTIDES NORMANDO'
- WHEN DISTRIBUIDORA IN ('COPARESA S.A N 1','COPARESA S.A.') THEN 'COPARESA S.A.'
- WHEN DISTRIBUIDORA IN ('DISTRIBUIDORA DE CONSUMO MASIVO NEOPOR S.A','NEOPOR S.A.') THEN 'NEOPOR S.A.'
- WHEN DISTRIBUIDORA IN ('ESPINOZA ZEAS MANUEL JHON','ESPINOZA ZEAS MANUEL JOHN') THEN 'ESPINOZA ZEAS MANUEL JOHN'
- WHEN DISTRIBUIDORA IN ('GUADALUPE CASTILLO ERNESTO VICEN 2','GUADALUPE CASTILLO ERNESTO VICENTE') THEN 'GUADALUPE CASTILLO ERNESTO VICENTE'
- WHEN DISTRIBUIDORA IN ('HARO','HARO IVAN') THEN 'HARO'
- WHEN DISTRIBUIDORA IN ('JINES CAJAS CESAR XAVIER','JINES CAJAS XAVIER CESAR') THEN 'JINES CAJAS CESAR XAVIER'
- WHEN DISTRIBUIDORA IN ('MARVECOBE','MARVECOBE S.A') THEN 'MARVECOBE S.A'
- WHEN DISTRIBUIDORA IN ('MOREJON QUISPE LUIS ALFREDO','ZAMORA BRIONES MARIA MAGDALENA') THEN 'ZAMORA BRIONES MARIA MAGDALENA'
- WHEN DISTRIBUIDORA IN ('PULLA','PULLA VIMOS LOURDES CATALINA') THEN 'PULLA'
- WHEN DISTRIBUIDORA IN ('XAVIER MORALES DE LA GUERRA','') THEN 'D-MEX CIA.LTDA.'
- WHEN DISTRIBUIDORA IN ('SEGUNDO MIGUEL ALVAREZ TORRES','ALVAREZ TORRES SEGUNDO MIGUEL','ALVAREZ') THEN 'ALVAREZ'
-ELSE 'AAA' END
- --SELECT DISTINCT DISTRIBUIDORA
- FROM BASE_FINAL A
-;
-go
-
-
-
- update a set cliente=CASE 
- WHEN cliente IN ('ARISTIDES NORMANDO TAGLE GUERRERO','TAGLE GUERRERO ARISTIDES NORMANDO') THEN 'TAGLE GUERRERO ARISTIDES NORMANDO'
- WHEN cliente IN ('COPARESA S.A N 1','COPARESA S.A.') THEN 'COPARESA S.A.'
- WHEN cliente IN ('DISTRIBUIDORA DE CONSUMO MASIVO NEOPOR S.A','NEOPOR S.A.') THEN 'NEOPOR S.A.'
- WHEN cliente IN ('ESPINOZA ZEAS MANUEL JHON','ESPINOZA ZEAS MANUEL JOHN') THEN 'ESPINOZA ZEAS MANUEL JOHN'
- WHEN cliente IN ('GUADALUPE CASTILLO ERNESTO VICEN 2','GUADALUPE CASTILLO ERNESTO VICENTE') THEN 'GUADALUPE CASTILLO ERNESTO VICENTE'
- WHEN cliente IN ('HARO','HARO IVAN') THEN 'HARO'
- WHEN cliente IN ('JINES CAJAS CESAR XAVIER','JINES CAJAS XAVIER CESAR') THEN 'JINES CAJAS CESAR XAVIER'
- WHEN cliente IN ('MARVECOBE','MARVECOBE S.A') THEN 'MARVECOBE S.A'
- WHEN cliente IN ('MOREJON QUISPE LUIS ALFREDO','ZAMORA BRIONES MARIA MAGDALENA') THEN 'ZAMORA BRIONES MARIA MAGDALENA'
- WHEN cliente IN ('PULLA','PULLA VIMOS LOURDES CATALINA') THEN 'PULLA'
- WHEN cliente IN ('XAVIER MORALES DE LA GUERRA','') THEN 'D-MEX CIA.LTDA.'
- WHEN cliente IN ('SEGUNDO MIGUEL ALVAREZ TORRES','ALVAREZ TORRES SEGUNDO MIGUEL','ALVAREZ') THEN 'ALVAREZ'
-ELSE 'AAA' END
- FROM INDICADORES_KPI a
- WHERE Cliente<>'Todas';
- go
-
-
-
- DELETE
- from INDICADORES_KPI
- where cliente='AAA';
+ 
