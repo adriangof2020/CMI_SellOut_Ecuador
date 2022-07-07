@@ -743,7 +743,7 @@ SELECT AG.Agrupacion_Distribuidora Grupo_Cliente, F.Periodo Periodo,'NULL' Tipo,
 	   AG.Territorio Territorio, AG.Zona_Clientes,
 	   M.Plataforma Plataforma, CONCAT(M.CodMarca,' ',M.Marca) Marca, M.CodMarca Marcacod, M.Marca Marcadesc, CONCAT(M.CodFamilia,' ',M.Familia) Familia, M.CodFamilia Familiacod, M.Familia Familiadesc,
 	   CONCAT(M.CodCategoria,' ', M.Categoria) Categoria, M.CodCategoria Categoriacod, M.Categoria Categoriadesc, M.Material Material, A.CodAlicorp Materialcod, M.Material Materialdesc,
-	   CONVERT(DATE,A.Fecha,103) Fecha, 0 Real_USD, A.Plan_Dol/1000 Plan_USD,	 
+	   CONVERT(DATE,A.Fecha,103) Fecha, 0 Real_USD, A.Plan_Dol Plan_USD,	 
 	   0 Clientes_Activos, 0, 0
 --SELECT *
 FROM #HULARUSS_PLAN_NUEVO_MINOR_1 A
