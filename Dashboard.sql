@@ -108,6 +108,90 @@ FROM CmiSellOutEcuador.dbo.MAESTRO_AGENCIAS;
 
 
 
+TRUNCATE TABLE KPIS;
+ 
+BULK INSERT KPIS
+FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\KPIS.csv'
+WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
+
+
+UPDATE KPIS SET Agencia_Distribuidora = CASE Agencia_Distribuidora
+WHEN 'Xavier Morales' THEN 'D-MEX CIA.LTDA.'
+WHEN 'PULLA VIMOS LOURDES CATALINA' THEN 'PULLA'
+WHEN 'HARO ZAMORA IVAN' THEN 'HARO'
+WHEN 'SEGUNDO MIGUEL ALVAREZ TORRES' THEN 'ALVAREZ' ELSE Agencia_Distribuidora END
+
+UPDATE KPIS SET Agrupacion_Distribuidora = CASE Agrupacion_Distribuidora
+WHEN 'Panal' THEN 'PANALES'
+WHEN 'SM' THEN '2MALLA'
+WHEN 'MD' THEN 'HULARUSS' ELSE Agrupacion_Distribuidora END
+
+UPDATE KPIS SET Territorio = 'Todas' WHERE Territorio IS NULL;
+
+UPDATE KPIS SET Agencia_Distribuidora = 'Todas' WHERE Agencia_Distribuidora like 'tota%'
+
+ 
+UPDATE A SET A.Territorio = M.Territorio
+FROM KPIS A JOIN MAESTRO_AGENCIAS_1 M ON A.Agencia_Distribuidora = M.Agencia_Distribuidora
+
+UPDATE A SET A.[Zona_Clientes] = M.[Zona_Clientes]
+FROM KPIS A JOIN MAESTRO_AGENCIAS_1 M ON A.Agencia_Distribuidora = M.Agencia_Distribuidora
+
+UPDATE KPIS SET [Plataforma] = CASE [Plataforma]
+WHEN 'HC' THEN 'Home Care'
+WHEN 'FOOD' THEN 'Foods' ELSE [Plataforma] END
+
+
+UPDATE KPIS SET [Categoria] = CASE [Categoria]
+WHEN 'PASTAS' THEN 'Pastas'
+WHEN 'SALSAS' THEN 'Salsas'
+WHEN 'DESINFECTANTES' THEN 'Limpiadores Light Du'
+WHEN 'INSECTICIDAS' THEN 'Insecticidas'
+WHEN 'LEJIAS' THEN 'Lejias'
+WHEN 'LAVAVAJILLAS' THEN 'Lavavajillas'
+WHEN 'DETERGENTES' THEN 'Detergentes' ELSE [Categoria] END
+UPDATE KPIS SET Periodo = '6_2022'
+
+UPDATE KPIS SET Zona_Clientes = 'Todas' WHERE Zona_Clientes = 'NACIONAL';
+UPDATE KPIS SET Plataforma = 'Todas' WHERE Plataforma = 'TODAS';
+UPDATE KPIS SET Categoria = 'Todas' WHERE Categoria = 'TODAS';
+
+IF OBJECT_ID('KPI_1') IS NOT NULL DROP TABLE KPI_1;
+
+SELECT  Periodo, [Agrupacion_Distribuidora]  Grupo_Cliente
+	  ,[Agencia_Distribuidora] Cliente
+      ,[Territorio]
+      ,[Zona_Clientes] Zona_Clientes
+      ,[Plataforma]
+      ,[Categoria]
+      ,[Clientes con Compra]
+      ,[Ticket promedio]
+      ,[Mix de Categoria]
+      ,[Mix de Familia]    
+INTO KPI_1
+FROM KPIS A
+WHERE Canal = 'Tienda'
+
+
+
+UPDATE KPI_1  SET [Clientes con Compra] = REPLACE([Clientes con Compra],',','')
+UPDATE KPI_1  SET [Ticket promedio] = REPLACE([Ticket promedio],',','')
+
+ALTER TABLE KPI_1 ALTER COLUMN [Clientes con Compra]  FLOAT;
+ALTER TABLE KPI_1 ALTER COLUMN [Ticket promedio]  FLOAT;
+
+--SELECT * FROM [INDICADORES_KPI]
+
+
+INSERT INTO INDICADORES_KPI
+SELECT A.Periodo, A.Grupo_Cliente, A.Cliente, A.Territorio,
+      A.Zona_Clientes, A.Plataforma, A.Categoria, A.[Clientes con Compra],
+		A.[Ticket promedio], A.[Mix de Categoria], A.[Mix de Familia]
+FROM KPI_1 A
+
+
+
+
 DROP TABLE BASE_MOBILVENDOR_AUTOMATICA_1;
 
 SELECT *
