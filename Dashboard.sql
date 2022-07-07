@@ -9,7 +9,7 @@ DECLARE @workday_MA INT;
 --Dia hábil que hay en el mes anterior
 DECLARE @d1 AS VARCHAR(20);
 
-SELECT @dia= DATEADD(DAY,-5,SYSDATETIME());
+SELECT @dia= DATEADD(DAY,-7,SYSDATETIME());
 -- poner el último día de ventas
 SELECT @workday = DIA_UTIL FROM BD_FECHAS_1 WHERE TRY_CONVERT(DATE,DIA,103) = @dia
 SELECT @workday_MA = DIA_UTIL FROM BD_FECHAS_1 WHERE  TRY_CONVERT(DATE,DIA,103) = EOMONTH(@dia,-1)
@@ -108,11 +108,15 @@ FROM CmiSellOutEcuador.dbo.MAESTRO_AGENCIAS;
 
 
 
-TRUNCATE TABLE KPIS;
+--TRUNCATE TABLE KPIS;
  
-BULK INSERT KPIS
-FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\KPIS.csv'
-WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
+--BULK INSERT KPIS
+--FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\KPIS_JUL.csv'
+--WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
+
+--PONER EL PERIODO
+--UPDATE KPIS SET Periodo = '7_2022' WHERE 1=1
+--AND Periodo IS NULL
 
 
 UPDATE KPIS SET Agencia_Distribuidora = CASE Agencia_Distribuidora
@@ -141,16 +145,27 @@ UPDATE KPIS SET [Plataforma] = CASE [Plataforma]
 WHEN 'HC' THEN 'Home Care'
 WHEN 'FOOD' THEN 'Foods' ELSE [Plataforma] END
 
+UPDATE KPIS SET Plataforma = TRIM(Plataforma);
+UPDATE KPIS SET Categoria = TRIM(Categoria);
+UPDATE KPIS SET Canal = TRIM(Canal);
+UPDATE KPIS SET Agrupacion_Distribuidora = TRIM(Agrupacion_Distribuidora);
+UPDATE KPIS SET Territorio = TRIM(Territorio);
+UPDATE KPIS SET Agencia_Distribuidora = TRIM(Agencia_Distribuidora);
+UPDATE KPIS SET Zona_Clientes = TRIM(Zona_Clientes);
+UPDATE KPIS SET Familia = TRIM(Familia);
+
 
 UPDATE KPIS SET [Categoria] = CASE [Categoria]
 WHEN 'PASTAS' THEN 'Pastas'
 WHEN 'SALSAS' THEN 'Salsas'
 WHEN 'DESINFECTANTES' THEN 'Limpiadores Light Du'
+WHEN 'DESINFECTANTE' THEN 'Limpiadores Light Du'
 WHEN 'INSECTICIDAS' THEN 'Insecticidas'
 WHEN 'LEJIAS' THEN 'Lejias'
 WHEN 'LAVAVAJILLAS' THEN 'Lavavajillas'
+WHEN 'DETERGENTE' THEN 'Lavavajillas'
 WHEN 'DETERGENTES' THEN 'Detergentes' ELSE [Categoria] END
-UPDATE KPIS SET Periodo = '6_2022'
+
 
 UPDATE KPIS SET Zona_Clientes = 'Todas' WHERE Zona_Clientes = 'NACIONAL';
 UPDATE KPIS SET Plataforma = 'Todas' WHERE Plataforma = 'TODAS';
@@ -182,6 +197,7 @@ ALTER TABLE KPI_1 ALTER COLUMN [Ticket promedio]  FLOAT;
 
 --SELECT * FROM [INDICADORES_KPI]
 
+TRUNCATE TABLE INDICADORES_KPI;
 
 INSERT INTO INDICADORES_KPI
 SELECT A.Periodo, A.Grupo_Cliente, A.Cliente, A.Territorio,
@@ -436,10 +452,11 @@ TRUNCATE TABLE BASE_FINAL;
 
 INSERT INTO BASE_FINAL
 SELECT AG.Agrupacion_Distribuidora Grupo_Cliente, F.Periodo Periodo,'Real' Tipo, AG.Agencia_Distribuidora Distribuidora, A.CodClienteSellOut Cliente_Dist,
+	   AG.Territorio Territorio, AG.Zona_Clientes,
 	   M.Plataforma Plataforma, CONCAT(M.CodMarca,' ',M.Marca) Marca, M.CodMarca Marcacod, M.Marca Marcadesc, CONCAT(M.CodFamilia,' ',M.Familia) Familia, M.CodFamilia Familiacod, M.Familia Familiadesc,
 	   CONCAT(M.CodCategoria,' ', M.Categoria) Categoria, M.CodCategoria Categoriacod, M.Categoria Categoriadesc, M.Material Material, A.CodAlicorp Materialcod, M.Material Materialdesc,
-	   CONVERT(DATE,A.Fecha,103) Fecha, ISNULL(A.VentaDolares,0)/1000 Real_USD, A.Plan_Dol Plan_USD,	 
-	   0 Clientes_Activos, (ISNULL(A.VentaDolares,0)/1000)/@dm1 * @DMAX	PROY_LIN_DOL, 0.96
+	   CONVERT(DATE,A.Fecha,103) Fecha, ISNULL(A.VentaDolares,0) Real_USD, A.Plan_Dol Plan_USD,	 
+	   0 Clientes_Activos, (ISNULL(A.VentaDolares,0))/@dm1 * @DMAX	PROY_LIN_DOL, 0.96
 FROM #PANALES_D A
 	LEFT JOIN BD_FECHAS_1 F ON  A.Fecha= F.DIA
 	LEFT JOIN MAESTRO_ALICORP_1 M ON A.CodAlicorp = M.CodAlicorp
@@ -449,9 +466,10 @@ FROM #PANALES_D A
 
 INSERT INTO BASE_FINAL
 SELECT AG.Agrupacion_Distribuidora Grupo_Cliente, F.Periodo Periodo,'NULL' Tipo, AG.Agencia_Distribuidora Distribuidora, 'NULL' Cliente_Dist,
+	   AG.Territorio Territorio, AG.Zona_Clientes,
 	   M.Plataforma Plataforma, CONCAT(M.CodMarca,' ',M.Marca) Marca, M.CodMarca Marcacod, M.Marca Marcadesc, CONCAT(M.CodFamilia,' ',M.Familia) Familia, M.CodFamilia Familiacod, M.Familia Familiadesc,
 	   CONCAT(M.CodCategoria,' ', M.Categoria) Categoria, M.CodCategoria Categoriacod, M.Categoria Categoriadesc, M.Material Material, A.CodAlicorp Materialcod, M.Material Materialdesc,
-	   CONVERT(DATE,A.Fecha,103) Fecha, A.Ventas_Reales Real_USD, A.Plan_Dol Plan_USD,	 
+	   CONVERT(DATE,A.Fecha,103) Fecha, A.Ventas_Reales Real_USD, A.Plan_Dol*1000 Plan_USD,	 
 	   0 Clientes_Activos, 0, 0
 --SELECT *
 FROM PLAN_PANALES_1 A
@@ -464,9 +482,10 @@ FROM PLAN_PANALES_1 A
 
 INSERT INTO BASE_FINAL
 SELECT AG.Agrupacion_Distribuidora Grupo_Cliente, F.Periodo Periodo,'NULL' Tipo, AG.Agencia_Distribuidora Distribuidora, 'NULL' Cliente_Dist,
+	   AG.Territorio Territorio, AG.Zona_Clientes,
 	   M.Plataforma Plataforma, CONCAT(M.CodMarca,' ',M.Marca) Marca, M.CodMarca Marcacod, M.Marca Marcadesc, CONCAT(M.CodFamilia,' ',M.Familia) Familia, M.CodFamilia Familiacod, M.Familia Familiadesc,
 	   CONCAT(M.CodCategoria,' ', M.Categoria) Categoria, M.CodCategoria Categoriacod, M.Categoria Categoriadesc, M.Material Material, A.CodAlicorp Materialcod, M.Material Materialdesc,
-	   CONVERT(DATE,A.Fecha,103) Fecha, A.Ventas_Reales Real_USD, A.Plan_Dol Plan_USD,	 
+	   CONVERT(DATE,A.Fecha,103) Fecha, A.Ventas_Reales Real_USD, A.Plan_Dol*1000 Plan_USD,	 
 	   0 Clientes_Activos, 0, 0
 --SELECT *
 FROM PLAN_2MAYA_1 A
@@ -576,7 +595,7 @@ SET CodAlicorp = CASE CodAlicorp
 	WHEN '293369' THEN '29369' ELSE CodAlicorp END;
 
 UPDATE A SET A.Cantidad = A.Cantidad*M.FacUnitario FROM HULARUSS A
-	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp
+	LEFT JOIN MAESTRO_ALICORP_1 M ON A.CodAlicorp = M.CodAlicorp
 	WHERE Empaque <> 'Unidad'
 
 
@@ -706,10 +725,11 @@ SET CodAlicorp = CASE CodAlicorp
 
 INSERT INTO BASE_FINAL
 SELECT AG.Agrupacion_Distribuidora Grupo_Cliente, F.Periodo Periodo,'Real' Tipo, AG.Agencia_Distribuidora Distribuidora, A.CodClienteSellOut Cliente_Dist,
+	   AG.Territorio Territorio, AG.Zona_Clientes,
 	   M.Plataforma Plataforma, CONCAT(M.CodMarca,' ',M.Marca) Marca, M.CodMarca Marcacod, M.Marca Marcadesc, CONCAT(M.CodFamilia,' ',M.Familia) Familia, M.CodFamilia Familiacod, M.Familia Familiadesc,
 	   CONCAT(M.CodCategoria,' ', M.Categoria) Categoria, M.CodCategoria Categoriacod, M.Categoria Categoriadesc, M.Material Material, A.CodAlicorp Materialcod, M.Material Materialdesc,
-	   CONVERT(DATE,A.Fecha,103) Fecha, ISNULL(A.VentaDolares,0)/1000 Real_USD, A.Plan_Dol Plan_USD,	 
-	   0 Clientes_Activos, (ISNULL(A.VentaDolares,0)/1000)/@dm1 * @DMAX	PROY_LIN_DOL, 0.96
+	   CONVERT(DATE,A.Fecha,103) Fecha, ISNULL(A.VentaDolares,0) Real_USD, A.Plan_Dol Plan_USD,	 
+	   0 Clientes_Activos, (ISNULL(A.VentaDolares,0))/@dm1 * @DMAX	PROY_LIN_DOL, 0.96
 FROM #HULARUSS_1 A
 	LEFT JOIN BD_FECHAS_1 F ON  A.Fecha= F.DIA
 	LEFT JOIN MAESTRO_ALICORP_1 M ON A.CodAlicorp = M.CodAlicorp
@@ -720,9 +740,10 @@ FROM #HULARUSS_1 A
 
 INSERT INTO BASE_FINAL
 SELECT AG.Agrupacion_Distribuidora Grupo_Cliente, F.Periodo Periodo,'NULL' Tipo, AG.Agencia_Distribuidora Distribuidora, 'NULL' Cliente_Dist,
+	   AG.Territorio Territorio, AG.Zona_Clientes,
 	   M.Plataforma Plataforma, CONCAT(M.CodMarca,' ',M.Marca) Marca, M.CodMarca Marcacod, M.Marca Marcadesc, CONCAT(M.CodFamilia,' ',M.Familia) Familia, M.CodFamilia Familiacod, M.Familia Familiadesc,
 	   CONCAT(M.CodCategoria,' ', M.Categoria) Categoria, M.CodCategoria Categoriacod, M.Categoria Categoriadesc, M.Material Material, A.CodAlicorp Materialcod, M.Material Materialdesc,
-	   CONVERT(DATE,A.Fecha,103) Fecha, 0 Real_USD, A.Plan_Dol Plan_USD,	 
+	   CONVERT(DATE,A.Fecha,103) Fecha, 0 Real_USD, A.Plan_Dol/1000 Plan_USD,	 
 	   0 Clientes_Activos, 0, 0
 --SELECT *
 FROM #HULARUSS_PLAN_NUEVO_MINOR_1 A
