@@ -9,7 +9,7 @@ DECLARE @workday_MA INT;
 --Dia hábil que hay en el mes anterior
 DECLARE @d1 AS VARCHAR(20);
 
-SELECT @dia= DATEADD(DAY,-5,SYSDATETIME());
+SELECT @dia= DATEADD(DAY,-1,SYSDATETIME());
 -- poner el último día de ventas
 SELECT @workday = DIA_UTIL FROM BD_FECHAS_1 WHERE TRY_CONVERT(DATE,DIA,103) = @dia
 SELECT @workday_MA = DIA_UTIL FROM BD_FECHAS_1 WHERE  TRY_CONVERT(DATE,DIA,103) = EOMONTH(@dia,-1)
@@ -416,7 +416,7 @@ SET CodAlicorp = CASE CodAlicorp
 
 DELETE FROM PLAN_LA_FABRIL_1 WHERE 1=1
 								   AND YEAR(Fecha) = 2022
-								   AND MONTH(Fecha) = 06
+								   AND MONTH(Fecha) = 07
 
 
 INSERT INTO PLAN_LA_FABRIL_1
@@ -490,10 +490,11 @@ TRUNCATE TABLE BASE_FINAL;
 
 INSERT INTO BASE_FINAL
 SELECT AG.Agrupacion_Distribuidora Grupo_Cliente, F.Periodo Periodo, A.Tipo, AG.Agencia_Distribuidora Distribuidora, A.CodClienteSellOut Cliente_Dist,
-	   M.Plataforma Plataforma, CONCAT(M.CodMarca,' ',M.Marca) Marca, M.CodMarca Marcacod, M.Marca Marcadesc, CONCAT(M.CodFamilia,' ',M.Familia) Familia, M.CodFamilia Familiacod, M.Familia Familiadesc,
+	   AG.Territorio Territorio, AG.Zona_Clientes Zona_Clientes,
+   	   M.Plataforma Plataforma, CONCAT(M.CodMarca,' ',M.Marca) Marca, M.CodMarca Marcacod, M.Marca Marcadesc, CONCAT(M.CodFamilia,' ',M.Familia) Familia, M.CodFamilia Familiacod, M.Familia Familiadesc,
 	   CONCAT(M.CodCategoria,' ', M.Categoria) Categoria, M.CodCategoria Categoriacod, M.Categoria Categoriadesc, M.Material Material, A.CodAlicorp Materialcod, M.Material Materialdesc,
-	   CONVERT(DATE,A.Fecha,103) Fecha, ISNULL(A.VentaDolares,0)/1000 Real_USD, A.Plan_Dol Plan_USD,	 
-	   0 Clientes_Activos, (ISNULL(A.VentaDolares,0)/1000)/@dm1 * @DMAX	PROY_LIN_DOL, 0.96
+	   CONVERT(DATE,A.Fecha,103) Fecha, ISNULL(A.VentaDolares,0) Real_USD, A.Plan_Dol*1000 Plan_USD,	 
+	   0 Clientes_Activos, ISNULL(A.VentaDolares,0)/@dm1 * @DMAX	PROY_LIN_DOL, 0.96
 --SELECT *
 FROM #VENTAS_Y_NOTAS_1 A
 	LEFT JOIN BD_FECHAS_1 F ON  A.Fecha= F.DIA
@@ -605,7 +606,7 @@ SET CodAlicorp = CASE CodAlicorp
 	WHEN '293369' THEN '29369' ELSE CodAlicorp END;
 
 UPDATE A SET A.Cantidad = A.Cantidad*M.FacUnitario FROM HULARUSS A
-	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp
+	LEFT JOIN MAESTRO_ALICORP_1 M ON A.CodAlicorp = M.CodAlicorp
 	WHERE Empaque <> 'Unidad'
 
 
@@ -636,7 +637,7 @@ UPDATE #HULARUSS_1
 SET Fecha = RIGHT(Fecha,9)
 WHERE Fecha LIKE '0_/%'
 
-SELECT SUM(VentaDolares) FROM #HULARUSS_1 WHERE Fecha LIKE '%/06/2022'
+--SELECT SUM(VentaDolares) FROM #HULARUSS_1 WHERE Fecha LIKE '%/06/2022'
 --Inserto plan Hularuss
 
 
@@ -657,7 +658,7 @@ SELECT SUM(VentaDolares) FROM #HULARUSS_1 WHERE Fecha LIKE '%/06/2022'
 
 DELETE FROM PLAN_HULARUSS WHERE 1=1
 								AND YEAR(Fecha) = 2022
-								AND MONTH(Fecha) = 06
+								AND MONTH(Fecha) = 07
 
 INSERT INTO PLAN_HULARUSS
 SELECT *
@@ -705,16 +706,16 @@ IF OBJECT_ID(N'tempdb..#HULARUSS_PLAN_NUEVO_MAYOR_1') IS NOT NULL DROP TABLE #HU
 SELECT CONVERT(VARCHAR(20),A.Fecha,103) Fecha, A.Canal Canal, A.CodAlicorp CodAlicorp, A.NomOficina, A.MontoCantidad Plan_Ton, B.MontoCantidad Plan_Dol
 INTO #HULARUSS_PLAN_NUEVO_MAYOR_1
 FROM #HULARUSS_PLAN_NUEVO_TON_1 A 
-	LEFT JOIN #HULARUSS_PLAN_NUEVO_DOL_1 B ON A.CodAlicorp = B.CodAlicorp AND A.NomOficina = B.NomOficina AND A.Canal = B.Canal
+	LEFT JOIN #HULARUSS_PLAN_NUEVO_DOL_1 B ON A.CodAlicorp = B.CodAlicorp AND A.NomOficina = B.NomOficina AND A.Canal = B.Canal AND A.Fecha = B.Fecha
 WHERE A.Canal = 'MAYORISTAS'
 
 DELETE #HULARUSS_PLAN_NUEVO_MAYOR_1 WHERE Plan_Dol = 0 AND Plan_Ton = 0;
 
-UPDATE #HULARUSS_PLAN_NUEVO_MAYOR_1
+--select SUM(Plan_Ton) FROM #HULARUSS_PLAN_NUEVO_MAYOR
+
+UPDATE #HULARUSS_PLAN_NUEVO_MAYOR_1 
 SET Fecha = RIGHT(Fecha,9)
 WHERE Fecha LIKE '0_/%'
-
---select * from #HULARUSS_PLAN_NUEVO_MINOR
 
 UPDATE #HULARUSS_PLAN_NUEVO_MAYOR_1
 SET CodAlicorp = CASE CodAlicorp
@@ -726,7 +727,7 @@ SET CodAlicorp = CASE CodAlicorp
 	WHEN '8309009' THEN '8309128'
 	WHEN '293369' THEN '29369' ELSE CodAlicorp END;
 
-
+--SELECT * FROM #HULARUSS_PLAN_NUEVO_MAYOR_1 WHERE FECHA = '10/07/2022'
 --Inserto Hularuss
 --DECLARE @dm1 INT;
 --DECLARE @DMAX INT;
@@ -735,10 +736,11 @@ SET CodAlicorp = CASE CodAlicorp
 
 INSERT INTO BASE_FINAL
 SELECT AG.Agrupacion_Distribuidora Grupo_Cliente, F.Periodo Periodo,'Real' Tipo, AG.Agencia_Distribuidora Distribuidora, A.CodClienteSellOut Cliente_Dist,
+	   AG.Territorio Territorio, AG.Zona_Clientes Zona_Clientes,
 	   M.Plataforma Plataforma, CONCAT(M.CodMarca,' ',M.Marca) Marca, M.CodMarca Marcacod, M.Marca Marcadesc, CONCAT(M.CodFamilia,' ',M.Familia) Familia, M.CodFamilia Familiacod, M.Familia Familiadesc,
 	   CONCAT(M.CodCategoria,' ', M.Categoria) Categoria, M.CodCategoria Categoriacod, M.Categoria Categoriadesc, M.Material Material, A.CodAlicorp Materialcod, M.Material Materialdesc,
-	   CONVERT(DATE,A.Fecha,103) Fecha, ISNULL(A.VentaDolares,0)/1000 Real_USD, A.Plan_Dol Plan_USD,	 
-	   0 Clientes_Activos, (ISNULL(A.VentaDolares,0)/1000)/@dm1 * @DMAX	PROY_LIN_DOL, 0.96
+	   CONVERT(DATE,A.Fecha,103) Fecha, ISNULL(A.VentaDolares,0) Real_USD, A.Plan_Dol Plan_USD,	 
+	   0 Clientes_Activos, ISNULL(A.VentaDolares,0)/@dm1 * @DMAX	PROY_LIN_DOL, 0.96
 --select distinct Fecha
 FROM #HULARUSS_1 A
 	LEFT JOIN BD_FECHAS_1 F ON  A.Fecha= F.DIA
@@ -751,6 +753,7 @@ FROM #HULARUSS_1 A
 
 INSERT INTO BASE_FINAL
 SELECT AG.Agrupacion_Distribuidora Grupo_Cliente, F.Periodo Periodo,'NULL' Tipo, AG.Agencia_Distribuidora Distribuidora, 'NULL' Cliente_Dist,
+	   AG.Territorio Territorio, AG.Zona_Clientes Zona_Clientes,
 	   M.Plataforma Plataforma, CONCAT(M.CodMarca,' ',M.Marca) Marca, M.CodMarca Marcacod, M.Marca Marcadesc, CONCAT(M.CodFamilia,' ',M.Familia) Familia, M.CodFamilia Familiacod, M.Familia Familiadesc,
 	   CONCAT(M.CodCategoria,' ', M.Categoria) Categoria, M.CodCategoria Categoriacod, M.Categoria Categoriadesc, M.Material Material, A.CodAlicorp Materialcod, M.Material Materialdesc,
 	   CONVERT(DATE,A.Fecha,103) Fecha, 0 Real_USD, A.Plan_Dol Plan_USD,	 
