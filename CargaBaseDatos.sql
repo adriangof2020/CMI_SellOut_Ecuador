@@ -393,7 +393,7 @@ UPDATE A SET Agencia_Distribuidora = TRIM(Agencia_Distribuidora) FROM PLAN_PANAL
 UPDATE A SET Plataforma = TRIM(Plataforma) FROM PLAN_PANALES A;
 
 DELETE FROM PLAN_PANALES
-	   WHERE Agencia_Distribuidora = ('CONTRERAS DELGADO WASHINGTON BENEDI')
+	   WHERE Agencia_Distribuidora IN ('CONTRERAS DELGADO WASHINGTON BENEDI','ATI CAMPAÑA FLAVIA MARINA')
 			 
 
 
@@ -904,7 +904,7 @@ IF OBJECT_ID(N'tempdb..#HULARUSS_PLAN_NUEVO_MINOR') IS NOT NULL DROP TABLE #HULA
 SELECT CONVERT(VARCHAR(20),A.Fecha,103) Fecha, A.Canal Canal, A.CodAlicorp CodAlicorp, A.NomOficina, A.MontoCantidad Plan_Ton, B.MontoCantidad Plan_Dol
 INTO #HULARUSS_PLAN_NUEVO_MINOR
 FROM #HULARUSS_PLAN_NUEVO_TON A 
-	LEFT JOIN #HULARUSS_PLAN_NUEVO_DOL B ON A.CodAlicorp = B.CodAlicorp AND A.NomOficina = B.NomOficina AND A.Canal = B.Canal
+	LEFT JOIN #HULARUSS_PLAN_NUEVO_DOL B ON A.CodAlicorp = B.CodAlicorp AND A.NomOficina = B.NomOficina AND A.Canal = B.Canal AND A.Fecha = B.Fecha
 WHERE A.Canal = 'MINORISTAS'
 
 DELETE #HULARUSS_PLAN_NUEVO_MINOR WHERE Plan_Dol = 0 AND Plan_Ton = 0;
