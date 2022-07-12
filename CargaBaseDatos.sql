@@ -323,6 +323,83 @@ UPDATE BASE_MOBILVENDOR_AUTOMATICA SET CodAlicorp = '4302045' WHERE CodAlicorp =
 --('156150253', '156163360', '156131204', '156150076')
 --PREGUNTAR A DIEGO HASTA CUANDO SERA HARA
 
+
+
+--Inserto Codify
+
+SET LANGUAGE SPANISH;
+
+DELETE FROM CODIFY_HISTORICA WHERE LEFT(Fecha,7) = '2022-07';
+
+BULK INSERT CODIFY_HISTORICA
+FROM 'C:\Proyectos\Ecuador\PANALES\CODIFY_julio.csv'
+WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
+
+DELETE FROM CODIFY_HISTORICA WHERE CodAlicorp IS NULL;
+
+TRUNCATE TABLE CODIFY;
+
+ALTER TABLE CODIFY ALTER COLUMN VentaDolares VARCHAR(100);
+ALTER TABLE CODIFY ALTER COLUMN VentaTon VARCHAR(100);
+
+
+INSERT INTO CODIFY
+SELECT *
+FROM CODIFY_HISTORICA
+WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 07;
+
+INSERT INTO CODIFY
+SELECT *
+FROM CODIFY_HISTORICA
+WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 06;
+
+------------------USAR CUANDO LLEGUE EL 2023------------------------------------------------------
+--INSERT INTO CODIFY
+--SELECT *
+--FROM CODIFY_HISTORICA
+--WHERE DATEPART(YEAR,Fecha) = PONER AÑOPASADO AND DATEPART(MONTH,Fecha) = PONER MES DE AÑO PASADO; 
+-----------------------------------------------------------------------------------------------------------
+
+
+UPDATE CODIFY
+SET VentaDolares = REPLACE(VentaDolares,',','')
+WHERE CHARINDEX(',', VentaDolares) > 0;
+
+UPDATE CODIFY
+SET VentaTon = REPLACE(VentaTon,',','')
+WHERE CHARINDEX(',', VentaTon) > 0;
+
+UPDATE CODIFY
+SET VentaDolares = REPLACE(VentaDolares,'$','')
+WHERE CHARINDEX('$', VentaDolares) > 0;
+
+
+ALTER TABLE CODIFY ALTER COLUMN VentaDolares FLOAT;
+ALTER TABLE CODIFY ALTER COLUMN VentaTon FLOAT;
+
+
+SET LANGUAGE US_ENGLISH;
+
+DELETE CODIFY WHERE CodAlicorp IS NULL;
+DELETE CODIFY WHERE CodAlicorp = '';
+DELETE FROM CODIFY WHERE VentaDolares = 0;
+DELETE FROM CODIFY WHERE VentaDolares IS NULL;
+
+UPDATE A SET CodAlicorp = TRIM(CodAlicorp) FROM CODIFY A;
+UPDATE A SET CodClienteSellOut = TRIM(CodClienteSellOut) FROM CODIFY A;
+UPDATE A SET Agencia = TRIM(Agencia) FROM CODIFY A;
+
+UPDATE CODIFY
+SET CodAlicorp = CASE CodAlicorp
+	WHEN '8309000' THEN '8309119'
+	WHEN '8309001' THEN '8309120'
+	WHEN '8309002' THEN '8309121'
+	WHEN '8309003' THEN '8309122'
+	WHEN '8309007' THEN '8309126'
+	WHEN '8309009' THEN '8309128' 
+	WHEN 'P.3300147' THEN '3300147'
+	WHEN '293369' THEN '29369' ELSE CodAlicorp END;
+
 --Creo tabla temporal para homologar los campos y darle formato a la fecha, tambien calculo las toneladas
 IF OBJECT_ID(N'tempdb..#PANALES') IS NOT NULL DROP TABLE #PANALES;
 
@@ -333,6 +410,13 @@ INTO #PANALES
 FROM BASE_MOBILVENDOR_AUTOMATICA A
 	LEFT JOIN VENDEDORES_PANALES V ON A.Usuario = V.Codigo
 	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp;
+
+INSERT INTO #PANALES
+SELECT CONVERT(VARCHAR(20), A.Fecha,103) Fecha, A.Agencia Agencia, A.CodClienteSellOut CodClienteSellOut, 'SIN ASIGNAR - CODIFY' ClienteSellOut, 'SIN ASIGNAR - CODIFY' Vendedor_Distribuidora, 'SIN ASIGNAR - CODIFY' Tipo_tienda_Distribuidora, A.CodAlicorp CodAlicorp,
+	   M.FacUnitario FacUnitario, A.TUnidades TUnidades, 0  Plan_Ton, A.VentaTon VentaTon, 0 Plan_Dol, A.VentaDolares VentaDolares,
+	   'Consumo Masivo' Negocio
+FROM CODIFY A
+   	 LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp;
 
 --DELETE FROM #PANALES WHERE   FacUnitario is null
 --SELECT  sum(VentaDolares)   FROM #PANALES WHERE   FacUnitario is null and RIGHT(Fecha,7) = '06/2022' 
