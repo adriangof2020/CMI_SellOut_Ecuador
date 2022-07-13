@@ -199,6 +199,9 @@ WHERE Canal <> 'Tienda'
 UPDATE KPI_1  SET [Clientes con Compra] = REPLACE([Clientes con Compra],',','')
 UPDATE KPI_1  SET [Ticket promedio] = REPLACE([Ticket promedio],',','')
 
+DELETE FROM KPI_1 WHERE Cliente IN  ('Representaciones J.Leonardo Soria ', 'REPREMARVA CIA. LTDA.',
+             'PRODISPRO CIA.LTDA', 'OLGER ARMIJOS DISTRIBUCIONES S.A.S ','MARVECOBE S.A ','FREDVY S.A.', 'CONTRERAS DELGADO WASHINGTON')
+
 ALTER TABLE KPI_1 ALTER COLUMN [Clientes con Compra]  FLOAT;
 ALTER TABLE KPI_1 ALTER COLUMN [Ticket promedio]  FLOAT;
 
@@ -208,9 +211,11 @@ TRUNCATE TABLE INDICADORES_KPI;
 
 INSERT INTO INDICADORES_KPI
 SELECT A.Periodo, A.Grupo_Cliente, A.Cliente, A.Territorio,
-      A.Zona_Clientes, A.Plataforma, A.Categoria, A.[Clientes con Compra],
-		A.[Ticket promedio], A.[Mix de Categoria], A.[Mix de Familia]
+      A.Zona_Clientes, A.Plataforma, A.Categoria, MAX(A.[Clientes con Compra]),
+		MAX(A.[Ticket promedio]), MAX(A.[Mix de Categoria]),MAX(A.[Mix de Familia])
 FROM KPI_1 A
+GROUP BY A.Periodo, A.Grupo_Cliente, A.Cliente, A.Territorio, A.Zona_Clientes, A.Plataforma, A.Categoria
+
 
 
 
