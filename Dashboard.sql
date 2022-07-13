@@ -221,6 +221,7 @@ GROUP BY A.Periodo, A.Grupo_Cliente, A.Cliente, A.Territorio, A.Zona_Clientes, A
 
 
 
+
   
       
       
