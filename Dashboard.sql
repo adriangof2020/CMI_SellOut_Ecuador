@@ -194,6 +194,9 @@ WHERE Canal = 'Tienda'
 UPDATE KPI_1  SET [Clientes con Compra] = REPLACE([Clientes con Compra],',','')
 UPDATE KPI_1  SET [Ticket promedio] = REPLACE([Ticket promedio],',','')
 
+DELETE FROM KPI_1 WHERE Cliente IN  ('Representaciones J.Leonardo Soria ', 'REPREMARVA CIA. LTDA.',
+             'PRODISPRO CIA.LTDA', 'OLGER ARMIJOS DISTRIBUCIONES S.A.S ','MARVECOBE S.A ','FREDVY S.A.', 'CONTRERAS DELGADO WASHINGTON')
+
 ALTER TABLE KPI_1 ALTER COLUMN [Clientes con Compra]  FLOAT;
 ALTER TABLE KPI_1 ALTER COLUMN [Ticket promedio]  FLOAT;
 
@@ -203,9 +206,78 @@ TRUNCATE TABLE INDICADORES_KPI;
 
 INSERT INTO INDICADORES_KPI
 SELECT A.Periodo, A.Grupo_Cliente, A.Cliente, A.Territorio,
-      A.Zona_Clientes, A.Plataforma, A.Categoria, A.[Clientes con Compra],
-		A.[Ticket promedio], A.[Mix de Categoria], A.[Mix de Familia]
+      A.Zona_Clientes, A.Plataforma, A.Categoria, MAX(A.[Clientes con Compra]),
+		MAX(A.[Ticket promedio]), MAX(A.[Mix de Categoria]),MAX(A.[Mix de Familia])
 FROM KPI_1 A
+GROUP BY A.Periodo, A.Grupo_Cliente, A.Cliente, A.Territorio, A.Zona_Clientes, A.Plataforma, A.Categoria
+
+
+
+--Inserto Codify
+
+
+DROP TABLE CODIFY_HISTORICA_1;
+
+SELECT *
+INTO CODIFY_HISTORICA_1
+FROM CmiSellOutEcuador.dbo.CODIFY_HISTORICA;
+
+--SET LANGUAGE SPANISH;
+
+--DELETE FROM CODIFY_HISTORICA WHERE LEFT(Fecha,7) = '2022-07';
+
+--BULK INSERT CODIFY_HISTORICA_1
+--FROM 'C:\Proyectos\Ecuador\PANALES\CODIFY_julio.csv'
+--WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
+
+DELETE FROM CODIFY_HISTORICA_1 WHERE CodAlicorp IS NULL;
+
+
+
+UPDATE CODIFY_HISTORICA_1
+SET VentaDolares = REPLACE(VentaDolares,',','')
+WHERE CHARINDEX(',', VentaDolares) > 0;
+
+UPDATE CODIFY_HISTORICA_1
+SET VentaTon = REPLACE(VentaTon,',','')
+WHERE CHARINDEX(',', VentaTon) > 0;
+
+UPDATE CODIFY_HISTORICA_1
+SET VentaDolares = REPLACE(VentaDolares,'$','')
+WHERE CHARINDEX('$', VentaDolares) > 0;
+
+
+ALTER TABLE CODIFY_HISTORICA_1 ALTER COLUMN VentaDolares FLOAT;
+ALTER TABLE CODIFY_HISTORICA_1 ALTER COLUMN VentaTon FLOAT;
+
+
+--SET LANGUAGE US_ENGLISH;
+
+DELETE CODIFY_HISTORICA_1 WHERE CodAlicorp IS NULL;
+DELETE CODIFY_HISTORICA_1 WHERE CodAlicorp = '';
+DELETE FROM CODIFY_HISTORICA_1 WHERE VentaDolares = 0;
+DELETE FROM CODIFY_HISTORICA_1 WHERE VentaDolares IS NULL;
+
+UPDATE A SET CodAlicorp = TRIM(CodAlicorp) FROM CODIFY_HISTORICA_1 A;
+UPDATE A SET CodClienteSellOut = TRIM(CodClienteSellOut) FROM CODIFY_HISTORICA_1 A;
+UPDATE A SET Agencia = TRIM(Agencia) FROM CODIFY_HISTORICA_1 A;
+
+UPDATE CODIFY_HISTORICA_1
+SET CodAlicorp = CASE CodAlicorp
+	WHEN '8309000' THEN '8309119'
+	WHEN '8309001' THEN '8309120'
+	WHEN '8309002' THEN '8309121'
+	WHEN '8309003' THEN '8309122'
+	WHEN '8309007' THEN '8309126'
+	WHEN '8309009' THEN '8309128' 
+	WHEN 'P.3300147' THEN '3300147'
+	WHEN '293369' THEN '29369' ELSE CodAlicorp END;
+
+
+
+
+
+
 
 
 
@@ -272,7 +344,15 @@ FROM BASE_MOBILVENDOR_AUTOMATICA_1 A
 DELETE FROM #PANALES_D WHERE CodAlicorp IN ('AD0220', 'AD0221', 'AD0224', 'AD0225', 'AD0226', 'AD0227', 'AD0228', 'AD0229', 'AD0230', 'AD0231', 'AD0232', 'AD0233', 'AD0234', 'AD0241', 'AD0242', 'AD0243', 'AD0246', 'AD0247',
                                           'AD0248', 'Ali001', 'Ali002', 'Ali003', 'Ali005', 'Ali007', 'Ali008', 'Ali009', 'Ali011', 'Ali013', 'Ali015', 'Ali016', 'Ali017', 'Ali10', 'AD0219', 'AD0215', 'AD0218', 'Ali006',
 										  'AD0217', 'ESPAPROM', 'AD0103', 'AD239', 'Ali014', 'ALIC063', 'H450C200', 'H523B017', 'H523B222', 'H523B223', 'P.33001461', '617080', '688320', '484168', '29116B', '453-G', '648-001', 'AMB360',
-										  'H180-G', 'MY', 'SP', 'TALL', 'AD0058', 'GLL','AD0250', 'AD0249')
+										  'H180-G', 'MY', 'SP', 'TALL', 'AD0058', 'GLL','AD0250', 'AD0249', 'AD0251', 'CL001' )
+
+
+INSERT INTO #PANALES_D
+SELECT CONVERT(VARCHAR(20), A.Fecha,103) Fecha, A.Agencia Agencia, A.CodClienteSellOut CodClienteSellOut, 'SIN ASIGNAR - CODIFY' ClienteSellOut, A.CodAlicorp CodAlicorp,
+	   M.FacUnitario FacUnitario, A.TUnidades TUnidades, 0  Plan_Ton, A.VentaTon VentaTon, 0 Plan_Dol, A.VentaDolares VentaDolares	   
+FROM CODIFY_HISTORICA_1 A
+   	 LEFT JOIN MAESTRO_ALICORP_1 M ON A.CodAlicorp = M.CodAlicorp;
+
 
 
 ALTER TABLE #PANALES_D ALTER COLUMN Plan_Ton FLOAT;
