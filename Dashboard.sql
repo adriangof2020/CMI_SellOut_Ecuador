@@ -213,6 +213,12 @@ FROM KPI_1 A
 GROUP BY A.Periodo, A.Grupo_Cliente, A.Cliente, A.Territorio, A.Zona_Clientes, A.Plataforma, A.Categoria
 
 
+---REFORMULAR CARGA DE KPIS
+TRUNCATE TABLE INDICADORES_KPI;
+
+BULK INSERT INDICADORES_KPI
+FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\KPIS_2.0.csv'
+WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
 
 --Inserto Codify
 
