@@ -130,6 +130,7 @@ WHEN 'PULLA VIMOS LOURDES CATALINA' THEN 'PULLA'
 WHEN 'HARO ZAMORA IVAN' THEN 'HARO'
 WHEN 'BARNUEVO VALAREZO & GCP CIA LTDA' THEN 'BARNUEVO VALAREZO &GCP CIAL LTDA'
 WHEN 'D LOGIS CODILOGIS CIA. LTDA.' THEN 'D LOGIS CODILOGIS CIA LTDA'
+WHEN 'MARVECOBE S.A ' THEN 'MARVECOBE S.A'
 WHEN 'SEGUNDO MIGUEL ALVAREZ TORRES' THEN 'ALVAREZ' ELSE Agencia_Distribuidora END
 
 UPDATE KPIS SET Agrupacion_Distribuidora = CASE Agrupacion_Distribuidora
@@ -199,8 +200,8 @@ WHERE Canal <> 'Tienda'
 UPDATE KPI_1  SET [Clientes con Compra] = REPLACE([Clientes con Compra],',','')
 UPDATE KPI_1  SET [Ticket promedio] = REPLACE([Ticket promedio],',','')
 
-DELETE FROM KPI_1 WHERE Cliente IN  ('Representaciones J.Leonardo Soria ', 'REPREMARVA CIA. LTDA.',
-             'PRODISPRO CIA.LTDA', 'OLGER ARMIJOS DISTRIBUCIONES S.A.S ','MARVECOBE S.A ','FREDVY S.A.', 'CONTRERAS DELGADO WASHINGTON')
+DELETE FROM KPI_1 WHERE Cliente IN  ('Representaciones J.Leonardo Soria ',
+             'PRODISPRO CIA.LTDA', 'OLGER ARMIJOS DISTRIBUCIONES S.A.S ','FREDVY S.A.', 'CONTRERAS DELGADO WASHINGTON')
 
 ALTER TABLE KPI_1 ALTER COLUMN [Clientes con Compra]  FLOAT;
 ALTER TABLE KPI_1 ALTER COLUMN [Ticket promedio]  FLOAT;
@@ -215,6 +216,9 @@ SELECT A.Periodo, A.Grupo_Cliente, A.Cliente, A.Territorio,
 		MAX(A.[Ticket promedio]), MAX(A.[Mix de Categoria]),MAX(A.[Mix de Familia])
 FROM KPI_1 A
 GROUP BY A.Periodo, A.Grupo_Cliente, A.Cliente, A.Territorio, A.Zona_Clientes, A.Plataforma, A.Categoria
+
+INSERT INTO INDICADORES_KPI VALUES('7_2022', 'LA FABRIL', 'Todas', 'Todas', 'Todas', 'Todas', 'Todas', 273, 7800, 1, 1)
+INSERT INTO INDICADORES_KPI VALUES('7_2022', 'LA FABRIL', 'Todas', 'MITE ZAMORA MILTON DANILO', 'Todas', 'Todas', 'Todas', 273, 7800, 1, 1)
 
 
 
