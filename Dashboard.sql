@@ -217,9 +217,13 @@ SELECT A.Periodo, A.Grupo_Cliente, A.Cliente, A.Territorio,
 FROM KPI_1 A
 GROUP BY A.Periodo, A.Grupo_Cliente, A.Cliente, A.Territorio, A.Zona_Clientes, A.Plataforma, A.Categoria
 
-INSERT INTO INDICADORES_KPI VALUES('7_2022', 'LA FABRIL', 'Todas', 'Todas', 'Todas', 'Todas', 'Todas', 273, 7800, 1, 1)
-INSERT INTO INDICADORES_KPI VALUES('7_2022', 'LA FABRIL', 'Todas', 'MITE ZAMORA MILTON DANILO', 'Todas', 'Todas', 'Todas', 273, 7800, 1, 1)
 
+--ver
+TRUNCATE TABLE INDICADORES_KPI;
+
+BULK INSERT INDICADORES_KPI
+FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\KPIS_MACRO2.0.csv'
+WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
 
 
 
