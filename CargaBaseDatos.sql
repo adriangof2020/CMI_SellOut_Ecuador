@@ -268,10 +268,6 @@ SELECT *
 FROM BASE_PANALES_HISTORICA
 WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 06;
 
-INSERT INTO BASE_MOBILVENDOR_AUTOMATICA
-SELECT *
-FROM BASE_PANALES_HISTORICA
-WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 05;
 
 ------------------USAR CUANDO LLEGUE EL 2023------------------------------------------------------
 --INSERT INTO BASE_MOBILVENDOR_AUTOMATICA
@@ -403,7 +399,7 @@ SET CodAlicorp = CASE CodAlicorp
 	WHEN '8309002' THEN '8309121'
 	WHEN '8309003' THEN '8309122'
 	WHEN '8309007' THEN '8309126'
-	WHEN '8309009' THEN '8309128' 
+	WHEN '8309009' THEN '8309128'
 	WHEN 'P.3300147' THEN '3300147'
 	WHEN '293369' THEN '29369' ELSE CodAlicorp END;
 
@@ -426,8 +422,8 @@ FROM CODIFY A
    	 LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp;
 
 --DELETE FROM #PANALES WHERE   FacUnitario is null
---SELECT  sum(VentaDolares)   FROM #PANALES WHERE   FacUnitario is null and RIGHT(Fecha,7) = '06/2022' 
---SELECT  distinct  agencia, CodAlicorp  FROM #PANALES WHERE   FacUnitario is null and RIGHT(Fecha,7) = '06/2022' agencia in ('156150253', '156163360', '156131204', '156150076') = '8410177' VentaTon=0 AND VentaDolares= 0 AND Plan_Dol = 0
+--SELECT  sum(VentaDolares)   FROM #PANALES WHERE   FacUnitario is null and RIGHT(Fecha,7) = '07/2022' 
+--SELECT  distinct  agencia, CodAlicorp  FROM #PANALES WHERE   FacUnitario is null and RIGHT(Fecha,7) = '07/2022' agencia in ('156150253', '156163360', '156131204', '156150076') = '8410177' VentaTon=0 AND VentaDolares= 0 AND Plan_Dol = 0
 DELETE FROM #PANALES WHERE CodAlicorp IN ('AD0220', 'AD0221', 'AD0224', 'AD0225', 'AD0226', 'AD0227', 'AD0228', 'AD0229', 'AD0230', 'AD0231', 'AD0232', 'AD0233', 'AD0234', 'AD0241', 'AD0242', 'AD0243', 'AD0246', 'AD0247',
                                           'AD0248', 'Ali001', 'Ali002', 'Ali003', 'Ali005', 'Ali007', 'Ali008', 'Ali009', 'Ali011', 'Ali013', 'Ali015', 'Ali016', 'Ali017', 'Ali10', 'AD0219', 'AD0215', 'AD0218', 'Ali006',
 										  'AD0217', 'ESPAPROM', 'AD0103', 'AD239', 'Ali014', 'ALIC063', 'H450C200', 'H523B017', 'H523B222', 'H523B223', 'P.33001461', '617080', '688320', '484168', '29116B', '453-G', '648-001', 'AMB360',
