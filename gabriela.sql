@@ -16,9 +16,11 @@ SELECT [Mes]
       ,[Grupo_Condiciones]
        ,[CodClienteSellOut]
       ,[ClienteSellOut]
-       ,[Plan_Ton]
+	  ,Plan_Dol
+	  ,real_Dolares
+      ,[Plan_Ton]
       ,[real_ton]
       ,[Plataforma]
   FROM [CmiSellOutEcuador].[dbo].[VENTAS_TABLERO]
-  WHERE Dia LIKE '%07/2022' AND ClienteSellOut <> 'Dummy'
+  WHERE Dia LIKE '%05/2022' AND ClienteSellOut <> 'Dummy'
 
