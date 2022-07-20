@@ -444,8 +444,8 @@ SELECT A.FFactura Fecha, A.Agencia Agencia, A.Cliente CodClienteSellOut, A.NomCl
 	   A.FacUnitario, A.TUnidades, 0 Plan_Ton, A.Kilos VentaKil, 0 Plan_Dol, A.Importe VentaDolares, 'Real' Tipo
 INTO #VENTAS_Y_NOTAS_CREDITO_1 
 FROM LF_VENTAS_HISTORICO_1 A;  
---SELECT * FROM #VENTAS_Y_NOTAS_CREDITO  WHERE  Plan_Ton =0 AND VentaKil = 0 AND Plan_Dol = 0 AND VentaDolares = 0
-
+--SELECT * FROM #VENTAS_Y_NOTAS_CREDITO_1  WHERE  Plan_Ton =0 AND VentaKil = 0 AND Plan_Dol = 0 AND VentaDolares = 0
+--select distinct CodClienteSellOut from #VENTAS_Y_NOTAS_CREDITO_1 where year(Fecha) = 2022 and month(Fecha) = 05 and VentaDolares > 0
 INSERT INTO #VENTAS_Y_NOTAS_CREDITO_1 
 SELECT A.FNC Fecha, A.Agencia Agencia, A.Cliente CodClienteSellOut, NCliente ClienteSellOut, 'SIN ASIGNAR - NC' Vendedor_Distribuidora,'SIN ASIGNAR - NC' Tipo_tienda_Distribuidora, A.CodArticulo CodLaFabril, A.CodAlicorp CodAlicorp,
 		0 FacUnitario, 0 TUnidades, 0 Plan_Ton, 0 VentaKil, 0 Plan_Dol,  A.Importe VentaDolares, 'Real' Tipo
@@ -514,9 +514,8 @@ FROM #VENTAS_Y_NOTAS_1 A
 	LEFT JOIN BD_FECHAS_1 F ON  A.Fecha= F.DIA
 	LEFT JOIN MAESTRO_ALICORP_1 M ON A.CodAlicorp = M.CodAlicorp
 	LEFT JOIN MAESTRO_AGENCIAS_1 AG ON A.Agencia = AG.Agencia
-	  
 
---SELECT * FROM BASE_FINAL
+
 
 
 
