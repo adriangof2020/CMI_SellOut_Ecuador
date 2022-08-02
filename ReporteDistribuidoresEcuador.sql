@@ -9,8 +9,7 @@ SELECT  [Mes]
       ,[Material]
       
       ,[Agrupacion_Distribuidora]
-      ,[Agencia_Distribuidora]
-      , 'SIN DATOS' Usuario
+      ,Agencia_Distribuidora , Usuario
       ,[Vendedor_Distribuidora]
       
       ,[CodClienteSellOut]
