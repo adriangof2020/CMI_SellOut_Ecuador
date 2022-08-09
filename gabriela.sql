@@ -15,12 +15,12 @@ SELECT [Mes]
       ,[Agencia_Distribuidora]
       ,[Grupo_Condiciones]
        ,[CodClienteSellOut]
-      ,[ClienteSellOut]
+      ,[ClienteSellOut], Vendedor_Distribuidora
 	  ,Plan_Dol
 	  ,real_Dolares
       ,[Plan_Ton]
       ,[real_ton]
       ,[Plataforma]
   FROM [CmiSellOutEcuador].[dbo].[VENTAS_TABLERO]
-  WHERE Dia LIKE '%07/2022' AND CodClienteSellOut <> 'Dummy'
+  WHERE Dia LIKE '%08/2022' AND CodClienteSellOut <> 'Dummy'
 
