@@ -434,7 +434,7 @@ SET CodAlicorp = CASE CodAlicorp
 
 DELETE FROM PLAN_LA_FABRIL_1 WHERE 1=1
 								   AND YEAR(Fecha) = 2022
-								   AND MONTH(Fecha) = 07
+								   AND MONTH(Fecha) = 08
 
 
 INSERT INTO PLAN_LA_FABRIL_1
@@ -675,7 +675,7 @@ WHERE Fecha LIKE '0_/%'
 
 DELETE FROM PLAN_HULARUSS WHERE 1=1
 								AND YEAR(Fecha) = 2022
-								AND MONTH(Fecha) = 07
+								AND MONTH(Fecha) = 08
 
 INSERT INTO PLAN_HULARUSS
 SELECT *
