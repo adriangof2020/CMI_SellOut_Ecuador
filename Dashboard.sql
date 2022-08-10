@@ -244,6 +244,10 @@ FROM CmiSellOutEcuador.dbo.MAESTRO_AGENCIAS;
 --								WHEN 'HARO ZAMORA IVAN' THEN 'HARO'
 --								WHEN 'MARVECOBE S.A ' THEN 'MARVECOBE S.A'
 --								WHEN 'PULLA VIMOS LOURDES CATALINA' THEN 'PULLA' ELSE Cliente END;
+
+--UPDATE INDICADORES_KPI SET TipoCliente = TRIM(TipoCliente);
+--UPDATE INDICADORES_KPI SET Cliente = TRIM(Cliente);
+   
 								
 -----------------------------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------------------------------
