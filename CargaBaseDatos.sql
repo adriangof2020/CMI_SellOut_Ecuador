@@ -423,6 +423,7 @@ SELECT CONVERT(VARCHAR(20), A.Fecha,103) Fecha, A.Agencia Agencia, A.CodClienteS
 FROM CODIFY A
    	 LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp;
 
+
 DELETE FROM #PANALES WHERE   FacUnitario is null
 --SELECT  sum(VentaDolares)   FROM #PANALES WHERE   FacUnitario is null and RIGHT(Fecha,7) = '08/2022'
 --SELECT    agencia, CodAlicorp,sum(VentaDolares)  FROM #PANALES WHERE   FacUnitario is null and RIGHT(Fecha,7) = '08/2022' group by agencia, CodAlicorp
