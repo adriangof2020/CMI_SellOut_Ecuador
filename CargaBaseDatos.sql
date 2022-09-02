@@ -684,7 +684,7 @@ SELECT F.DES_MES Mes, A.Fecha Dia,
 	   A.CodCategoria CodCategoria, A.Categoria Categoria, A.CodFamilia CodFamilia, A.Familia Familia, A.CodAlicorp CodAlicorp, A.Des_Material Material, A.CodMarca CodMarca, A.Marca Marca,
 	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
 	   AG.Oficina_Ventas, AG.Grupo_Vendedores, AG.Territorio, AG.Agrupacion_Distribuidora, AG.Agencia_Distribuidora, AG.Zona_Clientes, AG.Grupo_Condiciones,
-	   'SIN DATOS' Usuario, 'SIN ASIGNAR - PA_PLAN ' Vendedor_Distribuidora, 'SIN ASIGNAR - PA_PLAN ' Tipo_tienda_Distribuidora, 'SIN ASIGNAR - PA_PLAN ' CodClienteSellOut, 'SIN ASIGNAR - PA_PLAN ' ClienteSellOut,
+	   'SIN DATOS' Usuario, 'SIN ASIGNAR - 2MAY_PLAN ' Vendedor_Distribuidora, 'SIN ASIGNAR - 2MAY_PLAN ' Tipo_tienda_Distribuidora, 'SIN ASIGNAR - 2MAY_PLAN ' CodClienteSellOut, 'SIN ASIGNAR - 2MAY_PLAN ' ClienteSellOut,
 	   'Consumo Masivo' Negocio, 0 FacUnitario, 0 TUnidades, SUM(ISNULL(A.Plan_Ton,0)) Plan_Ton,
 	  SUM(ISNULL(A.Ventas_Ton,0)) real_ton, SUM(ISNULL(A.Plan_Dol,0)) Plan_Dol, SUM(ISNULL(A.Ventas_Reales,0)) real_Dolares,
 	  A.Plataforma Plataforma

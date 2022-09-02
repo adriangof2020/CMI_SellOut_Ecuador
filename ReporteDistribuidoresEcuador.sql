@@ -21,4 +21,4 @@ SELECT  [Mes]
       ,[real_Dolares]
       
   FROM [CmiSellOutEcuador].[dbo].[VENTAS_TABLERO]
-  WHERE Dia LIKE '%07/2022' AND CodClienteSellOut <> 'Dummy'
+  WHERE Dia LIKE '%08/2022' AND CodClienteSellOut <> 'Dummy'

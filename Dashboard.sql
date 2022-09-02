@@ -384,7 +384,7 @@ FROM BASE_MOBILVENDOR_AUTOMATICA_1 A
 	 LEFT JOIN MAESTRO_ALICORP_1 M ON A.CodAlicorp = M.CodAlicorp;
 
 
-DELETE FROM #PANALES_D WHERE   FacUnitario is null
+
 
 --DELETE FROM #PANALES_D WHERE CodAlicorp IN ('AD0220', 'AD0221', 'AD0224', 'AD0225', 'AD0226', 'AD0227', 'AD0228', 'AD0229', 'AD0230', 'AD0231', 'AD0232', 'AD0233', 'AD0234', 'AD0241', 'AD0242', 'AD0243', 'AD0246', 'AD0247',
 --                                          'AD0248', 'Ali001', 'Ali002', 'Ali003', 'Ali005', 'Ali007', 'Ali008', 'Ali009', 'Ali011', 'Ali013', 'Ali015', 'Ali016', 'Ali017', 'Ali10', 'AD0219', 'AD0215', 'AD0218', 'Ali006',
@@ -398,7 +398,7 @@ SELECT CONVERT(VARCHAR(20), A.Fecha,103) Fecha, A.Agencia Agencia, A.CodClienteS
 FROM CODIFY_HISTORICA_1 A
    	 LEFT JOIN MAESTRO_ALICORP_1 M ON A.CodAlicorp = M.CodAlicorp;
 
-
+DELETE FROM #PANALES_D WHERE   FacUnitario is null
 
 ALTER TABLE #PANALES_D ALTER COLUMN Plan_Ton FLOAT;
 ALTER TABLE #PANALES_D ALTER COLUMN VentaTon FLOAT;
@@ -408,7 +408,7 @@ UPDATE #PANALES_D
 SET Fecha = RIGHT(Fecha,9)
 WHERE Fecha LIKE '0_/%'
 
---SELECT * FROM #PANALES_D
+--SELECT * FROM #PANALES_D where Cliente_Dist = 'SIN ASIGNAR - CODIFY'
 
 
 
@@ -591,7 +591,7 @@ TRUNCATE TABLE BASE_FINAL;
 
 
 INSERT INTO BASE_FINAL
-SELECT AG.Agrupacion_Distribuidora Grupo_Cliente, F.Periodo Periodo,'Real' Tipo, AG.Agencia_Distribuidora Distribuidora, A.CodClienteSellOut Cliente_Dist,
+SELECT AG.Agrupacion_Distribuidora Grupo_Cliente, F.Periodo Periodo, AG.Agencia_Distribuidora Distribuidora, A.CodClienteSellOut Cliente_Dist,
 	   AG.Territorio Territorio, AG.Zona_Clientes,
 	   M.Plataforma Plataforma, CONCAT(M.CodMarca,' ',M.Marca) Marca, M.CodMarca Marcacod, M.Marca Marcadesc, CONCAT(M.CodFamilia,' ',M.Familia) Familia, M.CodFamilia Familiacod, M.Familia Familiadesc,
 	   CONCAT(M.CodCategoria,' ', M.Categoria) Categoria, M.CodCategoria Categoriacod, M.Categoria Categoriadesc, M.Material Material, A.CodAlicorp Materialcod, M.Material Materialdesc,
@@ -605,7 +605,7 @@ FROM #PANALES_D A
 --Inserto plan panales
 
 INSERT INTO BASE_FINAL
-SELECT AG.Agrupacion_Distribuidora Grupo_Cliente, F.Periodo Periodo,'NULL' Tipo, AG.Agencia_Distribuidora Distribuidora, 'NULL' Cliente_Dist,
+SELECT AG.Agrupacion_Distribuidora Grupo_Cliente, F.Periodo Periodo, AG.Agencia_Distribuidora Distribuidora, 'SIN ASIGNAR - PA_PLAN ' Cliente_Dist,
 	   AG.Territorio Territorio, AG.Zona_Clientes,
 	   M.Plataforma Plataforma, CONCAT(M.CodMarca,' ',M.Marca) Marca, M.CodMarca Marcacod, M.Marca Marcadesc, CONCAT(M.CodFamilia,' ',M.Familia) Familia, M.CodFamilia Familiacod, M.Familia Familiadesc,
 	   CONCAT(M.CodCategoria,' ', M.Categoria) Categoria, M.CodCategoria Categoriacod, M.Categoria Categoriadesc, M.Material Material, A.CodAlicorp Materialcod, M.Material Materialdesc,
@@ -621,7 +621,7 @@ FROM PLAN_PANALES_1 A
 --Inserto plan 2Maya
 
 INSERT INTO BASE_FINAL
-SELECT AG.Agrupacion_Distribuidora Grupo_Cliente, F.Periodo Periodo,'NULL' Tipo, AG.Agencia_Distribuidora Distribuidora, 'NULL' Cliente_Dist,
+SELECT AG.Agrupacion_Distribuidora Grupo_Cliente, F.Periodo Periodo, AG.Agencia_Distribuidora Distribuidora, 'SIN ASIGNAR - 2MAY_PLAN ' Cliente_Dist,
 	   AG.Territorio Territorio, AG.Zona_Clientes,
 	   M.Plataforma Plataforma, CONCAT(M.CodMarca,' ',M.Marca) Marca, M.CodMarca Marcacod, M.Marca Marcadesc, CONCAT(M.CodFamilia,' ',M.Familia) Familia, M.CodFamilia Familiacod, M.Familia Familiadesc,
 	   CONCAT(M.CodCategoria,' ', M.Categoria) Categoria, M.CodCategoria Categoriacod, M.Categoria Categoriadesc, M.Material Material, A.CodAlicorp Materialcod, M.Material Materialdesc,
@@ -866,7 +866,7 @@ SET CodAlicorp = CASE CodAlicorp
 --SELECT @DMAX = 26
 
 INSERT INTO BASE_FINAL
-SELECT AG.Agrupacion_Distribuidora Grupo_Cliente, F.Periodo Periodo,'Real' Tipo, AG.Agencia_Distribuidora Distribuidora, A.CodClienteSellOut Cliente_Dist,
+SELECT AG.Agrupacion_Distribuidora Grupo_Cliente, F.Periodo Periodo, AG.Agencia_Distribuidora Distribuidora, A.CodClienteSellOut Cliente_Dist,
 	   AG.Territorio Territorio, AG.Zona_Clientes,
 	   M.Plataforma Plataforma, CONCAT(M.CodMarca,' ',M.Marca) Marca, M.CodMarca Marcacod, M.Marca Marcadesc, CONCAT(M.CodFamilia,' ',M.Familia) Familia, M.CodFamilia Familiacod, M.Familia Familiadesc,
 	   CONCAT(M.CodCategoria,' ', M.Categoria) Categoria, M.CodCategoria Categoriacod, M.Categoria Categoriadesc, M.Material Material, A.CodAlicorp Materialcod, M.Material Materialdesc,
@@ -881,7 +881,7 @@ FROM #HULARUSS_1 A
 --Inserto plan Hularuss
 
 INSERT INTO BASE_FINAL
-SELECT AG.Agrupacion_Distribuidora Grupo_Cliente, F.Periodo Periodo,'NULL' Tipo, AG.Agencia_Distribuidora Distribuidora, 'NULL' Cliente_Dist,
+SELECT AG.Agrupacion_Distribuidora Grupo_Cliente, F.Periodo Periodo, AG.Agencia_Distribuidora Distribuidora, 'SIN ASIGNAR - HU' Cliente_Dist,
 	   AG.Territorio Territorio, AG.Zona_Clientes,
 	   M.Plataforma Plataforma, CONCAT(M.CodMarca,' ',M.Marca) Marca, M.CodMarca Marcacod, M.Marca Marcadesc, CONCAT(M.CodFamilia,' ',M.Familia) Familia, M.CodFamilia Familiacod, M.Familia Familiadesc,
 	   CONCAT(M.CodCategoria,' ', M.Categoria) Categoria, M.CodCategoria Categoriacod, M.Categoria Categoriadesc, M.Material Material, A.CodAlicorp Materialcod, M.Material Materialdesc,
