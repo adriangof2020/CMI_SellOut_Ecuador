@@ -449,22 +449,22 @@ FROM CmiSellOutEcuador.dbo.PLAN_LA_FABRIL;
 IF OBJECT_ID(N'tempdb..#VENTAS_Y_NOTAS_CREDITO_1') IS NOT NULL DROP TABLE #VENTAS_Y_NOTAS_CREDITO_1;
 --Creo tabla temporal para unir las ventas, las notas de crédito y el plan con los campos que se requiere
 SELECT A.FFactura Fecha, A.Agencia Agencia, A.Cliente CodClienteSellOut, A.NomCliente ClienteSellOut,A.NSupervisor Vendedor_Distribuidora, TVendedor Tipo_tienda_Distribuidora, A.CodArticulo CodLaFabril, A.CodAlicorp CodAlicorp,
-	   A.FacUnitario, A.TUnidades, 0 Plan_Ton, A.Kilos VentaKil, 0 Plan_Dol, A.Importe VentaDolares, 'Real' Tipo
+	   A.FacUnitario, A.TUnidades, 0 Plan_Ton, A.Kilos VentaKil, 0 Plan_Dol, A.Importe VentaDolares
 INTO #VENTAS_Y_NOTAS_CREDITO_1 
 FROM LF_VENTAS_HISTORICO_1 A;  
 --SELECT * FROM #VENTAS_Y_NOTAS_CREDITO_1  WHERE  Plan_Ton =0 AND VentaKil = 0 AND Plan_Dol = 0 AND VentaDolares = 0
 --select distinct CodClienteSellOut from #VENTAS_Y_NOTAS_CREDITO_1 where year(Fecha) = 2022 and month(Fecha) = 05 and VentaDolares > 0
 INSERT INTO #VENTAS_Y_NOTAS_CREDITO_1 
 SELECT A.FNC Fecha, A.Agencia Agencia, A.Cliente CodClienteSellOut, NCliente ClienteSellOut, 'SIN ASIGNAR - NC' Vendedor_Distribuidora,'SIN ASIGNAR - NC' Tipo_tienda_Distribuidora, A.CodArticulo CodLaFabril, A.CodAlicorp CodAlicorp,
-		0 FacUnitario, 0 TUnidades, 0 Plan_Ton, 0 VentaKil, 0 Plan_Dol,  A.Importe VentaDolares, 'Real' Tipo
+		0 FacUnitario, 0 TUnidades, 0 Plan_Ton, 0 VentaKil, 0 Plan_Dol,  A.Importe VentaDolares
 FROM LF_NC_HISTORICO_1  A;
 
 ALTER TABLE #VENTAS_Y_NOTAS_CREDITO_1 ALTER COLUMN Plan_Ton FLOAT;
 ALTER TABLE #VENTAS_Y_NOTAS_CREDITO_1 ALTER COLUMN Plan_Dol FLOAT;
 
  INSERT INTO #VENTAS_Y_NOTAS_CREDITO_1
- SELECT P.Fecha Fecha, P.Agencia, 'NULL' CodClienteSellOut, 'SIN ASIGNAR - LF_PLAN ' ClienteSellOut, 'SIN ASIGNAR - LF_PLAN ' Vendedor_Distribuidora, 'SIN ASIGNAR - LF_PLAN' Tipo_tienda_Distribuidora, 'NC' CodLaFabril, P.CodAlicorp CodAlicorp,
-		0 FacUnitario, 0 TUnidades, P.Plan_Ton, 0 VentaKil, P.Importe Plan_Dol , 0 VentaDolares, 'NULL' Tipo
+ SELECT P.Fecha Fecha, P.Agencia, 'SIN ASIGNAR - LF_PLAN' CodClienteSellOut, 'SIN ASIGNAR - LF_PLAN' ClienteSellOut, 'SIN ASIGNAR - LF_PLAN' Vendedor_Distribuidora, 'SIN ASIGNAR - LF_PLAN' Tipo_tienda_Distribuidora, 'NC' CodLaFabril, P.CodAlicorp CodAlicorp,
+		0 FacUnitario, 0 TUnidades, P.Plan_Ton, 0 VentaKil, P.Importe Plan_Dol , 0 VentaDolares
  FROM PLAN_LA_FABRIL_1 P
 
 
@@ -491,7 +491,7 @@ WHERE Agencia = 'AMA'
 IF OBJECT_ID(N'tempdb..#VENTAS_Y_NOTAS_1') IS NOT NULL DROP TABLE #VENTAS_Y_NOTAS_1;
 --Creo tabla temporal para darle formato varchar a la fecha
 SELECT CONVERT(VARCHAR(20), V.Fecha,103) Fecha, V.Agencia, V.CodClienteSellOut, V.ClienteSellOut, V.CodAlicorp,
-	   V.FacUnitario, V.TUnidades,V.Plan_Ton, V.Ventakil, V.Plan_Dol, V.VentaDolares, V.Tipo
+	   V.FacUnitario, V.TUnidades,V.Plan_Ton, V.Ventakil, V.Plan_Dol, V.VentaDolares
 INTO #VENTAS_Y_NOTAS_1
 FROM #VENTAS_Y_NOTAS_CREDITO_1 V
 
@@ -511,7 +511,7 @@ WHERE Agencia is null;
 TRUNCATE TABLE BASE_FINAL;
 
 INSERT INTO BASE_FINAL
-SELECT AG.Agrupacion_Distribuidora Grupo_Cliente, F.Periodo Periodo, A.Tipo, AG.Agencia_Distribuidora Distribuidora, A.CodClienteSellOut Cliente_Dist,
+SELECT AG.Agrupacion_Distribuidora Grupo_Cliente, F.Periodo Periodo, AG.Agencia_Distribuidora Distribuidora, A.CodClienteSellOut Cliente_Dist,
 	   AG.Territorio Territorio, AG.Zona_Clientes Zona_Clientes,
    	   M.Plataforma Plataforma, CONCAT(M.CodMarca,' ',M.Marca) Marca, M.CodMarca Marcacod, M.Marca Marcadesc, CONCAT(M.CodFamilia,' ',M.Familia) Familia, M.CodFamilia Familiacod, M.Familia Familiadesc,
 	   CONCAT(M.CodCategoria,' ', M.Categoria) Categoria, M.CodCategoria Categoriacod, M.Categoria Categoriadesc, M.Material Material, A.CodAlicorp Materialcod, M.Material Materialdesc,
@@ -758,7 +758,7 @@ SET CodAlicorp = CASE CodAlicorp
 --SELECT @DMAX = 26
 
 INSERT INTO BASE_FINAL
-SELECT AG.Agrupacion_Distribuidora Grupo_Cliente, F.Periodo Periodo,'Real' Tipo, AG.Agencia_Distribuidora Distribuidora, A.CodClienteSellOut Cliente_Dist,
+SELECT AG.Agrupacion_Distribuidora Grupo_Cliente, F.Periodo Periodo, AG.Agencia_Distribuidora Distribuidora, A.CodClienteSellOut Cliente_Dist,
 	   AG.Territorio Territorio, AG.Zona_Clientes Zona_Clientes,
 	   M.Plataforma Plataforma, CONCAT(M.CodMarca,' ',M.Marca) Marca, M.CodMarca Marcacod, M.Marca Marcadesc, CONCAT(M.CodFamilia,' ',M.Familia) Familia, M.CodFamilia Familiacod, M.Familia Familiadesc,
 	   CONCAT(M.CodCategoria,' ', M.Categoria) Categoria, M.CodCategoria Categoriacod, M.Categoria Categoriadesc, M.Material Material, A.CodAlicorp Materialcod, M.Material Materialdesc,
@@ -775,7 +775,7 @@ FROM #HULARUSS_1 A
 --Inserto plan Hularuss
 
 INSERT INTO BASE_FINAL
-SELECT AG.Agrupacion_Distribuidora Grupo_Cliente, F.Periodo Periodo,'NULL' Tipo, AG.Agencia_Distribuidora Distribuidora, 'NULL' Cliente_Dist,
+SELECT AG.Agrupacion_Distribuidora Grupo_Cliente, F.Periodo Periodo, AG.Agencia_Distribuidora Distribuidora, 'SIN ASIGNAR - HU' Cliente_Dist,
 	   AG.Territorio Territorio, AG.Zona_Clientes Zona_Clientes,
 	   M.Plataforma Plataforma, CONCAT(M.CodMarca,' ',M.Marca) Marca, M.CodMarca Marcacod, M.Marca Marcadesc, CONCAT(M.CodFamilia,' ',M.Familia) Familia, M.CodFamilia Familiacod, M.Familia Familiadesc,
 	   CONCAT(M.CodCategoria,' ', M.Categoria) Categoria, M.CodCategoria Categoriacod, M.Categoria Categoriadesc, M.Material Material, A.CodAlicorp Materialcod, M.Material Materialdesc,
