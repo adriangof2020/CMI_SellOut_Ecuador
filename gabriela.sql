@@ -6,5 +6,5 @@ SELECT Mes, Dia,
        CodClienteSellOut, ClienteSellOut, Vendedor_Distribuidora, Usuario,
 	   Plan_Dol, real_Dolares, Plan_Ton, real_ton, Plataforma
   FROM CmiSellOutEcuador.dbo.VENTAS_TABLERO
-  WHERE Dia LIKE '%08/2022' AND CodClienteSellOut <> 'Dummy'
+  WHERE Dia LIKE '%09/2022' AND CodClienteSellOut <> 'Dummy'
 
