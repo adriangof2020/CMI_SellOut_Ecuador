@@ -477,8 +477,8 @@ FROM CODIFY A
 
 
 DELETE FROM #PANALES WHERE   FacUnitario is null
---SELECT  sum(VentaDolares)   FROM #PANALES WHERE   FacUnitario is null and RIGHT(Fecha,7) = '08/2022'
---SELECT    agencia, CodAlicorp,sum(VentaDolares)  FROM #PANALES WHERE   FacUnitario is null and RIGHT(Fecha,7) = '08/2022' group by agencia, CodAlicorp
+--SELECT  sum(VentaDolares)   FROM #PANALES WHERE   FacUnitario is null and RIGHT(Fecha,7) = '09/2022'
+--SELECT    agencia, CodAlicorp,sum(VentaDolares)  FROM #PANALES WHERE   FacUnitario is null and RIGHT(Fecha,7) = '09/2022' group by agencia, CodAlicorp
 --DELETE FROM #PANALES WHERE CodAlicorp IN ('AD0220', 'AD0221', 'AD0224', 'AD0225', 'AD0226', 'AD0227', 'AD0228', 'AD0229', 'AD0230', 'AD0231', 'AD0232', 'AD0233', 'AD0234', 'AD0241', 'AD0242', 'AD0243', 'AD0246', 'AD0247',
 --                                          'AD0248', 'Ali001', 'Ali002', 'Ali003', 'Ali005', 'Ali007', 'Ali008', 'Ali009', 'Ali011', 'Ali013', 'Ali015', 'Ali016', 'Ali017', 'Ali10', 'AD0219', 'AD0215', 'AD0218', 'Ali006',
 --										  'AD0217', 'ESPAPROM', 'AD0103', 'AD239', 'Ali014', 'ALIC063', 'H450C200', 'H523B017', 'H523B222', 'H523B223', 'P.33001461', '617080', '688320', '484168', '29116B', '453-G', '648-001', 'AMB360',
@@ -760,7 +760,7 @@ GROUP BY F.DES_MES, A.Fecha,
 --SET LANGUAGE SPANISH;
 
 --Coloco el mes en curso aqui comienza
-DELETE FROM HULARUSS_HISTORICO WHERE LEFT(Fecha,7) = '2022-08';
+DELETE FROM HULARUSS_HISTORICO WHERE LEFT(Fecha,7) = '2022-09';
 
 
 --ALTER TABLE HULARUSS_HISTORICO ALTER COLUMN Importe VARCHAR(100);
@@ -770,7 +770,7 @@ ALTER TABLE HULARUSS_HISTORICO ALTER COLUMN Cantidad VARCHAR(100);
 
 DECLARE @HULARUSS VARCHAR(MAX);
 SELECT @HULARUSS = BULKCOLUMN FROM 
-OPENROWSET(BULK 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\AGO.json', SINGLE_BLOB) JSON;
+OPENROWSET(BULK 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\ALISCORP_ventas_peso.json', SINGLE_BLOB) JSON;
 IF (ISJSON(@HULARUSS) = 1)
 INSERT INTO HULARUSS_HISTORICO
 SELECT *
@@ -793,7 +793,7 @@ WITH (
 	Vendedor VARCHAR(100),
 	Categoria VARCHAR(100)
 )
-WHERE YEAR(Fecha) = 2022 AND MONTH(Fecha) = 08;
+WHERE YEAR(Fecha) = 2022 AND MONTH(Fecha) = 09;
 
 
 --BULK INSERT HULARUSS_HISTORICO
@@ -827,12 +827,12 @@ TRUNCATE TABLE VENTAS_HULARUSS;
 INSERT INTO VENTAS_HULARUSS
 SELECT *
 FROM HULARUSS_HISTORICO
-WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 08;
+WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 09;
 
 INSERT INTO VENTAS_HULARUSS
 SELECT *
 FROM HULARUSS_HISTORICO
-WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 07;
+WHERE DATEPART(YEAR,Fecha) = 2022 AND DATEPART(MONTH,Fecha) = 08;
 
 ------------------USAR CUANDO LLEGUE EL 2023------------------------------------------------------
 --INSERT INTO VENTAS_HULARUSS
@@ -999,7 +999,7 @@ SET LANGUAGE US_ENGLISH;
 TRUNCATE TABLE NuevoPlanHularussFormato;
 
 BULK INSERT NuevoPlanHularussFormato
-FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\PLAN_HULARUSS_AGO.csv'
+FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\PLAN_HULARUSS.csv'
 WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
 
 --DECLARE @dia DATE;
