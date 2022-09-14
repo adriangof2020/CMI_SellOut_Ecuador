@@ -13,3 +13,4 @@ SELECT  TipoDistribuidor ,Agrupacion_Distribuidora,  SUM(Real_Ton) toneladas FRO
 WHERE Mes = 'Set-22'
 GROUP BY TipoDistribuidor ,Agrupacion_Distribuidora
 ORDER BY 1
+

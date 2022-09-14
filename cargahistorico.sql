@@ -436,12 +436,12 @@ ALTER TABLE #PANALES ALTER COLUMN Plan_Dol FLOAT;
 
 --Creo tabla temporal para insertar variables Dummies ya que no todas los sku tienen registros suficientes y asi no se desconfigure el excel
 
-IF OBJECT_ID(N'tempdb..#PANALES_DUMMY1') IS NOT NULL DROP TABLE #PANALES_DUMMY1;
+--IF OBJECT_ID(N'tempdb..#PANALES_DUMMY1') IS NOT NULL DROP TABLE #PANALES_DUMMY1;
 
-SELECT B.Fecha, A.Agencia, C.CodAlicorp
-INTO #PANALES_DUMMY1 
-FROM (SELECT DISTINCT Agencia FROM #PANALES) A CROSS JOIN #FECHA B
-CROSS JOIN (SELECT DISTINCT CodAlicorp FROM #PANALES) C
+--SELECT B.Fecha, A.Agencia, C.CodAlicorp
+--INTO #PANALES_DUMMY1 
+--FROM (SELECT DISTINCT Agencia FROM #PANALES) A CROSS JOIN #FECHA B
+--CROSS JOIN (SELECT DISTINCT CodAlicorp FROM #PANALES) C
 
 --INSERT INTO #PANALES
 --SELECT A.Fecha Fecha, A.Agencia Agencia, 'Dummy' CodClienteSellOut, 'Dummy' ClienteSellOut, 'Dummy' Vendedor_Distribuidora, 'Dummy' Tipo_tienda_Distribuidora, A.CodAlicorp CodAlicorp,
@@ -529,10 +529,10 @@ SET CodAlicorp = CASE CodAlicorp
 
 
 --Inserto data dummy
-INSERT INTO #PANALES_DUMMY1
-SELECT B.Fecha, A.Agencia, C.CodAlicorp
-FROM  (SELECT F.Agencia FROM (SELECT DISTINCT Agencia_Distribuidora FROM PLAN_PANALES) D LEFT JOIN MAESTRO_AGENCIAS F ON D.Agencia_Distribuidora = F.Agencia_Distribuidora)  A CROSS JOIN #FECHA B
-CROSS JOIN (SELECT DISTINCT CodAlicorp FROM PLAN_PANALES) C
+--INSERT INTO #PANALES_DUMMY1
+--SELECT B.Fecha, A.Agencia, C.CodAlicorp
+--FROM  (SELECT F.Agencia FROM (SELECT DISTINCT Agencia_Distribuidora FROM PLAN_PANALES) D LEFT JOIN MAESTRO_AGENCIAS F ON D.Agencia_Distribuidora = F.Agencia_Distribuidora)  A CROSS JOIN #FECHA B
+--CROSS JOIN (SELECT DISTINCT CodAlicorp FROM PLAN_PANALES) C
 
 
 TRUNCATE TABLE PLAN_2MAYA;
@@ -607,17 +607,17 @@ SET CodAlicorp = CASE CodAlicorp
 
 --Inserto data dummy
 
-INSERT INTO #PANALES_DUMMY1
-SELECT B.Fecha, A.Agencia, C.CodAlicorp
-FROM  (SELECT F.Agencia FROM (SELECT DISTINCT Agencia_Distribuidora FROM PLAN_2MAYA) D LEFT JOIN MAESTRO_AGENCIAS F ON D.Agencia_Distribuidora = F.Agencia_Distribuidora)  A CROSS JOIN #FECHA B
-CROSS JOIN (SELECT DISTINCT CodAlicorp FROM PLAN_2MAYA) C
+--INSERT INTO #PANALES_DUMMY1
+--SELECT B.Fecha, A.Agencia, C.CodAlicorp
+--FROM  (SELECT F.Agencia FROM (SELECT DISTINCT Agencia_Distribuidora FROM PLAN_2MAYA) D LEFT JOIN MAESTRO_AGENCIAS F ON D.Agencia_Distribuidora = F.Agencia_Distribuidora)  A CROSS JOIN #FECHA B
+--CROSS JOIN (SELECT DISTINCT CodAlicorp FROM PLAN_2MAYA) C
 
 
-INSERT INTO #PANALES
-SELECT A.Fecha Fecha, A.Agencia Agencia, 'Dummy' CodClienteSellOut, 'Dummy' ClienteSellOut, 'Dummy' Usuario, 'Dummy' Vendedor_Distribuidora, 'Dummy' Tipo_tienda_Distribuidora, A.CodAlicorp CodAlicorp,
-	   0 FacUnitario, 0 TUnidades, 0  Plan_Ton, 0 VentaTon, 0 Plan_Dol, 0 VentaDolares,
-	   'Consumo Masivo' Negocio
-FROM #PANALES_DUMMY1 A
+--INSERT INTO #PANALES
+--SELECT A.Fecha Fecha, A.Agencia Agencia, 'Dummy' CodClienteSellOut, 'Dummy' ClienteSellOut, 'Dummy' Usuario, 'Dummy' Vendedor_Distribuidora, 'Dummy' Tipo_tienda_Distribuidora, A.CodAlicorp CodAlicorp,
+--	   0 FacUnitario, 0 TUnidades, 0  Plan_Ton, 0 VentaTon, 0 Plan_Dol, 0 VentaDolares,
+--	   'Consumo Masivo' Negocio
+--FROM #PANALES_DUMMY1 A
 
 
 UPDATE #PANALES 
@@ -802,6 +802,7 @@ UPDATE VENTAS_HULARUSS SET CodAlicorp = REPLACE(CodAlicorp, 'A', '')
 DELETE FROM VENTAS_HULARUSS WHERE CodAlicorp LIKE '%PROMO%';
 DELETE FROM VENTAS_HULARUSS WHERE CodAlicorp = 'BNDEO - 002';
 DELETE FROM VENTAS_HULARUSS WHERE Importe IS NULL;
+DELETE FROM VENTAS_HULARUSS WHERE Canal IS NULL;
 
 DELETE FROM VENTAS_HULARUSS WHERE Importe =0; 
 --Ver este delete
@@ -834,7 +835,6 @@ UPDATE A SET A.Ventakilos = (A.Cantidad * M.PesoKG) FROM VENTAS_HULARUSS A
 
 UPDATE A SET A.Canal = CASE A.Canal WHEN 'TAT' THEN 'MINORISTAS' ELSE 'MAYORISTAS' END FROM VENTAS_HULARUSS A 
 	
-
 --UPDATE A SET A.Canal = 'MAYORISTAS' FROM VENTAS_HULARUSS A 
 --	WHERE  A.Canal <> 'TAT'
 
@@ -854,12 +854,12 @@ FROM VENTAS_HULARUSS A
 --Solo deben salir 28 rows por los datos ficticios simpre y cuando lo corra desde la línea donde se agregan
 
 --Creo tabla temporal para insertar variables Dummies ya que no todas los sku tienen registros suficientes y asi no se desconfigure el excel
-IF OBJECT_ID(N'tempdb..#HULARUSS_DUMMY') IS NOT NULL DROP TABLE #HULARUSS_DUMMY;
+--IF OBJECT_ID(N'tempdb..#HULARUSS_DUMMY') IS NOT NULL DROP TABLE #HULARUSS_DUMMY;
 
-SELECT B.Fecha, A.Agencia, C.CodAlicorp
-INTO #HULARUSS_DUMMY
-FROM (SELECT DISTINCT Agencia FROM #HULARUSS) A CROSS JOIN #FECHA B
-CROSS JOIN (SELECT DISTINCT CodAlicorp FROM #HULARUSS) C
+--SELECT B.Fecha, A.Agencia, C.CodAlicorp
+--INTO #HULARUSS_DUMMY
+--FROM (SELECT DISTINCT Agencia FROM #HULARUSS) A CROSS JOIN #FECHA B
+--CROSS JOIN (SELECT DISTINCT CodAlicorp FROM #HULARUSS) C
 
 
 ALTER TABLE #HULARUSS ALTER COLUMN Plan_Ton FLOAT;
@@ -952,21 +952,21 @@ SET CodAlicorp = CASE CodAlicorp
 	WHEN '8309009' THEN '8309128'
 	WHEN '293369' THEN '29369' ELSE CodAlicorp END;
 
-INSERT INTO #HULARUSS_DUMMY
-SELECT B.Fecha, A.Agencia, C.CodAlicorp
-FROM  (SELECT F.Agencia FROM (SELECT DISTINCT NomOficina FROM #HULARUSS_PLAN_NUEVO_MINOR) D LEFT JOIN MAESTRO_AGENCIAS F ON D.NomOficina = F.NomOficina)  A CROSS JOIN #FECHA B
-CROSS JOIN (SELECT DISTINCT CodAlicorp FROM #HULARUSS_PLAN_NUEVO_MINOR) C
+--INSERT INTO #HULARUSS_DUMMY
+--SELECT B.Fecha, A.Agencia, C.CodAlicorp
+--FROM  (SELECT F.Agencia FROM (SELECT DISTINCT NomOficina FROM #HULARUSS_PLAN_NUEVO_MINOR) D LEFT JOIN MAESTRO_AGENCIAS F ON D.NomOficina = F.NomOficina)  A CROSS JOIN #FECHA B
+--CROSS JOIN (SELECT DISTINCT CodAlicorp FROM #HULARUSS_PLAN_NUEVO_MINOR) C
 
 
 
 --select SUM(Plan_Ton) FROM #HULARUSS_PLAN_NUEVO_MAYOR
 
 
-INSERT INTO #HULARUSS
-SELECT A.Fecha Fecha, 'Dummy' Canal , A.Agencia Agencia, 'Dummy' Usuario, 'Dummy' Vendedor_Distribuidora, 'Dummy' Tipo_tienda_Distribuidora, 'Dummy' CodClienteSellOut, A.CodAlicorp CodAlicorp,
-	   0 FacUnitario, 0 TUnidades, 0  Plan_Ton, 0 Ventakil, 0 Plan_Dol, 0 VentaDolares,
-	   'Consumo Masivo' Negocio
-FROM #HULARUSS_DUMMY A
+--INSERT INTO #HULARUSS
+--SELECT A.Fecha Fecha, 'Dummy' Canal , A.Agencia Agencia, 'Dummy' Usuario, 'Dummy' Vendedor_Distribuidora, 'Dummy' Tipo_tienda_Distribuidora, 'Dummy' CodClienteSellOut, A.CodAlicorp CodAlicorp,
+--	   0 FacUnitario, 0 TUnidades, 0  Plan_Ton, 0 Ventakil, 0 Plan_Dol, 0 VentaDolares,
+--	   'Consumo Masivo' Negocio
+--FROM #HULARUSS_DUMMY A
 
 
 UPDATE #HULARUSS 
@@ -1341,19 +1341,19 @@ FROM #VENTAS_Y_NOTAS_CREDITO V
 
 
 --Creo tabla temporal para insertar variables Dummies ya que no todas los sku tienen registros suficientes y asi no se desconfigure el excel
-IF OBJECT_ID(N'tempdb..#LAFABRIL_DUMMY') IS NOT NULL DROP TABLE #LAFABRIL_DUMMY;
+--IF OBJECT_ID(N'tempdb..#LAFABRIL_DUMMY') IS NOT NULL DROP TABLE #LAFABRIL_DUMMY;
 
-SELECT B.Fecha, A.Agencia, C.CodAlicorp
-INTO #LAFABRIL_DUMMY
-FROM (SELECT DISTINCT Agencia FROM #VENTAS_Y_NOTAS) A CROSS JOIN #FECHA B
-CROSS JOIN (SELECT DISTINCT CodAlicorp FROM #VENTAS_Y_NOTAS) C
+--SELECT B.Fecha, A.Agencia, C.CodAlicorp
+--INTO #LAFABRIL_DUMMY
+--FROM (SELECT DISTINCT Agencia FROM #VENTAS_Y_NOTAS) A CROSS JOIN #FECHA B
+--CROSS JOIN (SELECT DISTINCT CodAlicorp FROM #VENTAS_Y_NOTAS) C
 
 
-INSERT INTO #VENTAS_Y_NOTAS
-SELECT A.Fecha Fecha, A.Agencia Agencia, 'Dummy' CodClienteSellOut, 'Dummy' ClienteSellOut, 'Dummy' Vendedor_Distribuidora, 'Dummy' Tipo_tienda_Distribuidora, 'Dummy' CodLaFabril,  A.CodAlicorp CodAlicorp,
-	   0 FacUnitario, 0 TUnidades, 0  Plan_Ton, 0 Ventakil, 0 Plan_Dol, 0 VentaDolares,
-	   'MARCAS TERCEROS' TipoProducto
-FROM #LAFABRIL_DUMMY A
+--INSERT INTO #VENTAS_Y_NOTAS
+--SELECT A.Fecha Fecha, A.Agencia Agencia, 'Dummy' CodClienteSellOut, 'Dummy' ClienteSellOut, 'Dummy' Vendedor_Distribuidora, 'Dummy' Tipo_tienda_Distribuidora, 'Dummy' CodLaFabril,  A.CodAlicorp CodAlicorp,
+--	   0 FacUnitario, 0 TUnidades, 0  Plan_Ton, 0 Ventakil, 0 Plan_Dol, 0 VentaDolares,
+--	   'MARCAS TERCEROS' TipoProducto
+--FROM #LAFABRIL_DUMMY A
 
 
 
