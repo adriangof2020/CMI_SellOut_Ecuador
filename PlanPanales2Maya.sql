@@ -1,3 +1,9 @@
+DECLARE @dia DATE;
+SELECT @dia = DATEADD(DAY,-1,SYSDATETIME());
+
+
+SET LANGUAGE SPANISH;
+
 TRUNCATE TABLE PLAN_2MAYA;
 
 BULK INSERT PLAN_2MAYA
@@ -7,6 +13,37 @@ WITH (FIELDTERMINATOR=';', FIRSTROW=2, CODEPAGE='ACP');
 UPDATE A SET Fecha = REPLACE(Fecha, '.', '/') FROM PLAN_2MAYA A;
 UPDATE A SET Ventas_Reales = 0 FROM PLAN_2MAYA A;
 UPDATE A SET Ventas_Ton = 0 FROM PLAN_2MAYA A;
+
+
+ALTER TABLE PLAN_2MAYA ALTER COLUMN Fecha DATE NOT NULL;
+
+SET LANGUAGE US_ENGLISH;
+
+UPDATE PLAN_2MAYA SET Fecha = CASE WHEN Fecha > @dia THEN @dia ELSE Fecha END;
+
+IF OBJECT_ID(N'tempdb..#2MAYA') IS NOT NULL DROP TABLE #2MAYA;
+
+SELECT [Sociedad] ,[Ejercicio_Per_odo] , CONVERT(VARCHAR(20), Fecha, 103) Fecha ,[Lista_Precios] ,[Negocio] ,[Des_Negocio] ,[Sub_Negocio] ,[CodCategoria] ,[Categoria] ,[Sector]
+      ,[Des_Sector] ,[Grupo_Clientes] ,[Des_Grupo_Clientes] ,[Grupo_Precios] ,[Des_Grupo_Precios] ,[CodMarca] ,[Marca] ,[CodFamilia] ,[Familia]
+      ,[CodAlicorp] ,[Des_Material] ,[Oficina_ventas] ,[Des_Oficina_ventas] ,[Gpo_vendedores] ,[Des_Gpo_vendedores] ,[Gpo_condiciones1] ,[Des_Gpo_condiciones1]
+      ,[Cliente]  ,[Agencia_Distribuidora] ,[Zona] ,[Des_Zona] ,[Territorio] ,[Des_territorio] ,[Destinatario_mc_a] ,[Desmercancia] ,[CodPlataforma]
+      ,[Plataforma] ,[Plan_Dol] ,[Ventas_Reales] ,[Plan_Ton] ,[Ventas_Ton]
+INTO #2MAYA
+FROM PLAN_2MAYA
+
+--SELECT * FROM #PANALES
+
+ALTER TABLE PLAN_2MAYA ALTER COLUMN Fecha VARCHAR(20)
+
+TRUNCATE TABLE PLAN_2MAYA;
+
+
+INSERT INTO PLAN_2MAYA
+SELECT *
+FROM #2MAYA
+
+
+
 
 DELETE PLAN_2MAYA WHERE Plan_Dol = 0 AND Plan_Ton = 0;
 DELETE FROM PLAN_2MAYA WHERE Plan_Dol IS NULL AND Plan_Ton IS NULL;
@@ -68,10 +105,12 @@ SET CodAlicorp = CASE CodAlicorp
 --	ELSE NomOficina END
 
 
-
 --Ingreso los planes
+SET LANGUAGE SPANISH;
 
 TRUNCATE TABLE PLAN_PANALES;
+
+
 
 BULK INSERT PLAN_PANALES
 FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\PLAN_PANALES.csv'
@@ -81,8 +120,34 @@ UPDATE A SET Fecha = REPLACE(Fecha, '.', '/') FROM PLAN_PANALES A;
 UPDATE A SET Ventas_Reales = 0 FROM PLAN_PANALES A;
 UPDATE A SET Ventas_Ton = 0 FROM PLAN_PANALES A;
 
+ALTER TABLE PLAN_PANALES ALTER COLUMN Fecha DATE NOT NULL;
 
 SET LANGUAGE US_ENGLISH;
+
+UPDATE PLAN_PANALES SET Fecha = CASE WHEN Fecha > @dia THEN @dia ELSE Fecha END;
+
+IF OBJECT_ID(N'tempdb..#PANALES') IS NOT NULL DROP TABLE #PANALES;
+
+SELECT [Sociedad] ,[Ejercicio_Per_odo] , CONVERT(VARCHAR(20), Fecha, 103) Fecha ,[Lista_Precios] ,[Negocio] ,[Des_Negocio] ,[Sub_Negocio] ,[CodCategoria] ,[Categoria] ,[Sector]
+      ,[Des_Sector] ,[Grupo_Clientes] ,[Des_Grupo_Clientes] ,[Grupo_Precios] ,[Des_Grupo_Precios] ,[CodMarca] ,[Marca] ,[CodFamilia] ,[Familia]
+      ,[CodAlicorp] ,[Des_Material] ,[Oficina_ventas] ,[Des_Oficina_ventas] ,[Gpo_vendedores] ,[Des_Gpo_vendedores] ,[Gpo_condiciones1] ,[Des_Gpo_condiciones1]
+      ,[Cliente]  ,[Agencia_Distribuidora] ,[Zona] ,[Des_Zona] ,[Territorio] ,[Des_territorio] ,[Destinatario_mc_a] ,[Desmercancia] ,[CodPlataforma]
+      ,[Plataforma] ,[Plan_Dol] ,[Ventas_Reales] ,[Plan_Ton] ,[Ventas_Ton]
+INTO #PANALES
+FROM PLAN_PANALES
+
+--SELECT * FROM #PANALES
+
+ALTER TABLE PLAN_PANALES ALTER COLUMN Fecha VARCHAR(20)
+
+TRUNCATE TABLE PLAN_PANALES;
+
+
+INSERT INTO PLAN_PANALES
+SELECT *
+FROM #PANALES
+
+
 
 DELETE PLAN_PANALES WHERE Plan_Dol = 0 AND Plan_Ton = 0;
 DELETE FROM PLAN_PANALES WHERE Plan_Dol IS NULL AND Plan_Ton IS NULL;
