@@ -186,65 +186,11 @@ DELETE FROM #WORKINGDAYS WHERE DIA_SEM = '7';
 DELETE FROM #WORKINGDAYS WHERE FESTIVO = '1';
 
 
---Este maestro solo tiene codigos alicorp y sus quiebres
-TRUNCATE TABLE MAESTRO_ALICORP;
---La llave es el CodAlicorp
-BULK INSERT MAESTRO_ALICORP
-FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\MATERIALES_ALICORP_2.csv'
-WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
 
-UPDATE MAESTRO_ALICORP SET CodAlicorp = TRIM(CodAlicorp);
-UPDATE MAESTRO_ALICORP SET Material = TRIM(Material);
-UPDATE MAESTRO_ALICORP SET CodCategoria = TRIM(CodCategoria);
-UPDATE MAESTRO_ALICORP SET Categoria = TRIM(Categoria);
-UPDATE MAESTRO_ALICORP SET CodFamilia = TRIM(CodFamilia);
-UPDATE MAESTRO_ALICORP SET Familia = TRIM(Familia);
-UPDATE MAESTRO_ALICORP SET CodMarca = TRIM(CodMarca);
-UPDATE MAESTRO_ALICORP SET Marca = TRIM(Marca);
-UPDATE MAESTRO_ALICORP SET Plataforma = TRIM(Plataforma);
-
---Este maestro se usa para unir el CodLaFabril con los CodAlicorp
-TRUNCATE TABLE TABLA_MATERIALES;
---En esta base la llave es CodLaFabril&Descripcion de la Fabril
--- se usa para poner los codigos alicorp a las notas de credito
-BULK INSERT TABLA_MATERIALES
-FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\MATERIALES_ALICORP_1.csv'
-WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
-
-UPDATE TABLA_MATERIALES SET CodFabril = TRIM(CodFabril);
-UPDATE TABLA_MATERIALES SET MaterialLaFabril = TRIM(MaterialLaFabril);
-UPDATE TABLA_MATERIALES SET CodAlicorp = TRIM(CodAlicorp);
-UPDATE TABLA_MATERIALES SET Material = TRIM(Material);
-UPDATE TABLA_MATERIALES SET CodCategoria = TRIM(CodCategoria);
-UPDATE TABLA_MATERIALES SET Categoria = TRIM(Categoria);
-UPDATE TABLA_MATERIALES SET CodFamilia = TRIM(CodFamilia);
-UPDATE TABLA_MATERIALES SET Familia = TRIM(Familia);
-UPDATE TABLA_MATERIALES SET CodMarca = TRIM(CodMarca);
-UPDATE TABLA_MATERIALES SET Marca = TRIM(Marca);
-UPDATE TABLA_MATERIALES SET Plataforma = TRIM(Plataforma);
-
-
-
-TRUNCATE TABLE MAESTRO_AGENCIAS;
- 
-BULK INSERT MAESTRO_AGENCIAS
-FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\MAESTRO_AGENCIAS.csv'
-WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
-
-UPDATE MAESTRO_AGENCIAS SET Agencia = TRIM(Agencia);
-UPDATE MAESTRO_AGENCIAS SET NomOficina = TRIM(NomOficina);
-UPDATE MAESTRO_AGENCIAS SET CodOficina = TRIM(CodOficina);
 
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 --Panales
-TRUNCATE TABLE VENDEDORES_PANALES;
-
-BULK INSERT VENDEDORES_PANALES
-FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\VenderoresPanales.csv'
-WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
-
-UPDATE VENDEDORES_PANALES SET Codigo = TRIM(Codigo);
 
 --Esta es la base de ventas de Panales
 
@@ -681,7 +627,7 @@ WHERE Fecha LIKE '0_/%'
 --------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------
 -- Para el proyecto de tablero
-IF OBJECT_ID('VENTAS_TABLERO') IS NOT NULL DROP TABLE VENTAS_TABLERO;
+IF OBJECT_ID('DATA_MART_SO_ECUADOR') IS NOT NULL DROP TABLE DATA_MART_SO_ECUADOR;
 
 SELECT F.DES_MES Mes, A.Fecha Dia, 'MINORISTAS' TipoDistribuidor,
 	   M.CodCategoria CodCategoria, M.Categoria Categoria, M.CodFamilia CodFamilia, M.Familia Familia, M.CodAlicorp CodAlicorp, M.Material Material, M.CodMarca CodMarca, M.Marca Marca,
@@ -691,7 +637,7 @@ SELECT F.DES_MES Mes, A.Fecha Dia, 'MINORISTAS' TipoDistribuidor,
 	   A.Negocio, A.FacUnitario, SUM(ISNULL(A.TUnidades,0)) TUnidades, SUM(ISNULL(A.Plan_Ton,0)) Plan_Ton,
 	  SUM(ISNULL(A.VentaTon,0)) real_ton, SUM(ISNULL(A.Plan_Dol,0)) Plan_Dol, SUM(ISNULL(A.VentaDolares,0)/1000) real_Dolares,
 	  M.Plataforma Plataforma
-INTO VENTAS_TABLERO
+INTO DATA_MART_SO_ECUADOR
 FROM #PANALES A
 	LEFT JOIN BD_FECHAS F ON  A.Fecha= F.DIA
 	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp
@@ -707,7 +653,7 @@ GROUP BY F.DES_MES, A.Fecha,
 --Inserto el Plan de Panales
 --Para el proyecto tablero
 
-INSERT INTO VENTAS_TABLERO
+INSERT INTO DATA_MART_SO_ECUADOR
 SELECT F.DES_MES Mes, A.Fecha Dia, 'MINORISTAS' TipoDistribuidor,
 	   A.CodCategoria CodCategoria, A.Categoria Categoria, A.CodFamilia CodFamilia, A.Familia Familia, A.CodAlicorp CodAlicorp, A.Des_Material Material, A.CodMarca CodMarca, A.Marca Marca,
 	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
@@ -731,7 +677,7 @@ GROUP BY F.DES_MES, A.Fecha,
 
 ----inserto el Plan de 2maya----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------
-INSERT INTO VENTAS_TABLERO
+INSERT INTO DATA_MART_SO_ECUADOR
 SELECT F.DES_MES Mes, A.Fecha Dia, 'MINORISTAS' TipoDistribuidor,
 	   A.CodCategoria CodCategoria, A.Categoria Categoria, A.CodFamilia CodFamilia, A.Familia Familia, A.CodAlicorp CodAlicorp, A.Des_Material Material, A.CodMarca CodMarca, A.Marca Marca,
 	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
@@ -1029,7 +975,7 @@ WHERE Fecha LIKE '0_/%'
 
 -- Para el proyecto de tablero
 
-INSERT INTO VENTAS_TABLERO
+INSERT INTO DATA_MART_SO_ECUADOR
 SELECT F.DES_MES Mes, A.Fecha Dia, A.Canal TipoDistribuidor,
 	   M.CodCategoria CodCategoria, M.Categoria Categoria, M.CodFamilia CodFamilia, M.Familia Familia, A.CodAlicorp CodAlicorp, M.Material Material, M.CodMarca CodMarca, M.Marca Marca,
 	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
@@ -1057,7 +1003,7 @@ GROUP BY F.DES_MES, A.Fecha, A.Canal,
 
 
 
-INSERT INTO VENTAS_TABLERO
+INSERT INTO DATA_MART_SO_ECUADOR
 SELECT F.DES_MES Mes, A.Fecha Dia, A.Canal TipoDistribuidor,
 	   M.CodCategoria CodCategoria, M.Categoria Categoria, M.CodFamilia CodFamilia, M.Familia Familia, A.CodAlicorp CodAlicorp, M.Material Material, M.CodMarca CodMarca, M.Marca Marca,
 	   AG.ZonaV2, AG.CodOficina, A.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
@@ -1425,7 +1371,7 @@ UPDATE #VENTAS_Y_NOTAS
 SET Agencia = 'NC'
 WHERE Agencia is null;
 
-INSERT INTO VENTAS_TABLERO
+INSERT INTO DATA_MART_SO_ECUADOR
 SELECT F.DES_MES Mes, A.Fecha Dia, 'MAYORISTAS' TipoDistribuidor,
 	   M.CodCategoria CodCategoria, M.Categoria Categoria, M.CodFamilia CodFamilia, M.Familia Familia, A.CodAlicorp CodAlicorp, M.Material Material,  M.CodMarca CodMarca, M.Marca Marca,
 	   AG.ZonaV2, AG.CodOficina, AG.NomOficina, AG.CodTerritorio, AG.NomTerritorio, AG.CodZona, AG.NomZona,
@@ -1492,7 +1438,7 @@ SELECT A.Mes, A.Dia,
 	  SUM(A.real_ton) real_ton, SUM(A.Plan_Dol) Plan_Dol, SUM(A.real_Dolares) real_Dolares,
 	  A.Plataforma Plataforma
 INTO VENTAS_CONSOLIDADO
-FROM VENTAS_TABLERO A
+FROM DATA_MART_SO_ECUADOR A
 GROUP BY A.MES, A.Dia,
 	   A.CodCategoria, A.Categoria, A.CodFamilia, A.Familia, A.CodMarca, A.Marca, A.CodClienteSellOut, A.ClienteSellOut,
 	   A.ZonaV2, A.CodOficina, A.NomOficina, A.CodTerritorio, A.NomTerritorio, A.CodZona, A.NomZona,
