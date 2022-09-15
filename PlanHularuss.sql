@@ -7,7 +7,7 @@ TRUNCATE TABLE NuevoPlanHularussFormato;
 BULK INSERT NuevoPlanHularussFormato
 FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\PLAN_HULARUSS.csv'
 WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
-
+--te agrega la fecha
 DECLARE @dia DATE;
 SELECT @dia= DATEADD(DAY,-1,SYSDATETIME());
 

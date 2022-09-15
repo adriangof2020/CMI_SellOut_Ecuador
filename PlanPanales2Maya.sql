@@ -65,9 +65,9 @@ UPDATE A SET Des_Material = TRIM(Des_Material) FROM PLAN_2MAYA A;
 UPDATE A SET Agencia_Distribuidora = TRIM(Agencia_Distribuidora) FROM PLAN_2MAYA A;
 UPDATE A SET Plataforma = TRIM(Plataforma) FROM PLAN_2MAYA A;
 
-DELETE FROM PLAN_2MAYA
-	   WHERE Agencia_Distribuidora
-			 IN ('FREDVY S.A.', 'REPRESENTACIONES J.LEONARDO SORIA')
+--DELETE FROM PLAN_2MAYA
+--	   WHERE Agencia_Distribuidora
+--			 IN ('FREDVY S.A.', 'REPRESENTACIONES J.LEONARDO SORIA')
 
 UPDATE PLAN_2MAYA
 SET CodMarca = RIGHT(CodMarca,1)
