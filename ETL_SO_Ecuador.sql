@@ -1,5 +1,6 @@
 --TRUNCATE TABLE STAYING_SO_ECUADOR;
---SELECT @@TRANCOUNT()  TtansaccionesAbiertas
+--SELECT @@TRANCOUNT
+--TtansaccionesAbiertas
 DECLARE @ultimoDiaVentas DATE;
 SELECT @ultimoDiaVentas = DATEADD(DAY,-1,SYSDATETIME());
 
