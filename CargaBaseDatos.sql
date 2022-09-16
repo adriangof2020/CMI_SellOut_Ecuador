@@ -768,7 +768,7 @@ UPDATE A SET Empaque = TRIM(Empaque) FROM VENTAS_HULARUSS A;
 UPDATE A SET CodClienteSellOut = TRIM(CodClienteSellOut) FROM VENTAS_HULARUSS A
 UPDATE A SET Canal = TRIM(Canal) FROM VENTAS_HULARUSS A
 
-UPDATE VENTAS_HULARUSS SET CodAlicorp = REPLACE(CodAlicorp, 'A', '')
+UPDATE VENTAS_HULARUSS SET CodAlicorp = REPLACE(CodAlicorp, 'A', '') WHERE CodAlicorp NOT LIKE '%PROMO%'
 
 
 
@@ -781,7 +781,7 @@ UPDATE VENTAS_HULARUSS SET CodAlicorp = REPLACE(CodAlicorp, 'A', '')
 --ALTER TABLE VENTAS_HULARUSS ALTER COLUMN Importe FLOAT;
 
 --DELETE FROM VENTAS_HULARUSS WHERE Importe = 0; Esperar a ver que dice sobre las importes negativos
-DELETE FROM VENTAS_HULARUSS WHERE CodAlicorp LIKE '%PROMO%';
+--DELETE FROM VENTAS_HULARUSS WHERE CodAlicorp LIKE '%PROMO%';
 DELETE FROM VENTAS_HULARUSS WHERE CodAlicorp = 'BNDEO - 002';
 DELETE FROM VENTAS_HULARUSS WHERE Importe IS NULL;
 DELETE FROM VENTAS_HULARUSS WHERE Canal IS NULL;
@@ -805,15 +805,16 @@ SET CodAlicorp = CASE CodAlicorp
 	WHEN '335015' THEN '4335015' 
 	WHEN '293369' THEN '29369' ELSE CodAlicorp END;
 -- 293369 este error solo sale en la data de ventas de Panales
+--select  distinct codalicorp, Ventakilos,Importe, Empaque  from VENTAS_HULARUSS where CodAlicorp like '%promo%'
 
 UPDATE A SET A.Cantidad = A.Cantidad*M.FacUnitario FROM VENTAS_HULARUSS A
 	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp
 	WHERE Empaque <> 'Unidad'
-
+	
 
 UPDATE A SET A.Ventakilos = (A.Cantidad * M.PesoKG) FROM VENTAS_HULARUSS A 
 	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp
-	WHERE A.Ventakilos = 0
+	WHERE A.Ventakilos = 0 OR A.Ventakilos IS NULL
 
 UPDATE A SET A.Canal = 'MAYORISTAS' FROM VENTAS_HULARUSS A 
 	WHERE  A.Canal <> 'TAT'
@@ -829,6 +830,11 @@ INTO #HULARUSS
 FROM VENTAS_HULARUSS A
 	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp
 WHERE A.Canal = 'MAYORISTAS';
+--select   codalicorp,TUnidades, VentaKil,VentaDolares  from #HULARUSS where CodAlicorp like '%promo%' AND RIGHT(Fecha,7) = '09/2022'
+--select SUM( VentaKil), SUM(VentaDolares)  from #HULARUSS where CodAlicorp like '%promo%'AND RIGHT(Fecha,7) = '09/2022'
+DELETE FROM #HULARUSS WHERE FacUnitario IS NULL;
+DELETE FROM #HULARUSS WHERE VentaKil = 0 AND  VentaDolares = 0;
+
 --SELECT sum(VentaDolares) FROM #HULARUSS WHERE  FacUnitario is null VentaKil=0 AND VentaDolares= 0 AND Plan_Dol = 0 AND Plan_Ton = 0
 --Solo deben salir 28 rows por los datos ficticios simpre y cuando lo corra desde la línea donde se agregan
 --SELECT sum(VentaDolares) FROM #HULARUSS WHERE Fecha like '%/06/2022'

@@ -853,7 +853,10 @@ UPDATE VENTAS_HULARUSS SET CodAlicorp = REPLACE(CodAlicorp, 'A', '')
 
 
 --DELETE FROM VENTAS_HULARUSS WHERE Importe = 0; Esperar a ver que dice sobre las importes negativos
-DELETE FROM VENTAS_HULARUSS WHERE CodAlicorp LIKE '%PROMO%';
+--DELETE FROM VENTAS_HULARUSS WHERE CodAlicorp LIKE '%PROMO%';
+--UPDATE A SET A.Cantidad = A.Cantidad*M.FacUnitario FROM VENTAS_HULARUSS A
+--	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp
+--	WHERE M.CodAlicorp IS NULL
 DELETE FROM VENTAS_HULARUSS WHERE CodAlicorp = 'BNDEO - 002';
 DELETE FROM VENTAS_HULARUSS WHERE Importe IS NULL;
 
@@ -903,7 +906,7 @@ INTO #HULARUSS
 FROM VENTAS_HULARUSS A
 	LEFT JOIN MAESTRO_ALICORP M ON A.CodAlicorp = M.CodAlicorp
 --WHERE A.Canal = 'MINORISTAS';
-
+DELETE FROM #HULARUSS WHERE FacUnitario IS NULL;
 --SELECT * FROM #HULARUSS WHERE  FacUnitario is null VentaKil=0 AND VentaDolares= 0 AND Plan_Dol = 0 AND Plan_Ton = 0
 --Solo deben salir 28 rows por los datos ficticios simpre y cuando lo corra desde la línea donde se agregan
 
