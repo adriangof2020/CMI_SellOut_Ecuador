@@ -18,11 +18,11 @@ UPDATE A SET Ventas_Ton = 0 FROM PLAN_2MAYA A;
 ALTER TABLE PLAN_2MAYA ALTER COLUMN Fecha DATE NOT NULL;
 
 SET LANGUAGE US_ENGLISH;
-
+--aca ponemos ls fechas del plan que sean mayores al ultimo de ventas iguales lo mismo se hace en panales
 UPDATE PLAN_2MAYA SET Fecha = CASE WHEN Fecha > @dia THEN @dia ELSE Fecha END;
 
 IF OBJECT_ID(N'tempdb..#2MAYA') IS NOT NULL DROP TABLE #2MAYA;
-
+--esta tabla es para darle formato varchar a la fecha lo mismo se hace en panales
 SELECT [Sociedad] ,[Ejercicio_Per_odo] , CONVERT(VARCHAR(20), Fecha, 103) Fecha ,[Lista_Precios] ,[Negocio] ,[Des_Negocio] ,[Sub_Negocio] ,[CodCategoria] ,[Categoria] ,[Sector]
       ,[Des_Sector] ,[Grupo_Clientes] ,[Des_Grupo_Clientes] ,[Grupo_Precios] ,[Des_Grupo_Precios] ,[CodMarca] ,[Marca] ,[CodFamilia] ,[Familia]
       ,[CodAlicorp] ,[Des_Material] ,[Oficina_ventas] ,[Des_Oficina_ventas] ,[Gpo_vendedores] ,[Des_Gpo_vendedores] ,[Gpo_condiciones1] ,[Des_Gpo_condiciones1]
@@ -52,7 +52,6 @@ DELETE FROM PLAN_2MAYA WHERE Plan_Dol = '' AND Plan_Ton = '';
 --Cada vez que haya una nueva agencia incluirlo aca que se considerara en el reporte incluirla aca
 --DELETE FROM PLAN_2MAYA WHERE NomOficina NOT IN ('NEOPOR S.A.', 'PULLA', 'MARVECOBE S.A', 'HARO')
 --DELETE FROM PLAN_2MAYA WHERE NomOficina NOT IN ('NEOPOR S.A.', 'PULLA', 'MARVECOBE S.A', 'HARO', 'ALVAREZ') 
---PREGUNTAR HASTA CUANDO SERA ESTO
 
 UPDATE A SET CodCategoria = TRIM(CodCategoria) FROM PLAN_2MAYA A;
 UPDATE A SET Categoria = TRIM(Categoria) FROM PLAN_2MAYA A;
