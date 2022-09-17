@@ -108,114 +108,7 @@ FROM CmiSellOutEcuador.dbo.MAESTRO_AGENCIAS;
 
 
 
---TRUNCATE TABLE KPIS;
- 
---BULK INSERT KPIS
---FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\KPIS_JUL.csv'
---WITH (FIELDTERMINATOR=';',FIRSTROW=2,CODEPAGE='ACP');
 
---PONER EL PERIODO
---UPDATE KPIS SET Periodo = '7_2022' WHERE 1=1
---AND Periodo IS NULL
-
---------------------------------------------------------------------------------------------------------------
---codigo de formato anterior
---UPDATE KPIS SET Agencia_Distribuidora = CASE Agencia_Distribuidora
---WHEN 'Xavier Morales' THEN 'D-MEX CIA.LTDA.'
---WHEN 'PULLA VIMOS LOURDES CATALINA' THEN 'PULLA'
---WHEN 'HARO ZAMORA IVAN' THEN 'HARO'
---WHEN 'BARNUEVO VALAREZO & GCP CIA LTDA' THEN 'BARNUEVO VALAREZO &GCP CIAL LTDA'
---WHEN 'D LOGIS CODILOGIS CIA. LTDA.' THEN 'D LOGIS CODILOGIS CIA LTDA'
---WHEN 'MARVECOBE S.A 'THEN 'MARVECOBE S.A'
---WHEN 'SEGUNDO MIGUEL ALVAREZ TORRES' THEN 'ALVAREZ' ELSE Agencia_Distribuidora END
-
---UPDATE KPIS SET Agrupacion_Distribuidora = CASE Agrupacion_Distribuidora
---WHEN 'Panal' THEN 'PANALES'
---WHEN 'SM' THEN '2MALLA'
---WHEN 'MD' THEN 'HULARUSS' ELSE Agrupacion_Distribuidora END
-
---UPDATE KPIS SET Territorio = 'Todas' WHERE Territorio IS NULL;
-
---UPDATE KPIS SET Agencia_Distribuidora = 'Todas' WHERE Agencia_Distribuidora like 'tota%'
-
- 
---UPDATE A SET A.Territorio = M.Territorio
---FROM KPIS A JOIN MAESTRO_AGENCIAS_1 M ON A.Agencia_Distribuidora = M.Agencia_Distribuidora
-
---UPDATE A SET A.[Zona_Clientes] = M.[Zona_Clientes]
---FROM KPIS A JOIN MAESTRO_AGENCIAS_1 M ON A.Agencia_Distribuidora = M.Agencia_Distribuidora
-
---UPDATE KPIS SET [Plataforma] = CASE [Plataforma]
---WHEN 'HC' THEN 'Home Care'
---WHEN 'FOOD' THEN 'Foods' ELSE [Plataforma] END
-
---UPDATE KPIS SET Plataforma = TRIM(Plataforma);
---UPDATE KPIS SET Categoria = TRIM(Categoria);
---UPDATE KPIS SET Canal = TRIM(Canal);
---UPDATE KPIS SET Agrupacion_Distribuidora = TRIM(Agrupacion_Distribuidora);
---UPDATE KPIS SET Territorio = TRIM(Territorio);
---UPDATE KPIS SET Agencia_Distribuidora = TRIM(Agencia_Distribuidora);
---UPDATE KPIS SET Zona_Clientes = TRIM(Zona_Clientes);
---UPDATE KPIS SET Familia = TRIM(Familia);
-
-
---UPDATE KPIS SET [Categoria] = CASE [Categoria]
---WHEN 'PASTAS' THEN 'Pastas'
---WHEN 'SALSAS' THEN 'Salsas'
---WHEN 'DESINFECTANTES' THEN 'Limpiadores Light Du'
---WHEN 'DESINFECTANTE' THEN 'Limpiadores Light Du'
---WHEN 'INSECTICIDAS' THEN 'Insecticidas'
---WHEN 'LEJIAS' THEN 'Lejias'
---WHEN 'LAVAVAJILLAS' THEN 'Lavavajillas'
---WHEN 'DETERGENTE' THEN 'Lavavajillas'
---WHEN 'DETERGENTES' THEN 'Detergentes' ELSE [Categoria] END
-
-
---UPDATE KPIS SET Zona_Clientes = 'Todas' WHERE Zona_Clientes = 'NACIONAL';
---UPDATE KPIS SET Plataforma = 'Todas' WHERE Plataforma = 'TODAS';
---UPDATE KPIS SET Categoria = 'Todas' WHERE Categoria = 'TODAS';
-
---IF OBJECT_ID('KPI_1') IS NOT NULL DROP TABLE KPI_1;
-
---SELECT  Periodo, [Agrupacion_Distribuidora]  Grupo_Cliente
---	  ,[Agencia_Distribuidora] Cliente
---      ,[Territorio]
---      ,[Zona_Clientes] Zona_Clientes
---      ,[Plataforma]
---      ,[Categoria]
---      ,[Clientes con Compra]
---      ,[Ticket promedio]
---      ,[Mix de Categoria]
---      ,[Mix de Familia]    
---INTO KPI_1
---FROM KPIS A
---WHERE Canal = 'Tienda'
-----Tienda es Minoristas
-
-
---UPDATE KPI_1  SET [Clientes con Compra] = REPLACE([Clientes con Compra],',','')
---UPDATE KPI_1  SET [Ticket promedio] = REPLACE([Ticket promedio],',','')
-
---DELETE FROM KPI_1 WHERE Cliente IN  ('Representaciones J.Leonardo Soria ',
---             'PRODISPRO CIA.LTDA', 'OLGER ARMIJOS DISTRIBUCIONES S.A.S ','FREDVY S.A.', 'CONTRERAS DELGADO WASHINGTON')
-
---ALTER TABLE KPI_1 ALTER COLUMN [Clientes con Compra]  FLOAT;
---ALTER TABLE KPI_1 ALTER COLUMN [Ticket promedio]  FLOAT;
-
-----SELECT * FROM [INDICADORES_KPI]
-
---TRUNCATE TABLE INDICADORES_KPI;
-
---INSERT INTO INDICADORES_KPI
---SELECT A.Periodo, A.Grupo_Cliente, A.Cliente, A.Territorio,
---      A.Zona_Clientes, A.Plataforma, A.Categoria, MAX(A.[Clientes con Compra]),
---		MAX(A.[Ticket promedio]), MAX(A.[Mix de Categoria]),MAX(A.[Mix de Familia])
---FROM KPI_1 A
---GROUP BY A.Periodo, A.Grupo_Cliente, A.Cliente, A.Territorio, A.Zona_Clientes, A.Plataforma, A.Categoria
-----------------------------------------------------------------------------
-
-
----REFORMULAR CARGA DE KPIS
 --TRUNCATE TABLE INDICADORES_KPI;
 
 
@@ -255,6 +148,7 @@ FROM CmiSellOutEcuador.dbo.MAESTRO_AGENCIAS;
 
 
 --Inserto Codify
+--cargo hisorico de ventas con todas ventas a las fecha
 
 
 DROP TABLE CODIFY_HISTORICA_1;
@@ -321,7 +215,7 @@ SET CodAlicorp = CASE CodAlicorp
 
 
 
-
+--cargo hisorico de ventas con todas ventas a las fecha
 
 DROP TABLE BASE_MOBILVENDOR_AUTOMATICA_1;
 
@@ -529,7 +423,7 @@ SET CodAlicorp = CASE CodAlicorp
 	WHEN '8309007' THEN '8309126'
 	WHEN '8309009' THEN '8309128'
 	WHEN '293369' THEN '29369' ELSE CodAlicorp END;
-
+--borra el plan del mes actual por si hay algun cambio y lo vuelve a subir de la base de datos del so, ya que primero corres el so y luego el dash
 DELETE FROM PLAN_PANALES_1 WHERE RIGHT(Fecha,7) = '09/2022';
 --DELETE FROM PLAN_PANALES_1 WHERE Agencia_Distribuidora IN ('ATI CAMPAÑA FLAVIA MARINA', 'MOGRO AVILA FERNANDO PATRICIO', 'CONTRERAS DELGADO WASHINGTON' )
 
@@ -609,7 +503,7 @@ SET CodAlicorp = CASE CodAlicorp
 	WHEN '8309009' THEN '8309128'
 	WHEN '293369' THEN '29369' ELSE CodAlicorp END;
 
-
+--borra el plan del mes actual por si hay algun cambio y lo vuelve a subir de la base de datos del so, ya que primero corres el so y luego el dash
 
 DELETE FROM PLAN_2MAYA_1 WHERE RIGHT(Fecha,7) = '09/2022';
 
@@ -692,67 +586,8 @@ FROM PLAN_2MAYA_1 A
 --Hularuss
 
 
-----Coloco el mes en curso
---DELETE FROM HULARUSS_HISTORICO WHERE LEFT(Fecha,7) = '2022-06';
 
-
-----ALTER TABLE HULARUSS_HISTORICO ALTER COLUMN Importe VARCHAR(100);
---ALTER TABLE HULARUSS_HISTORICO ALTER COLUMN VentaKilos VARCHAR(100);
---ALTER TABLE HULARUSS_HISTORICO ALTER COLUMN importe VARCHAR(100);
---ALTER TABLE HULARUSS_HISTORICO ALTER COLUMN Cantidad VARCHAR(100);
-
---DECLARE @HULARUSS VARCHAR(MAX);
---SELECT @HULARUSS = BULKCOLUMN FROM 
---OPENROWSET(BULK 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\junios.json', SINGLE_BLOB) JSON;
---IF (ISJSON(@HULARUSS) = 1)
---INSERT INTO HULARUSS_HISTORICO
---SELECT *
---FROM OPENJSON(@HULARUSS)
---WITH (
---	CanalSR VARCHAR (100),
---	Ruta VARCHAR (100),
---	customernum VARCHAR(100),
---	invoicenum VARCHAR(100),
---	Fecha DATE,
---	status VARCHAR(100),
---	inventorynum VARCHAR(100),
---	description VARCHAR(100),
---	Cantidad VARCHAR(100),
---	Precio VARCHAR(100),
---	Valor VARCHAR(100),
---	Empaque VARCHAR(100),
---	PesoTot VARCHAR(100),
---	Territorio VARCHAR(100),
---	Vendedor VARCHAR(100),
---	Categoria VARCHAR(100)
---)
---WHERE YEAR(Fecha) = 2022 AND MONTH(Fecha) = 06;
-
-
-----BULK INSERT HULARUSS_HISTORICO
-----FROM 'C:\Proyectos\Ecuador\CMI_SellOut_Ecuador\BaseDatos\VentasHularuss_JUN.csv'
-----WITH (FIELDTERMINATOR= ';', FIRSTROW=2, CODEPAGE='ACP');
-
-
-----SET LANGUAGE US_ENGLISH;
-
---UPDATE HULARUSS_HISTORICO
---SET Cantidad = REPLACE(Cantidad,',','')
---WHERE CHARINDEX(',',Cantidad) > 0;
-
---UPDATE HULARUSS_HISTORICO
---SET importe = REPLACE(importe,',','')
---WHERE CHARINDEX(',',importe) > 0;
-
---UPDATE HULARUSS_HISTORICO
---SET VentaKilos = REPLACE(VentaKilos,',','')
---WHERE CHARINDEX(',',VentaKilos) > 0;
-
---ALTER TABLE HULARUSS_HISTORICO ALTER COLUMN VentaKilos FLOAT;
---ALTER TABLE HULARUSS_HISTORICO ALTER COLUMN importe FLOAT;
---ALTER TABLE HULARUSS_HISTORICO ALTER COLUMN Cantidad DECIMAL (18,2);
-
-
+--subes la data de ventas historica
 DROP TABLE HULARUSS;
 
  SELECT *
@@ -791,7 +626,7 @@ SET CodAlicorp = CASE CodAlicorp
 UPDATE A SET A.Cantidad = A.Cantidad*M.FacUnitario FROM HULARUSS A
 	LEFT JOIN MAESTRO_ALICORP_1 M ON A.CodAlicorp = M.CodAlicorp
 	WHERE Empaque <> 'Unidad'
-
+	--cuando su empaque no es unidad calculamos la cantidad de unidades compradas
 
 UPDATE A SET A.Ventakilos = (A.Cantidad * M.PesoKG) FROM HULARUSS A 
 	LEFT JOIN MAESTRO_ALICORP_1 M ON A.CodAlicorp = M.CodAlicorp
@@ -816,7 +651,7 @@ WHERE A.Canal = 'MINORISTAS';
 DELETE FROM #HULARUSS_1 WHERE VentaKil = 0 AND  VentaDolares = 0;
 DELETE FROM #HULARUSS_1 WHERE FacUnitario IS NULL;
 DELETE FROM #HULARUSS_1 WHERE CodAlicorp LIKE '%PROMO%' AND RIGHT(Fecha,7) IN ('04/2022', '05/2022', '06/2022', '07/2022','08/2022')
- 
+--elimina los meses previo al cambio, ya que en estos no se considerara la promociones,,si quisieran en algun momento que se haga quitarlo 
 ALTER TABLE #HULARUSS_1 ALTER COLUMN Plan_Ton FLOAT;
 ALTER TABLE #HULARUSS_1 ALTER COLUMN Plan_Dol FLOAT;
 
@@ -843,15 +678,17 @@ WHERE Fecha LIKE '0_/%'
 --@dia debe ser igual a al mes y año al que corresponde el plan
 
 
+--elimino plan actual por sihay cambioss
+
 DELETE FROM PLAN_HULARUSS WHERE 1=1
 								AND YEAR(Fecha) = 2022
 								AND MONTH(Fecha) = 09
-
+--vuelvo a cargar plan de baso so ya que esa se corre primero
 INSERT INTO PLAN_HULARUSS
 SELECT *
 FROM CmiSellOutEcuador.dbo.NuevoPlanHularussFormato
 
-
+--convierot tabla pivot en formato tabular
 
 IF OBJECT_ID(N'tempdb..#HULARUSS_PLAN_NUEVO_1') IS NOT NULL DROP TABLE #HULARUSS_PLAN_NUEVO_1;
 
@@ -866,9 +703,9 @@ MANABI,MANABI_TN,MILAGRO,MILAGRO_TN,ORIENTE,ORIENTE_TN,QUEVEDO,QUEVEDO_TN,QUITO,
 UPDATE A SET Canal = 'MINORISTAS' FROM #HULARUSS_PLAN_NUEVO_1 A  WHERE Canal = 'TIENDA';
 
 DELETE FROM #HULARUSS_PLAN_NUEVO_1 WHERE NomOficina IN ('CHONE', 'CHONE_TN', 'ORIENTE', 'ORIENTE_TN' )
-
+--elimino agencias que no necesitamos
 IF OBJECT_ID(N'tempdb..#HULARUSS_PLAN_NUEVO_TON_1') IS NOT NULL DROP TABLE #HULARUSS_PLAN_NUEVO_TON_1;
-
+--separa plan de campos pesos
 SELECT *
 INTO #HULARUSS_PLAN_NUEVO_TON_1
 FROM #HULARUSS_PLAN_NUEVO_1
@@ -878,7 +715,7 @@ WHERE NomOficina IN('AMBATO_TN','CHONE_TN','CUENCA_TN','ESMERALDAS_TN','GUAYAQUI
 
 UPDATE A SET NomOficina = LEFT(NomOficina,LEN(NomOficina)-3) FROM #HULARUSS_PLAN_NUEVO_TON_1 A;
 --SELECT * FROM #HULARUSS_PLAN_NUEVO_TON WHERE MontoCantidad IS NULL
-
+--separo campos de plan dolares
 IF OBJECT_ID(N'tempdb..#HULARUSS_PLAN_NUEVO_DOL_1') IS NOT NULL DROP TABLE #HULARUSS_PLAN_NUEVO_DOL_1;
 
 SELECT *
@@ -887,9 +724,8 @@ FROM #HULARUSS_PLAN_NUEVO_1
 WHERE NomOficina IN('AMBATO','CHONE','CUENCA','ESMERALDAS','GUAYAQUIL',
 'IBARRA','LOJA','MACHALA','MANABI','MILAGRO','ORIENTE','QUEVEDO',
 'QUITO','SANTA ELENA','SANTO DGO')
-
+--uno plan dolares con pesos
 IF OBJECT_ID(N'tempdb..#HULARUSS_PLAN_NUEVO_MINOR_1') IS NOT NULL DROP TABLE #HULARUSS_PLAN_NUEVO_MINOR_1;
-
 SELECT CONVERT(VARCHAR(20),A.Fecha,103) Fecha, A.Canal Canal, A.CodAlicorp CodAlicorp, A.NomOficina, A.MontoCantidad Plan_Ton, B.MontoCantidad Plan_Dol
 INTO #HULARUSS_PLAN_NUEVO_MINOR_1
 FROM #HULARUSS_PLAN_NUEVO_TON_1 A 
